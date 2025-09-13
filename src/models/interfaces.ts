@@ -20,6 +20,14 @@ export interface GeminiResponse {
 export interface GeminiOpinion {
   successRate: number;
 }
+
+export type SetupExchangeCreds = {
+  PrivEnc: string;
+  credsEnc: string;
+  exchange: string;
+  userTgNumericId: number;
+};
+
 export type AnalyzeOptions = {
   budgetUSDT?: number; // default 100 USDT
   preferTpAsExit?: boolean; // use tp as exit when computing profit (default true)
@@ -30,4 +38,17 @@ export type AnalyzeOptions = {
 export type GeminiRequestOptions = {
   message: string;
   contents: string;
+};
+
+/// ---
+
+export type User = {
+  tg_id: number;
+};
+
+export type ExchangeCreds = {
+  tg_id: number;
+  creds_enc: string;
+  priv_enc: string;
+  exchange_name: string;
 };

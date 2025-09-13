@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 export const fetchCache = "force-no-store";
 
-import { sendOpenAuthPageButton } from "@/app/controllers/auth";
+import { sendOpenAuthPageButton } from "@/app/controllers/setup/auth";
 import { Bot, webhookCallback } from "grammy";
 
 const token = process.env.TELEGRAM_BOT_TOKEN;

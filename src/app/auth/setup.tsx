@@ -5,7 +5,8 @@ import Header from "./components/header";
 import ImportantNote from "./components/importantNotes";
 import ExchangeButtons from "./components/exchangeButtons";
 import ExchangeForm from "./components/exchangeForm";
-
+import { getAdminPublicKey } from "@/middleware/vault";
+import * as crypto from "crypto";
 export default function MiniAppPage() {
   const [tg, setTg] = useState<any>(null);
   const [initData, setInitData] = useState<string | null>(null);
@@ -79,11 +80,39 @@ export default function MiniAppPage() {
     };
     setLoading(true);
     setError(null);
+
+    // here we have the data to encrypt
+
+    // first we get the admins public key
+    const serverPubKey = await getAdminPublicKey();
+
+    // now we generate a keypair for the user and encrypt the credentials
+    const userKeyPair = generateRSAKeyPair();
+
+    // encrypt the user conditionals using its trading password and its public key
+    const encryptedData = encryptCredentials(
+      { apiKey: payload.apiKey, secretKey: payload.secretKey },
+      userKeyPair.publicKey,
+      payload.tradingPassword
+    );
+
+    // encrypt the user private key using the admin public key and the trading password
+    const encryptedUserPrivKey = encryptUsersPrivKey(
+      userKeyPair.privateKey,
+      serverPubKey,
+      payload.tradingPassword
+    );
+
     try {
-      const res = await fetch("/api/miniapp/submit", {
+      const res = await fetch("/api/trade/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ payload, initData }),
+        body: JSON.stringify({
+          PrivEnc: encryptedUserPrivKey.encryptedKey,
+          credsEnc: encryptedData.encryptedData,
+          exchange: exchange,
+          userTgNumericId: tg.id,
+        }),
       });
       const json = await res.json();
       setLoading(false);
@@ -110,7 +139,7 @@ export default function MiniAppPage() {
             <ExchangeButtons connectedMap={connectedMap} openForm={openForm} />
           ) : (
             <ExchangeForm
-              exchange={exchange}
+              exchange={exchange as "kana" | "hyperion" | "merkle"}
               form={form}
               setForm={setForm}
               handleSubmit={handleSubmit}
@@ -127,4 +156,99 @@ export default function MiniAppPage() {
       </div>
     </div>
   );
+}
+
+export interface Credentials {
+  apiKey: string;
+  secretKey: string;
+}
+
+// Generate a random RSA key pair (2048-bit)
+export function generateRSAKeyPair() {
+  const { publicKey, privateKey } = crypto.generateKeyPairSync("rsa", {
+    modulusLength: 2048,
+    publicKeyEncoding: { type: "spki", format: "pem" },
+    privateKeyEncoding: { type: "pkcs8", format: "pem" },
+  });
+  return { publicKey, privateKey };
+}
+
+export function encryptCredentials(
+  creds: Credentials,
+  userPublicKey: string,
+  tradingPassword: string
+) {
+  // 1️⃣ Generate random AES key
+  const aesKey = crypto.randomBytes(32);
+
+  // 2️⃣ Derive IV from trading password
+  const iv = crypto
+    .createHash("sha256")
+    .update(tradingPassword)
+    .digest()
+    .slice(0, 12);
+
+  // 3️⃣ AES-GCM encrypt the credentials
+  const cipher = crypto.createCipheriv("aes-256-gcm", aesKey, iv);
+  const encryptedData = Buffer.concat([
+    cipher.update(JSON.stringify(creds), "utf8"),
+    cipher.final(),
+  ]);
+  const authTag = cipher.getAuthTag();
+
+  // 4️⃣ Encrypt the AES key with user's public key
+  const encryptedKey = crypto.publicEncrypt(
+    {
+      key: userPublicKey,
+      padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+      oaepHash: "sha256",
+    },
+    aesKey
+  );
+
+  return {
+    encryptedData: Buffer.concat([authTag, encryptedData]).toString("base64"),
+    encryptedKey: encryptedKey.toString("base64"),
+  };
+}
+
+export function encryptUsersPrivKey(
+  userPrvKey: string,
+  adminPubKey: string,
+  tradingPassword: string
+): { encryptedKey: string; encryptedData: string } {
+  // 1️⃣ Generate random AES key
+  const aesKey = crypto.randomBytes(32);
+
+  // 2️⃣ Derive IV from trading password (12 bytes for AES-GCM)
+  const iv = crypto
+    .createHash("sha256")
+    .update(tradingPassword)
+    .digest()
+    .slice(0, 12);
+
+  // 3️⃣ Encrypt user private key using AES-GCM
+  const cipher = crypto.createCipheriv("aes-256-gcm", aesKey, iv);
+  const encryptedPrvKey = Buffer.concat([
+    cipher.update(userPrvKey, "utf8"),
+    cipher.final(),
+  ]);
+  const authTag = cipher.getAuthTag();
+  const aesEncryptedBlob = Buffer.concat([authTag, encryptedPrvKey]).toString(
+    "base64"
+  );
+
+  // 4️⃣ Encrypt AES key using admin RSA public key
+  const encryptedKey = crypto
+    .publicEncrypt(
+      {
+        key: adminPubKey,
+        padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+        oaepHash: "sha256",
+      },
+      aesKey
+    )
+    .toString("base64");
+
+  return { encryptedKey, encryptedData: aesEncryptedBlob };
 }

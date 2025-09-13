@@ -13,7 +13,7 @@ export async function sendOpenAuthPageButton(chat_id: string) {
           [
             {
               text: "Open Exchange Setup Page",
-              web_app: { url: `${process.env.MINI_APP_BASE_URL}/auth` }, // must be HTTPS
+              web_app: { url: `${process.env.MINI_APP_BASE_URL}/auth/setup` }, // must be HTTPS
             },
           ],
         ],
