@@ -1,5 +1,12 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import {
+  AptosWalletAdapterProvider,
+  Network,
+} from "@aptos-labs/wallet-adapter-react";
+import WalletProvider from "@/lib/chains/aptos/walletContext";
+import Script from "next/script";
+
 import "./globals.css";
 
 const geistSans = Geist({
@@ -27,7 +34,11 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <WalletProvider>{children}</WalletProvider>
+        <Script
+          src="https://telegram.org/js/telegram-web-app.js"
+          strategy="beforeInteractive"
+        />
       </body>
     </html>
   );

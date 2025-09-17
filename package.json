@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@aptos-labs/wallet-adapter-react": "^7.0.5",
     "@google/genai": "^1.19.0",
     "@supabase/supabase-js": "^2.57.4",
     "dotenv": "^17.2.2",
@@ -18,7 +19,8 @@
     "node-vault": "^0.10.5",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "telegram": "^2.26.22"
+    "telegram": "^2.26.22",
+    "tweetnacl": "^1.0.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

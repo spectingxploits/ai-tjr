@@ -13,6 +13,7 @@ if (!token)
 const bot = new Bot(token);
 bot.on("message:text", async (ctx) => {
   console.log("Received message:", ctx.message.text);
+  console.log("this is the id ", ctx.chat.id.toString());
   if (ctx.message.text.trim().includes("/setup_exchange")) {
     console.log("command detected");
     await sendOpenAuthPageButton(ctx.chat.id.toString());
