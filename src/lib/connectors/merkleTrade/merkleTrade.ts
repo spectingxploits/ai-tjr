@@ -7,7 +7,7 @@ import {
   Position,
 } from "@merkletrade/ts-sdk";
 import { Aptos } from "@aptos-labs/ts-sdk";
-import { PerpConnector } from "./connector";
+import { PerpConnector } from "../connector";
 import {
   OrderResult,
   PerpOpenParams,
@@ -24,7 +24,7 @@ import {
 } from "@/models/merkleTrade/models";
 
 export class MerkleTradeConnector implements PerpConnector {
-  name: string = "MerkleTrade";
+  name: string = "merkle_trade_perpetual_connector";
   buySpot?(symbol: string, qty: number, price?: number): Promise<OrderResult> {
     throw new Error("Method not implemented.");
   }

@@ -6,12 +6,14 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest"
   },
   "dependencies": {
-    "@aptos-labs/wallet-adapter-react": "^7.0.5",
     "@aptos-labs/ts-sdk": "^1.33.1",
+    "@aptos-labs/wallet-adapter-react": "^7.0.5",
     "@google/genai": "^1.19.0",
+    "@hyperionxyz/sdk": "^0.0.19",
     "@merkletrade/ts-sdk": "^1.0.3",
     "@supabase/supabase-js": "^2.57.4",
     "dotenv": "^17.2.2",
@@ -27,12 +29,15 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/jest-dom": "^6.8.0",
+    "@testing-library/react": "^16.3.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.5.3",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.4"
   }
 }

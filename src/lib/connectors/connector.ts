@@ -50,13 +50,13 @@ export interface PerpConnector {
 export interface SwapConnector {
   readonly name: string;
 
-  /* Get on-chain quote for exact in or exact out */
+  /* Get on-chain quote for exact in or exact out */ // price
   getQuote(
     symbolIn: string,
     symbolOut: string,
     amount: number,
     opts?: { exactIn?: boolean; slippagePct?: number }
-  ): Promise<Quote>;
+  ): Promise<number>;
 
   /* Execute swaps (wallet signing / chain broadcast handled by implementor) */
   swapExactIn(
