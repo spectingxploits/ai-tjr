@@ -10,7 +10,9 @@
   },
   "dependencies": {
     "@aptos-labs/wallet-adapter-react": "^7.0.5",
+    "@aptos-labs/ts-sdk": "^1.33.1",
     "@google/genai": "^1.19.0",
+    "@merkletrade/ts-sdk": "^1.0.3",
     "@supabase/supabase-js": "^2.57.4",
     "dotenv": "^17.2.2",
     "grammy": "^1.38.2",
