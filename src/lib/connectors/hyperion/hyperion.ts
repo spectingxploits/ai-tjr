@@ -1,4 +1,4 @@
-import { Quote, SwapResult } from "@/models/interfaces";
+import { Balance, Quote, SwapResult } from "@/models/interfaces";
 import { SwapConnector } from "../connector";
 import { FeeTierIndex, HyperionSDK, initHyperionSDK } from "@hyperionxyz/sdk";
 
@@ -43,7 +43,7 @@ export class HyperionConnector implements SwapConnector {
     return pool.pool.currentTick;
   }
   async swap(params: SwapParams): Promise<{ payload: any }> {
-    let poolInfo = await this.getPoolTokensInfo(
+    let poolInfo = await this.getPoolInfoByPair(
       params.symbolIn,
       params.symbolOut
     );
@@ -121,7 +121,7 @@ export class HyperionConnector implements SwapConnector {
 
     return { payload };
   }
-  async getPoolTokensInfo(tokenA: string, tokenB: string): Promise<any> {
+  async getPoolInfoByPair(tokenA: string, tokenB: string): Promise<any> {
     const pools = await this.hyperionAdapter.Pool.fetchAllPools();
     const pool = pools.find((pool: any) => {
       return (
@@ -137,11 +137,47 @@ export class HyperionConnector implements SwapConnector {
     }
     return pool.pool;
   }
-  getPoolInfo?(symbolIn: string, symbolOut: string): Promise<any> {
-    throw new Error("Method not implemented.");
-  }
-  getTokenBalance?(address: string, token: string): Promise<number> {
-    throw new Error("Method not implemented.");
+
+  async getBalance(mainnet: boolean, userAddress: string): Promise<Balance[]> {
+    const balances: Balance[] = [];
+
+    try {
+      // Get native APT balance
+      const accountInfo =
+        await this.hyperionAdapter.AptosClient.getAccountAPTAmount({
+          accountAddress: userAddress,
+        });
+
+      balances.push({
+        asset: "APT",
+        amount: accountInfo / 10 ** 8,
+      });
+    } catch (error) {
+      console.error("Error fetching native balance:", error);
+    }
+
+    try {
+      // Get other token balances
+      const tokens =
+        await this.hyperionAdapter.AptosClient.getAccountOwnedTokens({
+          accountAddress: userAddress,
+        });
+      for (const token of tokens) {
+        if (token.amount > 0) {
+          const asset = token.current_token_data?.token_name
+            ? token.current_token_data?.token_name
+            : "Unknown";
+          balances.push({
+            asset: asset,
+            amount: token.amount / 10 ** token.current_token_data?.decimals,
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching token balances:", error);
+    }
+
+    return balances;
   }
   estimateGas?(
     symbolIn: string,
