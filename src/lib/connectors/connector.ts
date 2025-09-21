@@ -16,6 +16,10 @@ import {
   MerkleUpdatePayload,
 } from "@/models/merkleTrade/models";
 import { Order, Position } from "@merkletrade/ts-sdk";
+/** Standardized response wrapper for safer integrations */
+export type Result<T> =
+  | { success: true; data: T }
+  | { success: false; error: string };
 
 export interface PerpConnector {
   readonly name: string;
@@ -24,27 +28,25 @@ export interface PerpConnector {
   buySpot?(symbol: string, qty: number, price?: number): Promise<OrderResult>;
   sellSpot?(symbol: string, qty: number, price?: number): Promise<OrderResult>;
 
-  openLong(
-    params: Omit<PerpOpenParams, "side"> & { side?: "long" }
-  ): Promise<MerkleTradePayload>;
-  openShort(
-    params: Omit<PerpOpenParams, "side"> & { side?: "short" }
-  ): Promise<MerkleTradePayload>;
+  openLong(params: PerpOpenParams): Promise<Result<MerkleTradePayload>>;
+  openShort(params: PerpOpenParams): Promise<Result<MerkleTradePayload>>;
 
-  closeLong(params: PerpCloseParams): Promise<MerkleTradePayload>;
-  closeShort(params: PerpCloseParams): Promise<MerkleTradePayload>;
+  closeLong(params: PerpCloseParams): Promise<Result<MerkleTradePayload>>;
+  closeShort(params: PerpCloseParams): Promise<Result<MerkleTradePayload>>;
 
   /* Modify/auxiliary */
   setLeverage?(symbol: string, leverage: number): Promise<boolean>;
-  setTP_SL?(params: PerpTP_SLParams): Promise<MerkleUpdatePayload>;
-  cancelOrder(params: PerpCloseParams): Promise<MerkleCancelOrderPayload>;
-  fetchOrder(params: PerpCloseParams): Promise<Order>;
-  fetchPosition(params: PerpCloseParams): Promise<Position>;
-  listOpenPositions(params: PerpCloseParams): Promise<Position[]>;
+  setTP_SL?(params: PerpTP_SLParams): Promise<Result<MerkleUpdatePayload>>;
+  cancelOrder(
+    params: PerpCloseParams
+  ): Promise<Result<MerkleCancelOrderPayload>>;
+  fetchOrder(params: PerpCloseParams): Promise<Result<Order>>;
+  fetchPosition(params: PerpCloseParams): Promise<Result<Position>>;
+  listOpenPositions(params: PerpCloseParams): Promise<Result<Position[]>>;
 
   /* market data & account */
-  getTickerPrice(symbol: string, mainnet: boolean): Promise<number>;
-  getBalance(mainnet: boolean, userAddress: string): Promise<Balance[]>;
+  getTickerPrice(symbol: string, mainnet: boolean): Promise<Result<number>>;
+  getBalance(mainnet: boolean, userAddress: string): Promise<Result<Balance[]>>;
   getFundingRate?(symbol: string): Promise<number | null>;
 }
 

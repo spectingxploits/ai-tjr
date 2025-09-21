@@ -10,7 +10,7 @@ import {
 } from "@/models/hyperion/types";
 
 export class HyperionConnector implements SwapConnector {
-  name = "hyperion_connector";
+  name = "hyperion_swap_connector";
   network: Network.MAINNET | Network.TESTNET;
   hyperionAdapter: HyperionSDK;
 
