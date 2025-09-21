@@ -7,7 +7,11 @@ describe("HyperionConnector integration", () => {
     const connector = new HyperionConnector(Network.TESTNET);
 
     // this will query real data from Hyperion
-    const result = await connector.getQuote("APT", "USDC", 1_000_000); // amount = 0.01 APT (6 decimals)
+    const result = await connector.getQuote({
+      symbolIn: "APT",
+      symbolOut: "USDC",
+      amount: 1_000_000,
+    }); // amount = 0.01 APT (6 decimals)
 
     console.log("Quote result:", result);
 

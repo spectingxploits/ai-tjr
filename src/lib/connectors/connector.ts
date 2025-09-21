@@ -1,3 +1,4 @@
+import { PairPriceParams, SwapParams } from "@/models/hyperion/models";
 import {
   Balance,
   BasePosition,
@@ -51,36 +52,10 @@ export interface SwapConnector {
   readonly name: string;
 
   /* Get on-chain quote for exact in or exact out */ // price
-  getQuote(
-    symbolIn: string,
-    symbolOut: string,
-    amount: number,
-    opts?: { exactIn?: boolean; slippagePct?: number }
-  ): Promise<number>;
+  getQuote(params: PairPriceParams): Promise<number>;
 
   /* Execute swaps (wallet signing / chain broadcast handled by implementor) */
-  swapExactIn(
-    symbolIn: string,
-    symbolOut: string,
-    amountIn: number,
-    opts?: {
-      slippagePct?: number;
-      recipient?: string;
-      deadlineSecs?: number;
-      meta?: any;
-    }
-  ): Promise<SwapResult>;
-  swapExactOut(
-    symbolIn: string,
-    symbolOut: string,
-    amountOut: number,
-    opts?: {
-      slippagePct?: number;
-      recipient?: string;
-      deadlineSecs?: number;
-      meta?: any;
-    }
-  ): Promise<SwapResult>;
+  swap(params: SwapParams): Promise<{ payload: any }>;
 
   /* Helpers */
   getPoolInfo?(symbolIn: string, symbolOut: string): Promise<any>;
