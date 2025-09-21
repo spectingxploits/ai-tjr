@@ -1,4 +1,4 @@
-import { PairPriceParams, SwapParams } from "@/models/hyperion/models";
+import { PairPriceParams, SwapParams } from "@/models/hyperion/types";
 import {
   Balance,
   BasePosition,

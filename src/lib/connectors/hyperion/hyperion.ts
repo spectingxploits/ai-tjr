@@ -1,148 +1,136 @@
-import { Balance, Quote, SwapResult } from "@/models/interfaces";
+import { Balance } from "@/models/interfaces";
 import { SwapConnector } from "../connector";
-import { FeeTierIndex, HyperionSDK, initHyperionSDK } from "@hyperionxyz/sdk";
-
+import { HyperionSDK, initHyperionSDK } from "@hyperionxyz/sdk";
 import { Network } from "@aptos-labs/ts-sdk";
-import { PairPriceParams, SwapParams } from "@/models/hyperion/models";
+import { PairPriceParams, SwapParams } from "@/models/hyperion/types";
+import {
+  PoolInfo,
+  TokenInfo,
+  SwapPayloadResult,
+} from "@/models/hyperion/types";
 
 export class HyperionConnector implements SwapConnector {
-  name: string = "hyperion_connector";
+  name = "hyperion_connector";
   network: Network.MAINNET | Network.TESTNET;
   hyperionAdapter: HyperionSDK;
+
   constructor(network: Network.MAINNET | Network.TESTNET) {
     this.network = network;
+    const apiKey =
+      (this.network === Network.MAINNET
+        ? process.env.APTOS_API_KEY_MAINNET
+        : process.env.APTOS_API_KEY_TESTNET) || "";
+
+    if (!apiKey) {
+      console.warn(`[HyperionConnector] Missing API key for ${this.network}`);
+    }
+
     this.hyperionAdapter = initHyperionSDK({
       network: this.network,
-      APTOS_API_KEY:
-        (this.network === Network.MAINNET
-          ? process.env.APTOS_API_KEY_MAINNET
-          : process.env.APTOS_API_KEY_TESTNET) || "",
+      APTOS_API_KEY: apiKey,
     });
   }
 
   async getQuote(params: PairPriceParams): Promise<number> {
-    console.warn("Getting quote from Hyperion...");
-    // Get pool data
+    try {
+      console.info("[HyperionConnector] Fetching pools...");
+      const pools = await this.hyperionAdapter.Pool.fetchAllPools();
 
-    const pools = await this.hyperionAdapter.Pool.fetchAllPools();
-    console.warn(pools.length);
-    const pool = pools.find((pool: any) => {
-      console.warn(pool.pool.token1Info.symbol!, pool.pool.token2Info.symbol!);
-      return (
-        pool.pool.token1Info.symbol === params.symbolIn &&
-        pool.pool.token2Info.symbol === params.symbolOut
+      const pool = pools.find(
+        (p: any) =>
+          p.pool.token1Info.symbol === params.symbolIn &&
+          p.pool.token2Info.symbol === params.symbolOut
       );
-    });
-    if (!pool) {
-      throw new Error(
-        `No pool found for ${params.symbolIn} -> ${params.symbolOut}`
-      );
+
+      if (!pool) {
+        throw new Error(
+          `No pool found for ${params.symbolIn} -> ${params.symbolOut}`
+        );
+      }
+
+      return pool.pool.currentTick;
+    } catch (err) {
+      console.error("[HyperionConnector] getQuote error:", err);
+      throw err;
     }
-    console.warn("this is the pool", pool);
-
-    return pool.pool.currentTick;
   }
-  async swap(params: SwapParams): Promise<{ payload: any }> {
-    let poolInfo = await this.getPoolInfoByPair(
-      params.symbolIn,
-      params.symbolOut
-    );
 
-    if (!poolInfo) {
-      throw new Error(
-        `No pool found for ${params.symbolIn} -> ${params.symbolOut}`
+  async swap(params: SwapParams): Promise<SwapPayloadResult> {
+    try {
+      const poolInfo = await this.getPoolInfoByPair(
+        params.symbolIn,
+        params.symbolOut
       );
+      if (!poolInfo) {
+        throw new Error(
+          `No pool found for ${params.symbolIn} -> ${params.symbolOut}`
+        );
+      }
+
+      const tokenA: TokenInfo = poolInfo.token1Info;
+      const tokenB: TokenInfo = poolInfo.token2Info;
+
+      const tokenIn = tokenA.symbol === params.symbolIn ? tokenA : tokenB;
+      const tokenOut = tokenA.symbol === params.symbolIn ? tokenB : tokenA;
+
+      const currencyAAmount = params.amountIn * 10 ** tokenIn.decimals;
+
+      const { amountOut: currencyBAmount, path: poolRoute } =
+        await this.hyperionAdapter.Swap.estToAmount({
+          amount: currencyAAmount,
+          from: tokenIn.address,
+          to: tokenOut.address,
+          safeMode: false,
+        });
+
+      const swapParams = {
+        currencyA: tokenIn.address,
+        currencyB: tokenOut.address,
+        currencyAAmount,
+        currencyBAmount,
+        slippage: 0.1,
+        poolRoute,
+        recipient: params.userAddress,
+      };
+
+      const payload = await this.hyperionAdapter.Swap.swapTransactionPayload(
+        swapParams
+      );
+
+      return { payload };
+    } catch (err) {
+      console.error("[HyperionConnector] swap error:", err);
+      throw err;
     }
-    let tokenAInfo: {
-      address: string;
-      decimals: number;
-      symbol: string;
-      name: string;
-    } = {
-      address: poolInfo.token1Info.assetType,
-      decimals: poolInfo.token1Info.decimals,
-      symbol: poolInfo.token1Info.symbol,
-      name: poolInfo.token1Info.name,
-    };
-    let tokenBInfo: {
-      address: string;
-      decimals: number;
-      symbol: string;
-      name: string;
-    } = {
-      address: poolInfo.token2Info.assetType,
-      decimals: poolInfo.token2Info.decimals,
-      symbol: poolInfo.token2Info.symbol,
-      name: poolInfo.token2Info.name,
-    };
+  }
 
-    const currencyAAmount =
-      params.amountIn *
-      10 **
-        (tokenAInfo.symbol == params.symbolIn
-          ? tokenAInfo.decimals
-          : tokenBInfo.decimals);
-    const { amountOut: currencyBAmount, path: poolRoute } =
-      await this.hyperionAdapter.Swap.estToAmount({
-        amount: currencyAAmount,
-        from:
-          tokenAInfo.symbol == params.symbolIn
-            ? tokenAInfo.address
-            : tokenBInfo.address,
-        to:
-          tokenAInfo.symbol == params.symbolIn
-            ? tokenBInfo.address
-            : tokenAInfo.address,
-
-        safeMode: false,
+  async getPoolInfoByPair(tokenA: string, tokenB: string): Promise<PoolInfo> {
+    try {
+      const pools = await this.hyperionAdapter.Pool.fetchAllPools();
+      const pool = pools.find((p: any) => {
+        const t1 = p.pool.token1Info.symbol;
+        const t2 = p.pool.token2Info.symbol;
+        return (
+          (t1 === tokenA && t2 === tokenB) || (t1 === tokenB && t2 === tokenA)
+        );
       });
 
-    const swapParams = {
-      currencyA:
-        tokenAInfo.symbol == params.symbolIn
-          ? tokenAInfo.address
-          : tokenBInfo.address,
-      currencyB:
-        tokenAInfo.symbol == params.symbolIn
-          ? tokenBInfo.address
-          : tokenAInfo.address,
-      currencyAAmount,
-      currencyBAmount,
-      slippage: 0.1,
-      poolRoute,
-      recipient: params.userAddress,
-    };
+      if (!pool) {
+        throw new Error(`No pool found for ${tokenA} -> ${tokenB}`);
+      }
 
-    const payload = await this.hyperionAdapter.Swap.swapTransactionPayload(
-      swapParams
-    );
-
-    console.log(payload);
-
-    return { payload };
-  }
-  async getPoolInfoByPair(tokenA: string, tokenB: string): Promise<any> {
-    const pools = await this.hyperionAdapter.Pool.fetchAllPools();
-    const pool = pools.find((pool: any) => {
-      return (
-        pool.pool.token1Info.symbol === tokenA ||
-        (pool.pool.token1Info.symbol === tokenB &&
-          pool.pool.token2Info.symbol === tokenA) ||
-        pool.pool.token2Info.symbol === tokenB
-      );
-    });
-
-    if (!pool) {
-      throw new Error(`No pool found for ${tokenA} -> ${tokenB}`);
+      return pool.pool;
+    } catch (err) {
+      console.error("[HyperionConnector] getPoolInfoByPair error:", err);
+      throw err;
     }
-    return pool.pool;
   }
 
-  async getBalance(mainnet: boolean, userAddress: string): Promise<Balance[]> {
+  async getBalance(_mainnet: boolean, userAddress: string): Promise<Balance[]> {
     const balances: Balance[] = [];
 
     try {
-      // Get native APT balance
+      // Native APT balance
       const accountInfo =
         await this.hyperionAdapter.AptosClient.getAccountAPTAmount({
           accountAddress: userAddress,
@@ -152,37 +140,37 @@ export class HyperionConnector implements SwapConnector {
         asset: "APT",
         amount: accountInfo / 10 ** 8,
       });
-    } catch (error) {
-      console.error("Error fetching native balance:", error);
+    } catch (err) {
+      console.error("[HyperionConnector] Error fetching native balance:", err);
     }
 
     try {
-      // Get other token balances
+      // Token balances
       const tokens =
         await this.hyperionAdapter.AptosClient.getAccountOwnedTokens({
           accountAddress: userAddress,
         });
+
       for (const token of tokens) {
-        if (token.amount > 0) {
-          const asset = token.current_token_data?.token_name
-            ? token.current_token_data?.token_name
-            : "Unknown";
+        if (token.amount > 0 && token.current_token_data) {
+          const { token_name, decimals } = token.current_token_data;
           balances.push({
-            asset: asset,
-            amount: token.amount / 10 ** token.current_token_data?.decimals,
+            asset: token_name || "Unknown",
+            amount: token.amount / 10 ** (decimals || 0),
           });
         }
       }
-    } catch (error) {
-      console.error("Error fetching token balances:", error);
+    } catch (err) {
+      console.error("[HyperionConnector] Error fetching token balances:", err);
     }
 
     return balances;
   }
+
   estimateGas?(
-    symbolIn: string,
-    symbolOut: string,
-    amount: number
+    _symbolIn: string,
+    _symbolOut: string,
+    _amount: number
   ): Promise<number> {
     throw new Error("Method not implemented.");
   }
