@@ -1,3 +1,9 @@
+import {
+  MerkleCancelOrderPayload,
+  MerkleTradePayload,
+  MerkleUpdatePayload,
+} from "./merkleTrade/models";
+
 export interface GlobalSignal {
   enter: number | null;
   profit: number | null;
@@ -80,25 +86,6 @@ export interface OrderResult {
   raw?: any;
 }
 
-export interface BasePosition {
-  id: string;
-  symbol: string;
-  side: PositionSide;
-  size: number; // contract quantity (or base asset amount)
-  notional?: number; // price * size (optional)
-  entryPrice?: number;
-  leverage?: number | null;
-  margin?: number | null;
-  markPrice?: number | null;
-  unrealizedPnl?: number | null;
-  openedAt: number;
-  closedAt?: number | null;
-  closeOrderId?: string | null;
-  tpOrderId?: string | null;
-  slOrderId?: string | null;
-  meta?: any;
-}
-
 /* -------------------------
    Perpetual / Futures Connector
    ------------------------- */
@@ -136,28 +123,36 @@ export interface PerpTP_SLParams {
   slPriceInQuote: number; // without decimals adjustment
 }
 
+// global for balance
+
 export interface Balance {
   asset: string;
   amount: number;
 }
 
-/* -------------------------
-   Swap / AMM Connector
-   ------------------------- */
+// connector
 
-export interface Quote {
-  amountIn?: number;
-  amountOut?: number;
-  estimatedPrice: number;
-  estimatedGas?: number;
-  liquidityProviderFee?: number;
-  raw?: any;
-}
+export type GlobalPayload =
+  | MerkleTradePayload
+  | MerkleUpdatePayload
+  | MerkleCancelOrderPayload
+  | any;
 
-export interface SwapResult {
+export type SignAndSubmitParams = {
+  payload: GlobalPayload;
+  userAddress: string;
+  mainnet: boolean;
+  connectorName:
+    | "kana_labs_perpetual_connector"
+    | "hyperion_swap_connector"
+    | "merkle_trade_perpetual_connector";
+  tokenA: string;
+  tokenB: string;
+  amount: number;
+};
+
+export type SingAndSubmitResponse = {
+  success: boolean;
+  error?: string;
   txHash?: string;
-  executedAmountIn?: number;
-  executedAmountOut?: number;
-  gasUsed?: number;
-  raw?: any;
-}
+};

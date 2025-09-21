@@ -1,13 +1,13 @@
 import { PairPriceParams, SwapParams } from "@/models/hyperion/types";
 import {
   Balance,
-  BasePosition,
+  GlobalPayload,
   OrderResult,
   PerpCloseParams,
   PerpOpenParams,
   PerpTP_SLParams,
-  Quote,
-  SwapResult,
+  SignAndSubmitParams,
+  SingAndSubmitResponse,
   TimeInForce,
 } from "@/models/interfaces";
 import {
@@ -67,4 +67,19 @@ export interface SwapConnector {
     symbolOut: string,
     amount: number
   ): Promise<number>;
+}
+
+// this class has the responsibility of managing the connectors to sing and submit transactions
+// and then syncs the database with the tx data
+
+export abstract class ConnectorAgent {
+  static signAndSubmit(
+    params: SignAndSubmitParams
+  ): Promise<SingAndSubmitResponse> {
+
+    // preparing the link to petra wallet fo tx confirmation
+    
+
+    return Promise.reject("signAndSubmit not implemented");
+  }
 }
