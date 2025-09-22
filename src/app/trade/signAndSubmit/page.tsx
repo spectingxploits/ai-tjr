@@ -23,7 +23,10 @@ import nacl from "tweetnacl";
 
 const PETRA_LINK_BASE = "https://petra.app/api/v1"; // safe web fallback that opens the app
 const APP_INFO = {
-  domain: typeof window !== "undefined" ? window.location.origin : "https://your-dapp",
+  domain:
+    typeof window !== "undefined"
+      ? window.location.origin
+      : "https://your-dapp",
   name: "AI_TJR_APP",
 };
 
@@ -40,7 +43,9 @@ function hexToU8(hex?: string): Uint8Array {
 }
 
 function u8ToHex(u8: Uint8Array): string {
-  return Array.from(u8).map((b) => b.toString(16).padStart(2, "0")).join("");
+  return Array.from(u8)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 function utf8ToU8(str: string) {
@@ -72,20 +77,27 @@ export default function PetraSignPage() {
   }, [payloadParam]);
 
   // read keys from localStorage
-  const publicKeyHex = typeof window !== "undefined" ? localStorage.getItem("petra_public_key") : null;
-  const sharedKeyHex = typeof window !== "undefined" ? localStorage.getItem("petra_shared_key") : null;
+  const publicKeyHex =
+    typeof window !== "undefined"
+      ? localStorage.getItem("petra_public_key")
+      : null;
+  const sharedKeyHex =
+    typeof window !== "undefined"
+      ? localStorage.getItem("petra_shared_key")
+      : null;
 
   const missingKeys = !publicKeyHex || !sharedKeyHex;
 
   // summary for UI
   const txSummary = useMemo(() => {
     if (!parsedPayload) return null;
-    if ((parsedPayload as any).__parseError) return { error: "Invalid JSON payload" };
+    if ((parsedPayload as any).__parseError)
+      return { error: "Invalid JSON payload" };
     const p = parsedPayload as Record<string, any>;
 
     // try to extract common details
     const type = p.type ?? p.transaction ?? "unknown";
-    const fn = p.function ?? p.function_name ?? p.function || p.function;
+    const fn = p.function ?? p.function_name ?? (p.function || "");
     const typeArgs = p.type_arguments ?? p.typeArguments ?? [];
     const args = p.arguments ?? p.args ?? p.arguments;
     return {
@@ -105,7 +117,9 @@ export default function PetraSignPage() {
         throw new Error("Invalid or missing payload query parameter");
       }
       if (!publicKeyHex || !sharedKeyHex) {
-        throw new Error("Missing petra_public_key or petra_shared_key in localStorage. Please connect with Petra first.");
+        throw new Error(
+          "Missing petra_public_key or petra_shared_key in localStorage. Please connect with Petra first."
+        );
       }
 
       // Step A: create the payload string (following Petra doc example)
@@ -125,14 +139,18 @@ export default function PetraSignPage() {
         appInfo: APP_INFO,
         payload: u8ToHex(encrypted), // hex string
         redirectLink: `${window.location.origin}/petra/response?source=miniapp&fixedParam=ai_tjr`, // hardcoded extra params
-        dappEncryptionPublicKey: publicKeyHex.startsWith("0x") ? publicKeyHex : publicKeyHex, // hex public key
+        dappEncryptionPublicKey: publicKeyHex.startsWith("0x")
+          ? publicKeyHex
+          : publicKeyHex, // hex public key
         nonce: u8ToHex(nonce),
       };
 
       const dataB64 = btoa(JSON.stringify(dataObj));
 
       // Final: open the Petra deep link
-      const url = `${PETRA_LINK_BASE}/signAndSubmit?data=${encodeURIComponent(dataB64)}`;
+      const url = `${PETRA_LINK_BASE}/signAndSubmit?data=${encodeURIComponent(
+        dataB64
+      )}`;
       // open in a new tab / mobile will open the Petra app
       window.open(url, "_blank");
     } catch (err) {
@@ -145,16 +163,23 @@ export default function PetraSignPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-slate-900 text-white">
       <div className="max-w-2xl w-full bg-slate-800/60 backdrop-blur rounded-2xl p-6">
-        <h2 className="text-2xl font-semibold mb-4">Sign & Submit Transaction (Petra)</h2>
+        <h2 className="text-2xl font-semibold mb-4">
+          Sign & Submit Transaction (Petra)
+        </h2>
 
         {!payloadParam && (
           <div className="p-4 rounded bg-yellow-900/30 text-yellow-300">
-            Missing <code>payload</code> query parameter. Provide the transaction as <code>JSON.stringify(payload)</code> and URL-encode it.
+            Missing <code>payload</code> query parameter. Provide the
+            transaction as <code>JSON.stringify(payload)</code> and URL-encode
+            it.
           </div>
         )}
 
         {parsedPayload && (parsedPayload as any).__parseError && (
-          <div className="p-4 rounded bg-red-900/40 text-red-300">Failed to parse payload JSON. Raw: {String((parsedPayload as any).raw)}</div>
+          <div className="p-4 rounded bg-red-900/40 text-red-300">
+            Failed to parse payload JSON. Raw:{" "}
+            {String((parsedPayload as any).raw)}
+          </div>
         )}
 
         {txSummary && !txSummary.error && (
@@ -166,14 +191,19 @@ export default function PetraSignPage() {
               <strong>Function:</strong> {String(txSummary.function ?? "—")}
             </div>
             <div>
-              <strong>Type args:</strong> {Array.isArray(txSummary.typeArgs) ? txSummary.typeArgs.join(", ") || "—" : "—"}
+              <strong>Type args:</strong>{" "}
+              {Array.isArray(txSummary.typeArgs)
+                ? txSummary.typeArgs.join(", ") || "—"
+                : "—"}
             </div>
             <div>
               <strong>Arguments:</strong> {String(txSummary.argsCount)}
             </div>
             <details className="mt-2 p-3 bg-slate-900/30 rounded">
               <summary className="cursor-pointer">Full payload</summary>
-              <pre className="whitespace-pre-wrap text-sm mt-2">{JSON.stringify(txSummary.raw, null, 2)}</pre>
+              <pre className="whitespace-pre-wrap text-sm mt-2">
+                {JSON.stringify(txSummary.raw, null, 2)}
+              </pre>
             </details>
           </div>
         )}
@@ -181,10 +211,15 @@ export default function PetraSignPage() {
         <div className="mt-6 flex flex-col gap-3">
           {missingKeys ? (
             <div className="p-3 rounded bg-red-900/30 text-red-200">
-              Missing Petra keys in localStorage. Please connect to Petra first so we have:
+              Missing Petra keys in localStorage. Please connect to Petra first
+              so we have:
               <ul className="ml-4 list-disc">
-                <li><code>petra_public_key</code> (hex)</li>
-                <li><code>petra_shared_key</code> (hex) — the shared secret</li>
+                <li>
+                  <code>petra_public_key</code> (hex)
+                </li>
+                <li>
+                  <code>petra_shared_key</code> (hex) — the shared secret
+                </li>
               </ul>
             </div>
           ) : null}
@@ -206,7 +241,13 @@ export default function PetraSignPage() {
 
             <a
               className="px-4 py-2 rounded-xl border border-slate-700 hover:bg-slate-700/30"
-              href={payloadParam ? `data:application/json,${encodeURIComponent(JSON.stringify(parsedPayload))}` : "#"}
+              href={
+                payloadParam
+                  ? `data:application/json,${encodeURIComponent(
+                      JSON.stringify(parsedPayload)
+                    )}`
+                  : "#"
+              }
               download="payload.json"
             >
               Download Payload
@@ -214,7 +255,8 @@ export default function PetraSignPage() {
           </div>
 
           <div className="text-sm text-slate-400 mt-2">
-            Note: Petra will redirect back to <code>/petra/response</code> with a <code>response</code> and <code>data</code> parameter.
+            Note: Petra will redirect back to <code>/petra/response</code> with
+            a <code>response</code> and <code>data</code> parameter.
           </div>
         </div>
       </div>

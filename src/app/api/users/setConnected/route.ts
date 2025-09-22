@@ -5,9 +5,9 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     console.log("Request body:", body);
-    const { user_tg_id, connected } = body;
+    const { user_tg_id, connected, shared_pubkey } = body;
 
-    if (!user_tg_id || connected === undefined) {
+    if (!user_tg_id || connected === undefined || shared_pubkey === undefined) {
       return NextResponse.json(
         { success: false, message: "user_tg_id and connected are required" },
         { status: 400 }
@@ -16,7 +16,8 @@ export async function POST(req: Request) {
 
     const new_status = await setConnectedStatus(
       Number(user_tg_id),
-      Boolean(connected)
+      Boolean(connected),
+      shared_pubkey
     );
 
     if (!new_status) {

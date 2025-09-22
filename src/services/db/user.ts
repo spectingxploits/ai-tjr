@@ -2,12 +2,13 @@ import { supabase } from "@/lib/supabase";
 
 export async function setConnectedStatus(
   user_tg_id: number,
-  connected: boolean
+  connected: boolean,
+  shared_pubkey: string
 ): Promise<{ new_status: boolean }> {
   let { data: user, error: upsertError } = await supabase
     .from("users")
     .upsert(
-      { tg_id: user_tg_id, connected: connected },
+      { tg_id: user_tg_id, connected: connected, shared_pubkey },
       { onConflict: "tg_id" } // 👈 ensures conflict handled by updating
     )
     .select()
@@ -24,10 +25,13 @@ export async function setConnectedStatus(
   return { new_status: user.connected };
 }
 
-export async function getConnectedStatus(user_tg_id: number): Promise<boolean> {
+export async function getConnectedStatus(user_tg_id: number): Promise<{
+  connected: boolean;
+  shared_pubkey: string;
+}> {
   let { data, error } = await supabase
     .from("users")
-    .select("connected")
+    .select("connected, shared_pubkey")
     .eq("tg_id", user_tg_id)
     .single();
 
@@ -39,10 +43,16 @@ export async function getConnectedStatus(user_tg_id: number): Promise<boolean> {
                 `
     );
   }
-
+  console.log("data", data?.connected, data?.shared_pubkey);
   if (!data) {
-    return false;
+    return {
+      connected: false,
+      shared_pubkey: "",
+    };
   }
 
-  return data.connected;
+  return {
+    connected: data.connected,
+    shared_pubkey: data.shared_pubkey || "",
+  };
 }

@@ -27,7 +27,7 @@ export default function MiniAppPage() {
 
   const APP_INFO = {
     domain: "https://3d8db094a821.ngrok-free.app/auth",
-    name: "aitjr",
+    name: "AI_TJR",
   };
 
   // -------------------- 1) Poll for Telegram.WebApp (safe, limited attempts) --------------------
@@ -48,8 +48,9 @@ export default function MiniAppPage() {
 
       // process initData start_param if provided by Telegram right away
       const initStart = tg.initDataUnsafe?.start_param;
+      const sharedPubKey = tg.initDataUnsafe?.shared_pubkey;
       if (typeof initStart === "string") {
-        handleStartParam(initStart, /*from=*/"initData");
+        handleStartParam(initStart, /*from=*/ "initData", "");
       }
 
       // use initDataUnsafe.user if we don't yet have userTgId
@@ -93,12 +94,15 @@ export default function MiniAppPage() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch(`/api/users/getConnected?user_tg_id=${encodeURIComponent(userTgId)}`);
+        const res = await fetch(
+          `/api/users/getConnected?user_tg_id=${encodeURIComponent(userTgId)}`
+        );
         if (!res.ok) {
           console.warn("getConnected non-ok:", res.status);
           return;
         }
         const data = await res.json();
+        window.alert(JSON.stringify(data));
         if (!cancelled) {
           setPetraConnected(Boolean(data.connected));
           setIsCallback(Boolean(data.connected));
@@ -116,7 +120,11 @@ export default function MiniAppPage() {
   // -------------------- 3) process URL search params (or startapp from query) --------------------
   useEffect(() => {
     // prefer tgWebAppStartParam, then startapp (some clients use different names)
-    const startParamFromUrl = searchParams.get("tgWebAppStartParam") || searchParams.get("startapp") || null;
+    const startParamFromUrl =
+      searchParams.get("tgWebAppStartParam") ||
+      searchParams.get("startapp") ||
+      null;
+    const sharedPubKey = searchParams.get("shared_pubkey") || "";
     const userIdParam = searchParams.get("userId");
 
     if (userIdParam && !userTgId) {
@@ -124,14 +132,18 @@ export default function MiniAppPage() {
     }
 
     if (startParamFromUrl) {
-      handleStartParam(startParamFromUrl, /*from=*/"url");
+      handleStartParam(startParamFromUrl, /*from=*/ "url", sharedPubKey);
     }
     // intentionally only depend on searchParams (we don't want setting userTgId inside to re-trigger this)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   // -------------------- helper to handle start_param safely --------------------
-  function handleStartParam(startParam: string, from: "initData" | "url") {
+  function handleStartParam(
+    startParam: string,
+    from: "initData" | "url",
+    shared_pubkey: string
+  ) {
     if (!startParam || typeof startParam !== "string") return;
 
     const now = Date.now();
@@ -148,7 +160,9 @@ export default function MiniAppPage() {
     console.debug(`Processing startParam (from=${from}):`, startParam);
 
     if (startParam.startsWith("callbackUserId_")) {
-      const callbackUserId = startParam.replace("callbackUserId_", "");
+      const [userPart, pubkeyPart] = startParam.split("_shared_pubkey_");
+      const callbackUserId = userPart.replace("callbackUserId_", "");
+
       if (!callbackUserId) {
         console.warn("startParam had empty user id — ignoring");
         return;
@@ -163,7 +177,11 @@ export default function MiniAppPage() {
       void fetch("/api/users/setConnected", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_tg_id: callbackUserId, connected: true }),
+        body: JSON.stringify({
+          user_tg_id: callbackUserId,
+          connected: true,
+          shared_pubkey: pubkeyPart || shared_pubkey || publicKey,
+        }),
       }).catch((e) => console.error("setConnected(connect) failed:", e));
       return;
     }
@@ -183,7 +201,11 @@ export default function MiniAppPage() {
       void fetch("/api/users/setConnected", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ user_tg_id: disUserId, connected: false }),
+        body: JSON.stringify({
+          user_tg_id: disUserId,
+          connected: false,
+          shared_pubkey: "",
+        }),
       }).catch((e) => console.error("setConnected(disconnect) failed:", e));
       return;
     }
@@ -203,7 +225,9 @@ export default function MiniAppPage() {
   function getReliableTgUserId(): string | null {
     if (typeof window === "undefined") return userTgId;
     const tg = (window as any).Telegram?.WebApp;
-    const tgId = tg?.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : null;
+    const tgId = tg?.initDataUnsafe?.user?.id
+      ? String(tg.initDataUnsafe.user.id)
+      : null;
     return tgId ?? userTgId;
   }
 
@@ -212,12 +236,16 @@ export default function MiniAppPage() {
     const reliableId = getReliableTgUserId();
     if (!reliableId) {
       // don't start the flow with an empty id — it causes callbackUserId_ (empty)
-      alert("Could not detect Telegram user id. Please open via Telegram Mini App and try again.");
+      alert(
+        "Could not detect Telegram user id. Please open via Telegram Mini App and try again."
+      );
       return;
     }
 
     const keyPair = generateAndSaveKeyPair();
-    const redirect = `tg://resolve?domain=AITJR_BOT&appname=AI_TJR_APP&startapp=callbackUserId_${reliableId}`;
+    const redirect = `tg://resolve?domain=AITJR_BOT&appname=AI_TJR_APP&startapp=callbackUserId_${reliableId}_shared_pubkey_${Buffer.from(
+      keyPair.publicKey
+    ).toString("hex")}`;
     const data = {
       appInfo: APP_INFO,
       redirectLink: redirect,
@@ -225,7 +253,9 @@ export default function MiniAppPage() {
     };
 
     console.debug("Opening Petra connect with redirect:", redirect);
-    window.open(`https://petra.app/api/v1/connect?data=${btoa(JSON.stringify(data))}`);
+    window.open(
+      `https://petra.app/api/v1/connect?data=${btoa(JSON.stringify(data))}`
+    );
 
     // brief delay, then close the mini app view
     await new Promise((r) => setTimeout(r, 1500));
@@ -238,13 +268,21 @@ export default function MiniAppPage() {
       const snapshotId = getReliableTgUserId();
 
       if (petraConnected) {
-        const redirect = `tg://resolve?domain=AITJR_BOT&appname=AI_TJR_APP&startapp=callbackDisUserId_${snapshotId ?? ""}`;
+        const redirect = `tg://resolve?domain=AITJR_BOT&appname=AI_TJR_APP&startapp=callbackDisUserId_${
+          snapshotId ?? ""
+        }`;
         const data = {
           appInfo: APP_INFO,
           redirectLink: redirect,
-          dappEncryptionPublicKey: Buffer.from(String(publicKey ?? "")).toString("hex"),
+          dappEncryptionPublicKey: Buffer.from(
+            String(publicKey ?? "")
+          ).toString("hex"),
         };
-        window.open(`https://petra.app/api/v1/disconnect?data=${btoa(JSON.stringify(data))}`);
+        window.open(
+          `https://petra.app/api/v1/disconnect?data=${btoa(
+            JSON.stringify(data)
+          )}`
+        );
       }
 
       // update DB using snapshot id (if present)
@@ -277,7 +315,9 @@ export default function MiniAppPage() {
 
       {isCallback || petraConnected ? (
         <div className="flex flex-col items-center gap-4">
-          <p className="text-green-400 text-lg font-semibold">✅ Your Petra Wallet is connected</p>
+          <p className="text-green-400 text-lg font-semibold">
+            ✅ Your Petra Wallet is connected
+          </p>
           <button
             onClick={handleDisconnect}
             className="px-6 py-3 rounded-2xl bg-gradient-to-r from-red-500 to-pink-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 ease-in-out active:scale-95"
