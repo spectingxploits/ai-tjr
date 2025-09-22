@@ -51,6 +51,15 @@ export async function parseRawPotentialSignal(
     // wait for 3 seconds to avoid rate limit
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
+    // in this section we check the neseccary values that should have been filled by the raw signal and if they are present we fill them with the suggested values by gemini
+    if (parsedOutput.values.enter === undefined) {
+      return null;
+    }
+    if (parsedOutput.values.long === undefined) {
+      return null;
+    }
+
+
     // filling the null values with suggested values by gemini
     let geminiEnhancedOutput = await MakeGeminiRequestWithSearch({
       message: GlobalPrompts.fillParams,

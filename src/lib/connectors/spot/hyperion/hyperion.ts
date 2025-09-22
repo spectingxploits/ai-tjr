@@ -1,5 +1,5 @@
-import { Balance } from "@/models/interfaces";
-import { SwapConnector } from "../connector";
+import { Balance, Tokens } from "@/models/interfaces";
+import { Result, signAndSubmit, SwapConnector } from "../../connector";
 import { HyperionSDK, initHyperionSDK } from "@hyperionxyz/sdk";
 import { Network } from "@aptos-labs/ts-sdk";
 import { PairPriceParams, SwapParams } from "@/models/hyperion/types";
@@ -9,12 +9,13 @@ import {
   SwapPayloadResult,
 } from "@/models/hyperion/types";
 
-export class HyperionConnector implements SwapConnector {
+export class HyperionConnector extends signAndSubmit implements SwapConnector {
   name = "hyperion_swap_connector";
   network: Network.MAINNET | Network.TESTNET;
-  hyperionAdapter: HyperionSDK;
+  private hyperionAdapter: HyperionSDK;
 
   constructor(network: Network.MAINNET | Network.TESTNET) {
+    super("hyperion_swap_connector");
     this.network = network;
     const apiKey =
       (this.network === Network.MAINNET
@@ -29,6 +30,10 @@ export class HyperionConnector implements SwapConnector {
       network: this.network,
       APTOS_API_KEY: apiKey,
     });
+  }
+
+  init(): Promise<any> {
+    return Promise.resolve();
   }
 
   async getQuote(params: PairPriceParams): Promise<number> {
@@ -173,5 +178,33 @@ export class HyperionConnector implements SwapConnector {
     _amount: number
   ): Promise<number> {
     throw new Error("Method not implemented.");
+  }
+
+  async getTokens(): Promise<Result<Tokens>> {
+    const pools = await this.hyperionAdapter.Pool.fetchAllPools();
+
+    // You can then extract the token information from the pools
+    let tokens: Tokens = {};
+    pools.forEach((p: any) => {
+      let token1Info = {
+        address: p.pool.token1Info.assetType || "",
+        decimals: p.pool.token1Info.decimals || 1,
+        symbol: p.pool.token1Info.symbol || "UNKNOWN",
+        name: p.pool.token1Info.name || "UNKNOWN",
+      };
+
+      tokens[p.pool.token1Info.symbol] = token1Info;
+
+      let token2Info = {
+        address: p.pool.token2Info.assetType || "",
+        decimals: p.pool.token2Info.decimals || 1,
+        symbol: p.pool.token2Info.symbol || "UNKNOWN",
+        name: p.pool.token2Info.name || "UNKNOWN",
+      };
+
+      tokens[p.pool.token2Info.symbol] = token2Info;
+    });
+
+    return Promise.resolve({ success: true, data: tokens });
   }
 }

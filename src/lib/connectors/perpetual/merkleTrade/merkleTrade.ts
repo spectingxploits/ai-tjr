@@ -6,14 +6,15 @@ import {
   Order,
   Position,
 } from "@merkletrade/ts-sdk";
-import { Aptos } from "@aptos-labs/ts-sdk";
-import { PerpConnector, Result } from "../connector";
+import { Aptos, Network } from "@aptos-labs/ts-sdk";
+import { PerpConnector, Result, signAndSubmit } from "../../connector";
 import {
   OrderResult,
   PerpOpenParams,
   PerpCloseParams,
   PerpTP_SLParams,
   Balance,
+  Tokens,
 } from "@/models/interfaces";
 import {
   MerkleCancelOrderPayload,
@@ -21,24 +22,29 @@ import {
   MerkleUpdatePayload,
 } from "@/models/merkleTrade/models";
 
-
-
-export class MerkleTradeConnector implements PerpConnector {
+export class MerkleTradeConnector
+  extends signAndSubmit
+  implements PerpConnector
+{
   readonly name: string = "merkle_trade_perpetual_connector";
+  network: Network.MAINNET | Network.TESTNET;
+  private aptos_client: Aptos = {} as any;
+  private merkle_client: MerkleClient = {} as any;
 
   /** Initialize Merkle + Aptos clients */
-  private async initClients(mainnet: boolean): Promise<{
-    merkle: MerkleClient;
-    aptos: Aptos;
-  }> {
-    const config = mainnet
-      ? await MerkleClientConfig.mainnet()
-      : await MerkleClientConfig.testnet();
-    const merkle = new MerkleClient(config);
-    const aptos = new Aptos(config.aptosConfig);
-    return { merkle, aptos };
+  constructor(network: Network.MAINNET | Network.TESTNET) {
+    super("merkle_trade_perpetual_connector");
+    this.network = network ? Network.MAINNET : Network.TESTNET;
   }
 
+  async init() {
+    const config =
+      this.network === Network.MAINNET
+        ? await MerkleClientConfig.mainnet()
+        : await MerkleClientConfig.testnet();
+    this.merkle_client = new MerkleClient(config);
+    this.aptos_client = new Aptos(config.aptosConfig);
+  }
   /** ---------- Spot trading (not implemented) ---------- */
   async buySpot(
     symbol: string,
@@ -57,28 +63,26 @@ export class MerkleTradeConnector implements PerpConnector {
   }
 
   /** ---------- Open Long / Short ---------- */
-  async openLong(
-    params: PerpOpenParams
-  ): Promise<Result<MerkleTradePayload>> {
+  async openLong(params: PerpOpenParams): Promise<Result<MerkleTradePayload>> {
+    this.checkClients();
     return this.openPerp({ ...params, side: "long" });
   }
 
-  async openShort(
-    params: PerpOpenParams
-  ): Promise<Result<MerkleTradePayload>> {
+  async openShort(params: PerpOpenParams): Promise<Result<MerkleTradePayload>> {
+    this.checkClients();
     return this.openPerp({ ...params, side: "short" });
   }
 
   private async openPerp(
     params: PerpOpenParams
   ): Promise<Result<MerkleTradePayload>> {
+    this.checkClients();
     try {
-      const { merkle } = await this.initClients(params.mainnet);
       const pairId = `${params.base}_${params.quote}`;
 
       const [pairInfo, pairState] = await Promise.all([
-        merkle.getPairInfo({ pairId }),
-        merkle.getPairState({ pairId }),
+        this.merkle_client.getPairInfo({ pairId }),
+        this.merkle_client.getPairState({ pairId }),
       ]);
 
       // USDC always 6 decimals
@@ -93,7 +97,7 @@ export class MerkleTradeConnector implements PerpConnector {
 
       let payload: MerkleTradePayload;
       if (params.entryType === "market") {
-        payload = merkle.payloads.placeMarketOrder({
+        payload = this.merkle_client.payloads.placeMarketOrder({
           pair: pairId,
           userAddress: params.userAddress,
           sizeDelta: size,
@@ -102,7 +106,7 @@ export class MerkleTradeConnector implements PerpConnector {
           isIncrease: true,
         });
       } else if (params.entryType === "limit" && params.entryPrice) {
-        payload = merkle.payloads.placeLimitOrder({
+        payload = this.merkle_client.payloads.placeLimitOrder({
           pair: pairId,
           userAddress: params.userAddress,
           sizeDelta: size,
@@ -125,28 +129,38 @@ export class MerkleTradeConnector implements PerpConnector {
   async closeLong(
     params: PerpCloseParams
   ): Promise<Result<MerkleTradePayload>> {
+    this.checkClients();
     return this.closePerp(params);
   }
 
   async closeShort(
     params: PerpCloseParams
   ): Promise<Result<MerkleTradePayload>> {
+    this.checkClients();
     return this.closePerp(params);
   }
 
   private async closePerp(
     params: PerpCloseParams
   ): Promise<Result<MerkleTradePayload>> {
-    try {
-      const { merkle } = await this.initClients(params.mainnet);
-      const positions = await merkle.getPositions({ address: params.userAddress });
+    this.checkClients();
 
-      const position = positions.find((p) => p.pairType.endsWith(params.positionId));
+    try {
+      const positions = await this.merkle_client.getPositions({
+        address: params.userAddress,
+      });
+
+      const position = positions.find((p) =>
+        p.pairType.endsWith(params.positionId)
+      );
       if (!position) {
-        return { success: false, error: `Position ${params.positionId} not found` };
+        return {
+          success: false,
+          error: `Position ${params.positionId} not found`,
+        };
       }
 
-      const payload = merkle.payloads.placeMarketOrder({
+      const payload = this.merkle_client.payloads.placeMarketOrder({
         pair: params.positionId,
         userAddress: params.userAddress,
         sizeDelta: position.size,
@@ -165,16 +179,23 @@ export class MerkleTradeConnector implements PerpConnector {
   async setTP_SL(
     params: PerpTP_SLParams
   ): Promise<Result<MerkleUpdatePayload>> {
+    this.checkClients();
     try {
-      const { merkle } = await this.initClients(params.mainnet);
-      const positions = await merkle.getPositions({ address: params.userAddress });
+      const positions = await this.merkle_client.getPositions({
+        address: params.userAddress,
+      });
 
-      const position = positions.find((p) => p.pairType.endsWith(params.positionId));
+      const position = positions.find((p) =>
+        p.pairType.endsWith(params.positionId)
+      );
       if (!position) {
-        return { success: false, error: `Position ${params.positionId} not found` };
+        return {
+          success: false,
+          error: `Position ${params.positionId} not found`,
+        };
       }
 
-      const payload = merkle.payloads.updateTPSL({
+      const payload = this.merkle_client.payloads.updateTPSL({
         pair: params.positionId,
         userAddress: params.userAddress,
         isLong: position.isLong,
@@ -192,16 +213,22 @@ export class MerkleTradeConnector implements PerpConnector {
   async cancelOrder(
     params: PerpCloseParams
   ): Promise<Result<MerkleCancelOrderPayload>> {
+    this.checkClients();
+
     try {
-      const { merkle } = await this.initClients(params.mainnet);
-      const orders = await merkle.getOrders({ address: params.userAddress });
+      const orders = await this.merkle_client.getOrders({
+        address: params.userAddress,
+      });
 
       const order = orders.find((o) => o.pairType.endsWith(params.positionId));
       if (!order) {
-        return { success: false, error: `Order ${params.positionId} not found` };
+        return {
+          success: false,
+          error: `Order ${params.positionId} not found`,
+        };
       }
 
-      const payload = merkle.payloads.cancelOrder({
+      const payload = this.merkle_client.payloads.cancelOrder({
         pair: params.positionId,
         userAddress: params.userAddress,
         orderId: BigInt(order.orderId),
@@ -215,13 +242,19 @@ export class MerkleTradeConnector implements PerpConnector {
 
   /** ---------- Fetch Data ---------- */
   async fetchOrder(params: PerpCloseParams): Promise<Result<Order>> {
+    this.checkClients();
+
     try {
-      const { merkle } = await this.initClients(params.mainnet);
-      const orders = await merkle.getOrders({ address: params.userAddress });
+      const orders = await this.merkle_client.getOrders({
+        address: params.userAddress,
+      });
 
       const order = orders.find((o) => o.pairType.endsWith(params.positionId));
       if (!order) {
-        return { success: false, error: `Order ${params.positionId} not found` };
+        return {
+          success: false,
+          error: `Order ${params.positionId} not found`,
+        };
       }
 
       return { success: true, data: order };
@@ -231,13 +264,21 @@ export class MerkleTradeConnector implements PerpConnector {
   }
 
   async fetchPosition(params: PerpCloseParams): Promise<Result<Position>> {
-    try {
-      const { merkle } = await this.initClients(params.mainnet);
-      const positions = await merkle.getPositions({ address: params.userAddress });
+    this.checkClients();
 
-      const position = positions.find((p) => p.pairType.endsWith(params.positionId));
+    try {
+      const positions = await this.merkle_client.getPositions({
+        address: params.userAddress,
+      });
+
+      const position = positions.find((p) =>
+        p.pairType.endsWith(params.positionId)
+      );
       if (!position) {
-        return { success: false, error: `Position ${params.positionId} not found` };
+        return {
+          success: false,
+          error: `Position ${params.positionId} not found`,
+        };
       }
 
       return { success: true, data: position };
@@ -246,10 +287,15 @@ export class MerkleTradeConnector implements PerpConnector {
     }
   }
 
-  async listOpenPositions(params: PerpCloseParams): Promise<Result<Position[]>> {
+  async listOpenPositions(
+    params: PerpCloseParams
+  ): Promise<Result<Position[]>> {
+    this.checkClients();
+
     try {
-      const { merkle } = await this.initClients(params.mainnet);
-      const positions = await merkle.getPositions({ address: params.userAddress });
+      const positions = await this.merkle_client.getPositions({
+        address: params.userAddress,
+      });
 
       if (!positions || positions.length === 0) {
         return { success: false, error: "No positions found" };
@@ -261,13 +307,18 @@ export class MerkleTradeConnector implements PerpConnector {
     }
   }
 
-  async getTickerPrice(symbol: string, mainnet: boolean): Promise<Result<number>> {
+  async getTickerPrice(
+    symbol: string,
+    mainnet: boolean
+  ): Promise<Result<number>> {
+    this.checkClients();
+
     try {
-      const { merkle } = await this.initClients(mainnet);
-      const summary = await merkle.api.getSummary();
+      const summary = await this.merkle_client.api.getSummary();
 
       const price = summary.prices.find((p) => p.id.endsWith(symbol));
-      if (!price) return { success: false, error: `Price for ${symbol} not found` };
+      if (!price)
+        return { success: false, error: `Price for ${symbol} not found` };
 
       return { success: true, data: Number(price.price) };
     } catch (err) {
@@ -275,14 +326,20 @@ export class MerkleTradeConnector implements PerpConnector {
     }
   }
 
-  async getBalance(mainnet: boolean, userAddress: string): Promise<Result<Balance[]>> {
+  async getBalance(
+    mainnet: boolean,
+    userAddress: string
+  ): Promise<Result<Balance[]>> {
+    this.checkClients();
+
     try {
-      const { aptos } = await this.initClients(mainnet);
       const balances: Balance[] = [];
 
       // Native APT
       try {
-        const accountInfo = await aptos.getAccountAPTAmount({ accountAddress: userAddress });
+        const accountInfo = await this.aptos_client.getAccountAPTAmount({
+          accountAddress: userAddress,
+        });
         balances.push({ asset: "APT", amount: accountInfo / 10 ** 8 });
       } catch {
         // continue without native balance
@@ -290,7 +347,9 @@ export class MerkleTradeConnector implements PerpConnector {
 
       // Tokens
       try {
-        const tokens = await aptos.getAccountOwnedTokens({ accountAddress: userAddress });
+        const tokens = await this.aptos_client.getAccountOwnedTokens({
+          accountAddress: userAddress,
+        });
         for (const token of tokens) {
           if (token.amount > 0) {
             const asset = token.current_token_data?.token_name ?? "Unknown";
@@ -315,5 +374,21 @@ export class MerkleTradeConnector implements PerpConnector {
 
   async getFundingRate(symbol: string): Promise<number | null> {
     return Promise.reject("getFundingRate not implemented");
+  }
+
+  private checkClients() {
+    if (!this.merkle_client || !this.aptos_client) {
+      throw new Error("MerkleClient and AptosClient not initialized");
+    }
+  }
+  async getTokens(): Promise<Result<Tokens>> {
+    this.checkClients();
+
+    const summary = await this.merkle_client.api.getSummary();
+
+    // The pairs can be extracted from the 'prices' array in the summary
+    const pairs = summary.prices.map((p) => p.id);
+    console.log(pairs);
+    return Promise.reject("getTokens not implemented");
   }
 }

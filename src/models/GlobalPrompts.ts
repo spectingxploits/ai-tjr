@@ -4,7 +4,7 @@ export const GlobalPrompts = {
 
 Task:
 Analyze the given text and decide if it contains a trading signal.
-If it does, extract values (enter, exit, profit, loss, tp, sl, lq, leverage(اهرم), long(either the position is a long position or no and its a short position), symbol) and set "signalDetected" = true and "values" = the extracted values.
+If it does, extract values (enter, exit, profit, loss, tp, sl, lq, leverage(اهرم), long(either the position is a long position or no and its a short position), symbol and also the if it is specified in the signal text that is if the trade is a market position or a limit position, if not specified market set the market to false, and if specified set it to true) and set "signalDetected" = true and "values" = the extracted values.
 If not, set "signalDetected" = false and "values" = null.
 
 note that lq is the budget and and the trading amount for this trade.
@@ -14,6 +14,7 @@ Return only valid JSON that can be parsed directly in JavaScript:
 {
   "signalDetected": boolean,
   "values": {
+    "market": boolean,
     "enter": number | null,
     "profit": number | null,
     "loss": number | null,
@@ -69,7 +70,7 @@ Rules:
   fillParams: `You are a world-class professional trading risk manager and market strategist. 
 Your highest priority is always the user’s asset safety, risk minimization, and realistic, proven strategies that protect against large losses. 
 Never suggest overly aggressive, speculative, or unsafe values. Always follow conservative, risk-managed, and industry-proven methods.
-
+don't touch the market value, just fill the rest of the values.
 Input:
 You will receive a JSON object with a detected trading signal. 
 Some fields may be null and must be filled with safe, realistic, and achievable values:
@@ -79,6 +80,7 @@ dor example enter is in 4000 and the tp is 5000 so the profit is 25% and if the 
 {
   "signalDetected": true,
   "values": {
+    "market": true,
     "enter": 4000,
     "exit": null,
     "profit": null,
@@ -111,6 +113,7 @@ Return only valid JSON in the same structure, but with all missing fields filled
 {
   "signalDetected": true,
   "values": {
+    "market": boolean,
     "enter": number,
     "exit": number | null,
     "profit": number | null,

@@ -13,7 +13,7 @@ describe("MerkleTradeConnector integration", () => {
   const mainnet = false;
 
   beforeAll(() => {
-    connector = new MerkleTradeConnector();
+    connector = new MerkleTradeConnector(Network.TESTNET);
   });
 
   describe("open positions", () => {

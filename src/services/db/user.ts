@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/middleware/supabase";
 
 export async function setConnectedStatus(
   user_tg_id: number,

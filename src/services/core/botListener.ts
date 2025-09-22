@@ -1,6 +1,8 @@
 // src/services/core/botPoll.ts
-import { formatGLobalSignal } from "@/lib/formatter";
-import { parseRawPotentialSignal } from "@/lib/signalParser";
+import { ConnectorGateway } from "@/lib/connectors/connector";
+import { formatGLobalSignal } from "@/lib/helpers/formatter";
+import { parseRawPotentialSignal } from "@/lib/helpers/signalParser";
+import { Network } from "@aptos-labs/ts-sdk";
 import "dotenv/config";
 import { Bot } from "grammy";
 const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -10,6 +12,8 @@ if (!token)
 const bot = new Bot(token);
 
 async function listener() {
+  let connector_gateway = new ConnectorGateway(Network.TESTNET);
+  
   bot.on("channel_post", async (ctx) => {
     const post = ctx.update.channel_post;
     console.log(

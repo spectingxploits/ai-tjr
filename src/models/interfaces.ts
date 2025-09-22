@@ -1,3 +1,4 @@
+import { TokenInfo } from "./hyperion/types";
 import {
   MerkleCancelOrderPayload,
   MerkleTradePayload,
@@ -5,6 +6,7 @@ import {
 } from "./merkleTrade/models";
 
 export interface GlobalSignal {
+  market: boolean;
   enter: number | null;
   profit: number | null;
   loss: number | null;
@@ -18,6 +20,8 @@ export interface GlobalSignal {
   aiDetectedSuccessRate?: number | null;
   reasons: string[];
 }
+
+export type Tokens = Record<string, TokenInfo>;
 
 export interface GeminiResponse {
   signalDetected: boolean;
@@ -146,9 +150,7 @@ export type SignAndSubmitParams = {
     | "kana_labs_perpetual_connector"
     | "hyperion_swap_connector"
     | "merkle_trade_perpetual_connector";
-  tokenA: string;
-  tokenB: string;
-  amount: number;
+  signal: GlobalSignal;
 };
 
 export type SingAndSubmitResponse = {
