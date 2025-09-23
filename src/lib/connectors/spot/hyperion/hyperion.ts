@@ -1,5 +1,5 @@
 import { Balance, Tokens } from "@/models/interfaces";
-import { Result, signAndSubmit, SwapConnector } from "../../connector";
+import { Result, SwapConnector } from "../../connector";
 import { HyperionSDK, initHyperionSDK } from "@hyperionxyz/sdk";
 import { Network } from "@aptos-labs/ts-sdk";
 import { PairPriceParams, SwapParams } from "@/models/hyperion/types";
@@ -8,7 +8,9 @@ import {
   TokenInfo,
   SwapPayloadResult,
 } from "@/models/hyperion/types";
-
+import { signAndSubmit } from "../../signAndSubmit";
+import path from "path";
+import fs from "fs";
 export class HyperionConnector extends signAndSubmit implements SwapConnector {
   name = "hyperion_swap_connector";
   network: Network.MAINNET | Network.TESTNET;
@@ -26,10 +28,15 @@ export class HyperionConnector extends signAndSubmit implements SwapConnector {
       console.warn(`[HyperionConnector] Missing API key for ${this.network}`);
     }
 
+    // this is the api key
+    console.log("this is the api key", apiKey);
+
     this.hyperionAdapter = initHyperionSDK({
       network: this.network,
       APTOS_API_KEY: apiKey,
     });
+
+    console.log("inited the hyperion sdk");
   }
 
   init(): Promise<any> {
@@ -180,31 +187,51 @@ export class HyperionConnector extends signAndSubmit implements SwapConnector {
     throw new Error("Method not implemented.");
   }
 
-  async getTokens(): Promise<Result<Tokens>> {
-    const pools = await this.hyperionAdapter.Pool.fetchAllPools();
+  async getTokens(updateTokenList: boolean = false): Promise<Result<Tokens>> {
+    try {
+      console.log("trying to fetch all the pools");
+      const pools = await this.hyperionAdapter.Pool.fetchAllPools();
+      console.log("this is the number of the pools", pools.length);
+      // You can then extract the token information from the pools
+      let tokens: Tokens = {};
+      pools.forEach((p: any) => {
+        let token1Info = {
+          address: p.pool.token1Info.assetType || "",
+          decimals: p.pool.token1Info.decimals || 1,
+          symbol: p.pool.token1Info.symbol || "UNKNOWN",
+          name: p.pool.token1Info.name || "UNKNOWN",
+        };
 
-    // You can then extract the token information from the pools
-    let tokens: Tokens = {};
-    pools.forEach((p: any) => {
-      let token1Info = {
-        address: p.pool.token1Info.assetType || "",
-        decimals: p.pool.token1Info.decimals || 1,
-        symbol: p.pool.token1Info.symbol || "UNKNOWN",
-        name: p.pool.token1Info.name || "UNKNOWN",
-      };
+        tokens[p.pool.token1Info.symbol] = token1Info;
 
-      tokens[p.pool.token1Info.symbol] = token1Info;
+        let token2Info = {
+          address: p.pool.token2Info.assetType || "",
+          decimals: p.pool.token2Info.decimals || 1,
+          symbol: p.pool.token2Info.symbol || "UNKNOWN",
+          name: p.pool.token2Info.name || "UNKNOWN",
+        };
 
-      let token2Info = {
-        address: p.pool.token2Info.assetType || "",
-        decimals: p.pool.token2Info.decimals || 1,
-        symbol: p.pool.token2Info.symbol || "UNKNOWN",
-        name: p.pool.token2Info.name || "UNKNOWN",
-      };
+        tokens[p.pool.token2Info.symbol] = token2Info;
+      });
 
-      tokens[p.pool.token2Info.symbol] = token2Info;
-    });
-
-    return Promise.resolve({ success: true, data: tokens });
+      // writing to the tokens.ts file if update was true
+      if (updateTokenList) {
+        console.log("writing to the tokens.ts file");
+        const tokensFilePath = path.join(
+          process.cwd(),
+          "src",
+          "models",
+          "hyperion",
+          "tokens.ts"
+        );
+        fs.writeFileSync(tokensFilePath, "export const tokens = " + JSON.stringify(tokens, null, 2));
+      } else {
+        console.log("tokens", tokens);
+      }
+      return Promise.resolve({ success: true, data: tokens });
+    } catch (e) {
+      console.error("getTokens failed:", e);
+      return Promise.reject(e);
+    }
   }
 }

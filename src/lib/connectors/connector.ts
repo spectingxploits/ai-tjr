@@ -57,7 +57,7 @@ export interface PerpConnector {
   getTickerPrice(symbol: string, mainnet: boolean): Promise<Result<number>>;
   getBalance(mainnet: boolean, userAddress: string): Promise<Result<Balance[]>>;
   getFundingRate?(symbol: string): Promise<number | null>;
-  getTokens(): Promise<Result<Tokens>>;
+  getTokens(updateTokenList: boolean): Promise<Result<Tokens>>;
 }
 
 export interface SwapConnector {
@@ -77,32 +77,9 @@ export interface SwapConnector {
     symbolOut: string,
     amount: number
   ): Promise<number>;
-  getTokens(): Promise<Result<Tokens>>;
+  getTokens(updateTokenList: boolean): Promise<Result<Tokens>>;
 }
 
-export abstract class signAndSubmit {
-  connector_name:
-    | "hyperion_swap_connector"
-    | "kana_labs_perpetual_connector"
-    | "merkle_trade_perpetual_connector";
-
-  constructor(
-    connector_name:
-      | "hyperion_swap_connector"
-      | "kana_labs_perpetual_connector"
-      | "merkle_trade_perpetual_connector"
-  ) {
-    this.connector_name = connector_name;
-  }
-
-  async signAndSubmit(
-    params: SignAndSubmitParams
-  ): Promise<SingAndSubmitResponse> {
-    // preparing the link to petra wallet fo tx confirmation
-
-    return Promise.reject("signAndSubmit not implemented");
-  }
-}
 // this class has the responsibility of managing the connectors to sing and submit transactions
 // and then syncs the database with the tx data
 

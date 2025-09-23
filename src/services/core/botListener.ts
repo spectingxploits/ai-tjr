@@ -12,8 +12,6 @@ if (!token)
 const bot = new Bot(token);
 
 async function listener() {
-  let connector_gateway = new ConnectorGateway(Network.TESTNET);
-  
   bot.on("channel_post", async (ctx) => {
     const post = ctx.update.channel_post;
     console.log(
@@ -56,22 +54,30 @@ async function listener() {
 
 // Start polling and keep process alive
 (async () => {
-  console.log("Starting bot with long polling...");
-  await bot.init(); // optional but ensures bot info is fetched
-  bot.start({
-    onStart: (info) =>
-      console.log("Bot started as", info.username, "id", info.id),
-  });
-  await listener();
+  let connector_gateway = new ConnectorGateway(Network.MAINNET);
+  await connector_gateway.initGatewayConnectors();
+  try {
+    await connector_gateway.hyperion?.getTokens(true);
+    await connector_gateway.merkle?.getTokens(true);
+  } catch (e) {
+    console.error("getTokens failed:", e);
+  }
+  // console.log("Starting bot with long polling...");
+  // await bot.init(); // optional but ensures bot info is fetched
+  // bot.start({
+  //   onStart: (info) =>
+  //     console.log("Bot started as", info.username, "id", info.id),
+  // });
+  // await listener();
 
-  // graceful shutdown
-  const shutdown = async () => {
-    console.log("Shutting down bot...");
-    try {
-      await bot.stop();
-    } catch {}
-    process.exit(0);
-  };
-  process.on("SIGINT", shutdown);
-  process.on("SIGTERM", shutdown);
+  // // graceful shutdown
+  // const shutdown = async () => {
+  //   console.log("Shutting down bot...");
+  //   try {
+  //     await bot.stop();
+  //   } catch {}
+  //   process.exit(0);
+  // };
+  // process.on("SIGINT", shutdown);
+  // process.on("SIGTERM", shutdown);
 })();

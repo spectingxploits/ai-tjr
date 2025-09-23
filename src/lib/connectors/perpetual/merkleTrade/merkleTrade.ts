@@ -7,7 +7,7 @@ import {
   Position,
 } from "@merkletrade/ts-sdk";
 import { Aptos, Network } from "@aptos-labs/ts-sdk";
-import { PerpConnector, Result, signAndSubmit } from "../../connector";
+import { PerpConnector, Result } from "../../connector";
 import {
   OrderResult,
   PerpOpenParams,
@@ -21,7 +21,9 @@ import {
   MerkleTradePayload,
   MerkleUpdatePayload,
 } from "@/models/merkleTrade/models";
-
+import { signAndSubmit } from "../../signAndSubmit";
+import path from "path";
+import fs from "fs";
 export class MerkleTradeConnector
   extends signAndSubmit
   implements PerpConnector
@@ -381,14 +383,44 @@ export class MerkleTradeConnector
       throw new Error("MerkleClient and AptosClient not initialized");
     }
   }
-  async getTokens(): Promise<Result<Tokens>> {
-    this.checkClients();
+  async getTokens(updateTokenList: boolean = false): Promise<Result<Tokens>> {
+    try {
+      this.checkClients();
 
-    const summary = await this.merkle_client.api.getSummary();
+      const summary = await this.merkle_client.api.getSummary();
 
-    // The pairs can be extracted from the 'prices' array in the summary
-    const pairs = summary.prices.map((p) => p.id);
-    console.log(pairs);
-    return Promise.reject("getTokens not implemented");
+      let tokens: Tokens = {};
+
+      console.log("this is the summary", summary);
+      // The pairs can be extracted from the 'prices' array in the summary
+      summary.coins.forEach((coin) => {
+        tokens[coin.symbol] = {
+          address: coin.assetType || "",
+          decimals: coin.decimals || 1,
+          symbol: coin.symbol || "UNKNOWN",
+          name: coin.name || "UNKNOWN",
+        };
+      });
+      if (updateTokenList) {
+        console.log("writing to the tokens.ts file");
+        const tokensFilePath = path.join(
+          process.cwd(),
+          "src",
+          "models",
+          "merkleTrade",
+          "tokens.ts"
+        );
+        fs.writeFileSync(
+          tokensFilePath,
+          "export const tokens = " + JSON.stringify(tokens, null, 2)
+        );
+      } else {
+        console.log("not writing to the tokens.ts file");
+      }
+      return Promise.resolve({ success: true, data: tokens });
+    } catch (e) {
+      console.error("getTokens failed:", e);
+      return Promise.reject(e);
+    }
   }
 }
