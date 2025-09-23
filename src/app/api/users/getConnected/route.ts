@@ -27,6 +27,7 @@ export async function GET(req: Request) {
       ok: true,
       connected: res.connected,
       shared_pubkey: res.shared_pubkey,
+      wallet_address: res.wallet_address,
     });
   } catch (err: any) {
     return NextResponse.json(

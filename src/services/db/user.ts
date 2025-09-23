@@ -3,12 +3,18 @@ import { supabase } from "@/middleware/supabase";
 export async function setConnectedStatus(
   user_tg_id: number,
   connected: boolean,
-  shared_pubkey: string
+  shared_pubkey: string,
+  wallet_address: string
 ): Promise<{ new_status: boolean }> {
   let { data: user, error: upsertError } = await supabase
     .from("users")
     .upsert(
-      { tg_id: user_tg_id, connected: connected, shared_pubkey },
+      {
+        tg_id: user_tg_id,
+        connected: connected,
+        shared_pubkey,
+        wallet_address,
+      },
       { onConflict: "tg_id" } // 👈 ensures conflict handled by updating
     )
     .select()
@@ -28,10 +34,11 @@ export async function setConnectedStatus(
 export async function getConnectedStatus(user_tg_id: number): Promise<{
   connected: boolean;
   shared_pubkey: string;
+  wallet_address: string;
 }> {
   let { data, error } = await supabase
     .from("users")
-    .select("connected, shared_pubkey")
+    .select("connected, shared_pubkey, wallet_address")
     .eq("tg_id", user_tg_id)
     .single();
 
@@ -48,11 +55,13 @@ export async function getConnectedStatus(user_tg_id: number): Promise<{
     return {
       connected: false,
       shared_pubkey: "",
+      wallet_address: "",
     };
   }
 
   return {
     connected: data.connected,
     shared_pubkey: data.shared_pubkey || "",
+    wallet_address: data.wallet_address || "",
   };
 }

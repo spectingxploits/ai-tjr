@@ -6,12 +6,12 @@ export async function sendOpenAuthPageButton(chat_id: string) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       chat_id: chat_id,
-      text: "Open the exchange setup page:",
+      text: "Open Connect Wallet Page:",
       reply_markup: {
         inline_keyboard: [
           [
             {
-              text: "Open Exchange Setup Page",
+              text: "Connect Wallet Page",
               web_app: {
                 url: `${process.env.MINI_APP_BASE_URL}/auth?ref=telegram&userId=${chat_id}`,
               },

@@ -5,11 +5,16 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     console.log("Request body:", body);
-    const { user_tg_id, connected, shared_pubkey } = body;
+    const { user_tg_id, connected, shared_pubkey, wallet_address } = body;
 
-    if (!user_tg_id || connected === undefined || shared_pubkey === undefined) {
+    if (
+      !user_tg_id ||
+      connected === undefined ||
+      shared_pubkey === undefined ||
+      wallet_address === undefined
+    ) {
       return NextResponse.json(
-        { success: false, message: "user_tg_id and connected are required" },
+        { success: false, message: "user_tg_id and connected and shared pubkey and the wallet address are required" },
         { status: 400 }
       );
     }
@@ -17,7 +22,8 @@ export async function POST(req: Request) {
     const new_status = await setConnectedStatus(
       Number(user_tg_id),
       Boolean(connected),
-      shared_pubkey
+      shared_pubkey,
+      wallet_address
     );
 
     if (!new_status) {

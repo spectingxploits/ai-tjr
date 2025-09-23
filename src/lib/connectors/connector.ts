@@ -153,8 +153,52 @@ export class ConnectorGateway {
     }
   }
 
-  async handleIncommingSignal(signal: GlobalSignal) {
-    // getting the supportive dexes
+  async handleIncomingSignal(signal: GlobalSignal) {
+    // getting the supported dexes
+    let supportedSpotDexes: SwapConnector[] = [];
+    for (const connector of this.spotConnectors) {
+      if (
+        await connector.isPairSupported(
+          signal.symbol,
+          connector.getCustomQuotes()[0]
+        )
+      ) {
+        supportedSpotDexes.push(connector);
+      }
+    }
+    console.log(
+      "supported spot dexes",
+      supportedSpotDexes.map((d) => d.name)
+    );
+    let supportedPerpDexes: PerpConnector[] = [];
+    for (const connector of this.perpConnectors) {
+      if (
+        await connector.isPairSupported(
+          signal.symbol,
+          connector.getCustomQuotes()[0]
+        )
+      ) {
+        supportedPerpDexes.push(connector);
+      }
+    }
+    console.log(
+      "supported perp dexes",
+      supportedPerpDexes.map((d) => d.name)
+    );
+
+    // preparing the payload for the supported dexes
+    let payloads: Record<string, GlobalPayload> = {};
+
+    // for spot
+    for (const connector of supportedSpotDexes) {
+      const payload = await connector.swap({
+        symbolIn: "",
+        symbolOut: "",
+        amountIn: 0,
+        userAddress: ""
+      });
+      payloads[connector.name] = payload;
+    }
   }
   getSpotConnectors() {
     return this.spotConnectors;

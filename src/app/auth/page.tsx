@@ -1,6 +1,9 @@
 "use client";
 
-import { useWallet } from "@aptos-labs/wallet-adapter-react";
+import {
+  getAptosConnectWallets,
+  useWallet,
+} from "@aptos-labs/wallet-adapter-react";
 import { useEffect, useRef, useState } from "react";
 import nacl from "tweetnacl";
 import { useSearchParams } from "next/navigation";
@@ -19,21 +22,34 @@ export default function MiniAppPage() {
   const [secretKey, setSecretKey] = useState<string | null>(null);
   const [isCallback, setIsCallback] = useState(false);
   const [petraConnected, setPetraConnected] = useState(false);
+  // add at the top of component
+  const [walletAddress, setWalletAddress] = useState("");
+  const [isValidAddress, setIsValidAddress] = useState(false);
 
+  // validation function
+  function validateAddress(addr: string): boolean {
+    return /^0x[0-9a-fA-F]{1,64}$/.test(addr);
+  }
+
+  // when user types in input
+  const handleAddressChange = (val: string) => {
+    setWalletAddress(val.trim());
+    setIsValidAddress(validateAddress(val.trim()));
+  };
   const { disconnect } = useWallet();
 
   // map of start_param -> lastProcessedTimestamp (ms)
   const processedMapRef = useRef<Map<string, number>>(new Map());
 
   const APP_INFO = {
-    domain: "https://3d8db094a821.ngrok-free.app/auth",
+    domain: `${process.env.MINI_APP_BASE_URL}/auth`,
     name: "AI_TJR",
   };
 
   // -------------------- 1) Poll for Telegram.WebApp (safe, limited attempts) --------------------
   useEffect(() => {
     if (typeof window === "undefined") return;
-
+    getAptosConnectWallets;
     let attempts = 0;
     const intervalMs = 250;
     const maxAttempts = 40; // stop after ~10s
@@ -106,6 +122,7 @@ export default function MiniAppPage() {
         if (!cancelled) {
           setPetraConnected(Boolean(data.connected));
           setIsCallback(Boolean(data.connected));
+          setWalletAddress(data.wallet_address);
         }
       } catch (err) {
         console.error("Failed to fetch connection status:", err);
@@ -160,7 +177,8 @@ export default function MiniAppPage() {
     console.debug(`Processing startParam (from=${from}):`, startParam);
 
     if (startParam.startsWith("callbackUserId_")) {
-      const [userPart, pubkeyPart] = startParam.split("_shared_pubkey_");
+      const [userPart, keys] = startParam.split("_shared_pubkey_");
+      const [pubkeyPart, walletAddress] = keys.split("_wallet_address_");
       const callbackUserId = userPart.replace("callbackUserId_", "");
 
       if (!callbackUserId) {
@@ -181,6 +199,7 @@ export default function MiniAppPage() {
           user_tg_id: callbackUserId,
           connected: true,
           shared_pubkey: pubkeyPart || shared_pubkey || publicKey,
+          wallet_address: walletAddress,
         }),
       }).catch((e) => console.error("setConnected(connect) failed:", e));
       return;
@@ -205,6 +224,7 @@ export default function MiniAppPage() {
           user_tg_id: disUserId,
           connected: false,
           shared_pubkey: "",
+          wallet_address: "",
         }),
       }).catch((e) => console.error("setConnected(disconnect) failed:", e));
       return;
@@ -245,7 +265,7 @@ export default function MiniAppPage() {
     const keyPair = generateAndSaveKeyPair();
     const redirect = `tg://resolve?domain=AITJR_BOT&appname=AI_TJR_APP&startapp=callbackUserId_${reliableId}_shared_pubkey_${Buffer.from(
       keyPair.publicKey
-    ).toString("hex")}`;
+    ).toString("hex")}_wallet_address_${walletAddress}`;
     const data = {
       appInfo: APP_INFO,
       redirectLink: redirect,
@@ -290,7 +310,12 @@ export default function MiniAppPage() {
         await fetch("/api/users/setConnected", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ user_tg_id: snapshotId, connected: false }),
+          body: JSON.stringify({
+            user_tg_id: snapshotId,
+            connected: false,
+            wallet_address: "",
+            shared_pubkey: "",
+          }),
         }).catch(console.error);
       }
 
@@ -311,13 +336,25 @@ export default function MiniAppPage() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-black text-white p-6">
       <h1 className="text-4xl font-bold mb-6">AI TJR</h1>
-      <p className="text-lg mb-6">Connect your Aptos Petra Wallet</p>
+      {isCallback || petraConnected ? (
+        <>
+          <p className="text-white-400 text-lg font-semibold items-center">
+            Wallet is connected
+          </p>
+          <p className="text-green-400 text-lg font-semibold">
+            {walletAddress ? walletAddress.slice(0, 6) : "address "}...
+            {walletAddress ? walletAddress.slice(-4) : "not found !"}
+          </p>
+          <br />
+        </>
+      ) : (
+        <p className="text-white-400 text-lg font-semibold">
+          Connect your Aptos Petra Wallet
+        </p>
+      )}
 
       {isCallback || petraConnected ? (
         <div className="flex flex-col items-center gap-4">
-          <p className="text-green-400 text-lg font-semibold">
-            ✅ Your Petra Wallet is connected
-          </p>
           <button
             onClick={handleDisconnect}
             className="px-6 py-3 rounded-2xl bg-gradient-to-r from-red-500 to-pink-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 ease-in-out active:scale-95"
@@ -326,12 +363,32 @@ export default function MiniAppPage() {
           </button>
         </div>
       ) : (
-        <button
-          onClick={connectMobile}
-          className="px-6 py-3 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 ease-in-out active:scale-95"
-        >
-          Connect Wallet
-        </button>
+        <div className="flex flex-col items-center gap-4 w-full max-w-md">
+          {/* Wallet address input */}
+          <input
+            type="text"
+            value={walletAddress}
+            onChange={(e) => handleAddressChange(e.target.value)}
+            placeholder="Enter your Aptos wallet address (0x...)"
+            className="w-full px-4 py-3 rounded-xl bg-slate-900/60 border border-slate-700 focus:border-indigo-400 outline-none text-white"
+          />
+
+          {/* Connect button (disabled until valid address) */}
+          <button
+            onClick={connectMobile}
+            disabled={!isValidAddress}
+            className="px-6 py-3 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 ease-in-out active:scale-95 disabled:opacity-50"
+          >
+            Connect Wallet
+          </button>
+
+          {/* Note */}
+          <p className="text-xs text-slate-400 text-center">
+            The wallet address you enter must be the same as the active address
+            in your Petra wallet. You cannot continue without entering a valid
+            Aptos address.
+          </p>
+        </div>
       )}
     </div>
   );

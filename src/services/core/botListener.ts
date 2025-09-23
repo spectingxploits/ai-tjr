@@ -37,7 +37,7 @@ async function listener() {
             }
             await ctx.api.sendMessage(
               admin.user.id,
-              `new Signal from channel \n ${post.chat.title}:\n\n${signal.values.text}`
+              `new Signal from channel \n ${post.chat.title}:\n${signal.values.text}`
             );
             console.log("Notified admin user", admin.user.id);
             break; // notify first human admin only (optional)
@@ -54,31 +54,31 @@ async function listener() {
 
 // Start polling and keep process alive
 (async () => {
-  let connector_gateway = new ConnectorGateway(Network.MAINNET);
-  await connector_gateway.initGatewayConnectors();
-  try {
-    // await connector_gateway.hyperion?.getTokens(true);
-    // await connector_gateway.merkle?.getTokens(true);
-    await connector_gateway.hyperion?.isPairSupported("APT", "USDT");
-  } catch (e) {
-    console.error("getTokens failed:", e);
-  }
-  // console.log("Starting bot with long polling...");
-  // await bot.init(); // optional but ensures bot info is fetched
-  // bot.start({
-  //   onStart: (info) =>
-  //     console.log("Bot started as", info.username, "id", info.id),
-  // });
-  // await listener();
+  // let connector_gateway = new ConnectorGateway(Network.MAINNET);
+  // await connector_gateway.initGatewayConnectors();
+  // try {
+  //   // await connector_gateway.hyperion?.getTokens(true);
+  //   // await connector_gateway.merkle?.getTokens(true);
+  //   await connector_gateway.hyperion?.isPairSupported("APT", "USDT");
+  // } catch (e) {
+  //   console.error("getTokens failed:", e);
+  // }
+  console.log("Starting bot with long polling...");
+  await bot.init(); // optional but ensures bot info is fetched
+  bot.start({
+    onStart: (info) =>
+      console.log("Bot started as", info.username, "id", info.id),
+  });
+  await listener();
 
-  // // graceful shutdown
-  // const shutdown = async () => {
-  //   console.log("Shutting down bot...");
-  //   try {
-  //     await bot.stop();
-  //   } catch {}
-  //   process.exit(0);
-  // };
-  // process.on("SIGINT", shutdown);
-  // process.on("SIGTERM", shutdown);
+  // graceful shutdown
+  const shutdown = async () => {
+    console.log("Shutting down bot...");
+    try {
+      await bot.stop();
+    } catch {}
+    process.exit(0);
+  };
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
 })();
