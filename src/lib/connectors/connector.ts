@@ -6,6 +6,7 @@ import {
 import {
   Balance,
   GlobalPayload,
+  GlobalSignal,
   OrderResult,
   PerpCloseParams,
   PerpOpenParams,
@@ -58,6 +59,14 @@ export interface PerpConnector {
   getBalance(mainnet: boolean, userAddress: string): Promise<Result<Balance[]>>;
   getFundingRate?(symbol: string): Promise<number | null>;
   getTokens(updateTokenList: boolean): Promise<Result<Tokens>>;
+  isPairSupported(base: string, quote: string): Promise<Result<boolean>>;
+  /**
+   * This function returns a list of custom quotes supported by the exchange.
+   * The default implementation should return ["USDT"].
+   * For example the merkle trade exchange only supports trading token against USDC while the hyperion exchange supports USDT and other tokens as well.
+   * @returns The list of custom quotes supported by the exchange
+   */
+  getCustomQuotes(): string[]; // default should return ["USDT"]
 }
 
 export interface SwapConnector {
@@ -78,6 +87,14 @@ export interface SwapConnector {
     amount: number
   ): Promise<number>;
   getTokens(updateTokenList: boolean): Promise<Result<Tokens>>;
+  isPairSupported(base: string, quote: string): Promise<Result<boolean>>;
+  /**
+   * This function returns a list of custom quotes supported by the exchange.
+   * The default implementation should return ["USDT"].
+   * For example the merkle trade exchange only supports trading token against USDC while the hyperion exchange supports USDT and other tokens as well.
+   * @returns The list of custom quotes supported by the exchange
+   */
+  getCustomQuotes(): string[]; // default should return ["USDT"]
 }
 
 // this class has the responsibility of managing the connectors to sing and submit transactions
@@ -136,7 +153,9 @@ export class ConnectorGateway {
     }
   }
 
-  // optional helpers
+  async handleIncommingSignal(signal: GlobalSignal) {
+    // getting the supportive dexes
+  }
   getSpotConnectors() {
     return this.spotConnectors;
   }

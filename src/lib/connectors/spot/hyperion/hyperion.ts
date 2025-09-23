@@ -28,9 +28,6 @@ export class HyperionConnector extends signAndSubmit implements SwapConnector {
       console.warn(`[HyperionConnector] Missing API key for ${this.network}`);
     }
 
-    // this is the api key
-    console.log("this is the api key", apiKey);
-
     this.hyperionAdapter = initHyperionSDK({
       network: this.network,
       APTOS_API_KEY: apiKey,
@@ -224,7 +221,10 @@ export class HyperionConnector extends signAndSubmit implements SwapConnector {
           "hyperion",
           "tokens.ts"
         );
-        fs.writeFileSync(tokensFilePath, "export const tokens = " + JSON.stringify(tokens, null, 2));
+        fs.writeFileSync(
+          tokensFilePath,
+          "export const tokens = " + JSON.stringify(tokens, null, 2)
+        );
       } else {
         console.log("tokens", tokens);
       }
@@ -233,5 +233,47 @@ export class HyperionConnector extends signAndSubmit implements SwapConnector {
       console.error("getTokens failed:", e);
       return Promise.reject(e);
     }
+  }
+
+  async isTokenSupported(symbol: string): Promise<boolean> {
+    try {
+      const pools = await this.hyperionAdapter.Pool.fetchAllPools();
+      const pool = pools.find((p: any) => {
+        const t1 = p.pool.token1Info.symbol;
+        const t2 = p.pool.token2Info.symbol;
+        return (
+          (t1 === symbol && t2 === symbol) || (t1 === symbol && t2 === symbol)
+        );
+      });
+      return pool != null;
+    } catch (err) {
+      console.error("[HyperionConnector] isTokenSupported error:", err);
+      throw err;
+    }
+  }
+
+  async isPairSupported(base: string, quote: string): Promise<Result<boolean>> {
+    try {
+      const pools = await this.hyperionAdapter.Pool.fetchAllPools();
+      const pool = pools.find((p: any) => {
+        const t1 = p.pool.token1Info.symbol;
+        const t2 = p.pool.token2Info.symbol;
+        return (t1 === base && t2 === quote) || (t1 === quote && t2 === base);
+      });
+      if (!pool) {
+        return Promise.resolve({ success: true, data: false });
+      } else {
+        console.log("found pair", pool.pool);
+        return Promise.resolve({ success: true, data: true });
+      }
+      return Promise.resolve({ success: true, data: pool != null });
+    } catch (err) {
+      console.error("[HyperionConnector] isPairSupported error:", err);
+      return Promise.reject(err);
+    }
+  }
+
+  getCustomQuotes(): string[] {
+    return ["USDT"];
   }
 }

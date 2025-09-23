@@ -57,8 +57,9 @@ async function listener() {
   let connector_gateway = new ConnectorGateway(Network.MAINNET);
   await connector_gateway.initGatewayConnectors();
   try {
-    await connector_gateway.hyperion?.getTokens(true);
-    await connector_gateway.merkle?.getTokens(true);
+    // await connector_gateway.hyperion?.getTokens(true);
+    // await connector_gateway.merkle?.getTokens(true);
+    await connector_gateway.hyperion?.isPairSupported("APT", "USDT");
   } catch (e) {
     console.error("getTokens failed:", e);
   }

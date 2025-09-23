@@ -59,6 +59,9 @@ export async function parseRawPotentialSignal(
       return null;
     }
 
+    if (parsedOutput.values.symbol === undefined) {
+      return null;
+    }
 
     // filling the null values with suggested values by gemini
     let geminiEnhancedOutput = await MakeGeminiRequestWithSearch({

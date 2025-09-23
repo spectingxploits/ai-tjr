@@ -15,7 +15,7 @@ export interface GlobalSignal {
   lq: number | null;
   leverage: number | null;
   long: boolean | null;
-  symbol?: string | null;
+  symbol: string | null;
   text?: string | null;
   aiDetectedSuccessRate?: number | null;
   reasons: string[];

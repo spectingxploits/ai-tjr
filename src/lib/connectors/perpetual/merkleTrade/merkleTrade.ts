@@ -423,4 +423,24 @@ export class MerkleTradeConnector
       return Promise.reject(e);
     }
   }
+  async isPairSupported(base: string, quote: string): Promise<Result<boolean>> {
+    try {
+      const pairStates = await this.merkle_client.api.getAllPairStates();
+      pairStates.forEach((pairState) => {
+        // checking for each quote
+        if (pairState.pairType.includes(base + "_USD")) {
+          console.log("found pair", pairState.pairType);
+          return Promise.resolve({ success: true, data: true });
+        }
+      });
+      return Promise.resolve({ success: true, data: false });
+    } catch (err) {
+      console.error("[MerkleConnector] isPairSupported error:", err);
+      return Promise.reject(err);
+    }
+  }
+
+  getCustomQuotes(): string[] {
+    return ["USDC"];
+  }
 }
