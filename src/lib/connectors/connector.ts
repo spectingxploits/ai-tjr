@@ -49,7 +49,10 @@ export interface PerpConnector {
   /* Modify/auxiliary */
   setLeverage?(symbol: string, leverage: number): Promise<boolean>;
   setTP_SL?(params: PerpTP_SLParams): Promise<Result<SimpleTransaction>>;
-  cancelOrder(params: PerpCloseParams): Promise<Result<SimpleTransaction>>;
+  cancelOrder(
+    orders: GlobalOrders,
+    userAddress: `0x${string}`
+  ): Promise<Result<SimpleTransaction>>;
   listOpenOrders(userAddress: `0x${string}`): Promise<Result<GlobalOrders>>;
   fetchPosition(params: PerpCloseParams): Promise<Result<Position>>;
   listOpenPositions(

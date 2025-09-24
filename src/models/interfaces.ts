@@ -168,4 +168,8 @@ export type SingAndSubmitResponse = {
 
 export type GlobalPositions = Position[] | ParsedKanaPosition[];
 
-export type GlobalOrders = Order[] | ParsedKanaOrder[];
+export type GlobalOrders =
+  | Order[]
+  | Order
+  | ParsedKanaOrder[]
+  | ParsedKanaOrder;

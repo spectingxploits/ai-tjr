@@ -184,8 +184,42 @@ export class KanalabsConnector extends signAndSubmit implements PerpConnector {
   setTP_SL?(params: PerpTP_SLParams): Promise<Result<SimpleTransaction>> {
     throw new Error("Method not implemented.");
   }
-  cancelOrder(params: PerpCloseParams): Promise<Result<SimpleTransaction>> {
-    throw new Error("Method not implemented.");
+  async cancelOrder(
+    order: ParsedKanaOrder,
+    userAddress: `0x${string}`
+  ): Promise<Result<SimpleTransaction>> {
+    try {
+      if (!order.orderId || !order.marketId) {
+        return {
+          success: false,
+          error: "orderId or marketId not found",
+        };
+      }
+      const body = {
+        marketId: order.marketId,
+        cancelOrderIds: [order.orderId],
+        orderSides: Number(order.orderType) % 2 === 0 ? [true] : [false],
+      };
+
+      const res = await this.kanalabsApi.post("/cancelMultipleOrders", body, {
+        headers: {
+          "x-api-key": process.env.API_KEY,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const payloadData = res.data.data;
+
+      let transactionPayload: SimpleTransaction =
+        await this.aptosClient.transaction.build.simple({
+          sender: userAddress,
+          data: payloadData,
+        });
+      return { success: true, data: transactionPayload };
+    } catch (e) {
+      console.error("cancelOrder failed:", e);
+      return { success: false, error: (e as Error).message };
+    }
   }
   async listOpenOrders(
     userAddress: `0x${string}`
@@ -222,7 +256,7 @@ export class KanalabsConnector extends signAndSubmit implements PerpConnector {
     }
     return Promise.resolve({ success: true, data: parsedPositions });
   }
-  
+
   fetchPosition(params: PerpCloseParams): Promise<Result<Position>> {
     throw new Error("Method not implemented. use list all poisons instead");
   }

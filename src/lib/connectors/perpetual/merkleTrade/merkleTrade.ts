@@ -235,31 +235,20 @@ export class MerkleTradeConnector
 
   /** ---------- Cancel Order ---------- */
   async cancelOrder(
-    params: PerpCloseParams
+    order: Order,
+    userAddress: `0x${string}`
   ): Promise<Result<SimpleTransaction>> {
     this.checkClients();
 
     try {
-      const orders = await this.merkle_client.getOrders({
-        address: params.userAddress,
-      });
-
-      const order = orders.find((o) => o.pairType.endsWith(params.positionId));
-      if (!order) {
-        return {
-          success: false,
-          error: `Order ${params.positionId} not found`,
-        };
-      }
-
       const payload = this.merkle_client.payloads.cancelOrder({
-        pair: params.positionId,
-        userAddress: params.userAddress,
+        pair: order.pairType.trim().split("::").pop()!,
+        userAddress: userAddress,
         orderId: BigInt(order.orderId),
       });
       let transactionPayload: SimpleTransaction =
         await this.aptos_client.transaction.build.simple({
-          sender: params.userAddress,
+          sender: userAddress,
           data: payload,
         });
       return { success: true, data: transactionPayload };
@@ -293,7 +282,9 @@ export class MerkleTradeConnector
   }
 
   async fetchPosition(params: PerpCloseParams): Promise<Result<Position>> {
-    return Promise.reject("fetchPosition not implemented");
+    return Promise.reject(
+      "fetchPosition not implemented, use list open positions instead"
+    );
   }
 
   async listOpenPositions(
