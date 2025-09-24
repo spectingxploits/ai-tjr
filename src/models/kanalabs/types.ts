@@ -91,3 +91,80 @@ export function parseKanaPosition(p: KanaPosition): ParsedKanaPosition {
     transactionVersion: p.transaction_version,
   };
 }
+
+// types/kanaPerpsOrders.ts
+
+/** Raw order shape as returned by Kana Perps REST API (snake_case) */
+export interface KanaOrder {
+  address: string;
+  market_id: string;
+  leverage: number;
+  order_type: number;
+  timestamp: number; // unix seconds
+  price: string;
+  total_size: string;
+  remaining_size: string;
+  order_value: string;
+  order_id: string;
+  trade_id?: string | null;
+  last_updated: number;
+  transaction_version: number;
+}
+
+/** API response wrapper for list of orders */
+export interface KanaOrdersResponse {
+  success: boolean;
+  message?: string;
+  data: KanaOrder[];
+}
+
+/** Parsed / normalized order with numeric fields converted and camelCase keys */
+export interface ParsedKanaOrder {
+  address: string;
+  marketId: number;
+  leverage: number;
+  orderType: number;
+  timestamp: number; // unix seconds
+  price: number;
+  totalSize: number;
+  remainingSize: number;
+  orderValue: number;
+  orderId: string;
+  tradeId?: string | null;
+  lastUpdated: number;
+  transactionVersion: number;
+}
+
+/** Helper: safely convert string -> number | null */
+const toNum = (v: string | null | undefined): number | null => {
+  if (v == null) return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+};
+
+/** Parse a single KanaOrder into ParsedKanaOrder */
+export function parseKanaOrder(o: KanaOrder): ParsedKanaOrder {
+  return {
+    address: o.address,
+    marketId: Number(o.market_id),
+    leverage: o.leverage,
+    orderType: o.order_type,
+    timestamp: o.timestamp,
+    price: toNum(o.price) ?? 0,
+    totalSize: toNum(o.total_size) ?? 0,
+    remainingSize: toNum(o.remaining_size) ?? 0,
+    orderValue: toNum(o.order_value) ?? 0,
+    orderId: o.order_id,
+    tradeId: o.trade_id ?? null,
+    lastUpdated: o.last_updated,
+    transactionVersion: o.transaction_version,
+  };
+}
+
+/** Parse array helper */
+export function parseKanaOrders(
+  list: KanaOrder[] | undefined
+): ParsedKanaOrder[] {
+  if (!Array.isArray(list)) return [];
+  return list.map(parseKanaOrder);
+}

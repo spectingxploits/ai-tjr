@@ -3,6 +3,7 @@ import axios, { AxiosInstance } from "axios";
 import { PerpConnector, Result } from "../../connector";
 import {
   Balance,
+  GlobalOrders,
   GlobalPositions,
   OrderResult,
   PerpCloseParams,
@@ -23,13 +24,16 @@ import {
   Network,
   SimpleTransaction,
 } from "@aptos-labs/ts-sdk";
-import path from "path";
+import path, { parse } from "path";
 import fs from "fs";
 import {
   KanalabsOrderPayload,
   KanalabsResponse,
+  KanaOrdersResponse,
   KanaPositionsResponse,
+  ParsedKanaOrder,
   ParsedKanaPosition,
+  parseKanaOrder,
   parseKanaPosition,
 } from "@/models/kanalabs/types";
 
@@ -183,12 +187,24 @@ export class KanalabsConnector extends signAndSubmit implements PerpConnector {
   cancelOrder(params: PerpCloseParams): Promise<Result<SimpleTransaction>> {
     throw new Error("Method not implemented.");
   }
-  fetchOrder(params: PerpCloseParams): Promise<Result<Order>> {
-    throw new Error("Method not implemented.");
+  async listOpenOrders(
+    userAddress: `0x${string}`
+  ): Promise<Result<GlobalOrders>> {
+    let ordersRes: KanaOrdersResponse = (
+      await this.kanalabsApi.get("/getOpenOrders", {
+        params: { userAddress: userAddress },
+      })
+    ).data;
+    if (!ordersRes.success) {
+      return Promise.reject(ordersRes.message);
+    }
+    let parsedPositions: ParsedKanaOrder[] = [];
+    for (const p of ordersRes.data) {
+      parsedPositions.push(parseKanaOrder(p));
+    }
+    return Promise.resolve({ success: true, data: parsedPositions });
   }
-  fetchPosition(params: PerpCloseParams): Promise<Result<Position>> {
-    throw new Error("Method not implemented.");
-  }
+
   async listOpenPositions(
     userAddress: `0x${string}`
   ): Promise<Result<GlobalPositions>> {
@@ -206,6 +222,11 @@ export class KanalabsConnector extends signAndSubmit implements PerpConnector {
     }
     return Promise.resolve({ success: true, data: parsedPositions });
   }
+  
+  fetchPosition(params: PerpCloseParams): Promise<Result<Position>> {
+    throw new Error("Method not implemented. use list all poisons instead");
+  }
+
   async getTickerPrice(symbol: string): Promise<Result<number>> {
     let priceRes = await this.kanalabsApi.get("/getMarketPrice", {
       params: { marketId: this.tokens[symbol].marketId },

@@ -5,6 +5,7 @@ import {
 } from "@/models/hyperion/types";
 import {
   Balance,
+  GlobalOrders,
   GlobalPositions,
   GlobalSignal,
   OrderResult,
@@ -49,7 +50,7 @@ export interface PerpConnector {
   setLeverage?(symbol: string, leverage: number): Promise<boolean>;
   setTP_SL?(params: PerpTP_SLParams): Promise<Result<SimpleTransaction>>;
   cancelOrder(params: PerpCloseParams): Promise<Result<SimpleTransaction>>;
-  fetchOrder(params: PerpCloseParams): Promise<Result<Order>>;
+  listOpenOrders(userAddress: `0x${string}`): Promise<Result<GlobalOrders>>;
   fetchPosition(params: PerpCloseParams): Promise<Result<Position>>;
   listOpenPositions(
     userAddress: `0x${string}`

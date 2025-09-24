@@ -16,6 +16,7 @@ import {
   Balance,
   Tokens,
   GlobalPositions,
+  GlobalOrders,
 } from "@/models/interfaces";
 import {
   MerkleCancelOrderPayload,
@@ -268,50 +269,31 @@ export class MerkleTradeConnector
   }
 
   /** ---------- Fetch Data ---------- */
-  async fetchOrder(params: PerpCloseParams): Promise<Result<Order>> {
+  async listOpenOrders(
+    userAddress: `0x${string}`
+  ): Promise<Result<GlobalOrders>> {
     this.checkClients();
 
     try {
       const orders = await this.merkle_client.getOrders({
-        address: params.userAddress,
+        address: userAddress,
       });
 
-      const order = orders.find((o) => o.pairType.endsWith(params.positionId));
-      if (!order) {
+      if (!orders) {
         return {
           success: false,
-          error: `Order ${params.positionId} not found`,
+          error: `Order not found for ${userAddress}`,
         };
       }
 
-      return { success: true, data: order };
+      return { success: true, data: orders };
     } catch (err) {
       return { success: false, error: (err as Error).message };
     }
   }
 
   async fetchPosition(params: PerpCloseParams): Promise<Result<Position>> {
-    this.checkClients();
-
-    try {
-      const positions = await this.merkle_client.getPositions({
-        address: params.userAddress,
-      });
-
-      const position = positions.find((p) =>
-        p.pairType.endsWith(params.positionId)
-      );
-      if (!position) {
-        return {
-          success: false,
-          error: `Position ${params.positionId} not found`,
-        };
-      }
-
-      return { success: true, data: position };
-    } catch (err) {
-      return { success: false, error: (err as Error).message };
-    }
+    return Promise.reject("fetchPosition not implemented");
   }
 
   async listOpenPositions(

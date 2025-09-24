@@ -1,6 +1,10 @@
-import { Position } from "@merkletrade/ts-sdk";
+import { Order, Position } from "@merkletrade/ts-sdk";
 import { TokenInfo } from "./hyperion/types";
-import { KanalabsOrderPayload, ParsedKanaPosition } from "./kanalabs/types";
+import {
+  KanalabsOrderPayload,
+  ParsedKanaOrder,
+  ParsedKanaPosition,
+} from "./kanalabs/types";
 import {
   MerkleCancelOrderPayload,
   MerkleTradePayload,
@@ -163,3 +167,5 @@ export type SingAndSubmitResponse = {
 };
 
 export type GlobalPositions = Position[] | ParsedKanaPosition[];
+
+export type GlobalOrders = Order[] | ParsedKanaOrder[];
