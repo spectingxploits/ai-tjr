@@ -412,17 +412,17 @@ export class MerkleTradeConnector
         };
       });
       if (updateTokenList) {
-        console.log("writing to the tokens.ts file");
+        console.log(`writing to the token_${this.network}.ts file`);
         const tokensFilePath = path.join(
           process.cwd(),
           "src",
           "models",
           "merkleTrade",
-          "tokens.ts"
+          `tokens_${this.network}.ts`
         );
         fs.writeFileSync(
           tokensFilePath,
-          "export const tokens = " + JSON.stringify(tokens, null, 2)
+          `export const tokens = ` + JSON.stringify(tokens, null, 2)
         );
       } else {
         console.log("not writing to the tokens.ts file");

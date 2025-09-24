@@ -1,4 +1,5 @@
 import { TokenInfo } from "./hyperion/types";
+import { KanalabsOrderPayload } from "./kanalabs/types";
 import {
   MerkleCancelOrderPayload,
   MerkleTradePayload,
@@ -136,10 +137,11 @@ export interface Balance {
 
 // connector
 
-export type  GlobalPayload =
+export type GlobalPayload =
   | MerkleTradePayload
   | MerkleUpdatePayload
   | MerkleCancelOrderPayload
+  | KanalabsOrderPayload
   | any;
 
 export type SignAndSubmitParams = {

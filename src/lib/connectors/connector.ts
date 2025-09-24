@@ -16,11 +16,7 @@ import {
   TimeInForce,
   Tokens,
 } from "@/models/interfaces";
-import {
-  MerkleCancelOrderPayload,
-  MerkleTradePayload,
-  MerkleUpdatePayload,
-} from "@/models/merkleTrade/models";
+
 import { Order, Position } from "@merkletrade/ts-sdk";
 import { MerkleTradeConnector } from "./perpetual/merkleTrade/merkleTrade";
 import { HyperionConnector } from "./spot/hyperion/hyperion";
@@ -29,6 +25,7 @@ import { getConnectedStatus } from "@/services/db/user";
 import { connect } from "http2";
 import { sendOpenSignPageButton } from "@/app/controllers/trade/confirmButton";
 import SuperJSON from "superjson";
+import { KanalabsConnector } from "./perpetual/kanalabs/kanalabs";
 /** Standardized response wrapper for safer integrations */
 export type Result<T> =
   | { success: true; data: T }
@@ -42,18 +39,16 @@ export interface PerpConnector {
   buySpot?(symbol: string, qty: number, price?: number): Promise<OrderResult>;
   sellSpot?(symbol: string, qty: number, price?: number): Promise<OrderResult>;
 
-  openLong(params: PerpOpenParams): Promise<Result<MerkleTradePayload>>;
-  openShort(params: PerpOpenParams): Promise<Result<MerkleTradePayload>>;
+  openLong(params: PerpOpenParams): Promise<Result<GlobalPayload>>;
+  openShort(params: PerpOpenParams): Promise<Result<GlobalPayload>>;
 
-  closeLong(params: PerpCloseParams): Promise<Result<MerkleTradePayload>>;
-  closeShort(params: PerpCloseParams): Promise<Result<MerkleTradePayload>>;
+  closeLong(params: PerpCloseParams): Promise<Result<GlobalPayload>>;
+  closeShort(params: PerpCloseParams): Promise<Result<GlobalPayload>>;
 
   /* Modify/auxiliary */
   setLeverage?(symbol: string, leverage: number): Promise<boolean>;
-  setTP_SL?(params: PerpTP_SLParams): Promise<Result<MerkleUpdatePayload>>;
-  cancelOrder(
-    params: PerpCloseParams
-  ): Promise<Result<MerkleCancelOrderPayload>>;
+  setTP_SL?(params: PerpTP_SLParams): Promise<Result<GlobalPayload>>;
+  cancelOrder(params: PerpCloseParams): Promise<Result<GlobalPayload>>;
   fetchOrder(params: PerpCloseParams): Promise<Result<Order>>;
   fetchPosition(params: PerpCloseParams): Promise<Result<Position>>;
   listOpenPositions(params: PerpCloseParams): Promise<Result<Position[]>>;
@@ -80,7 +75,7 @@ export interface SwapConnector {
   getQuote(params: PairPriceParams): Promise<number>;
 
   /* Execute swaps (wallet signing / chain broadcast handled by implementor) */
-  swap(params: SwapParams): Promise<{ payload: any }>;
+  swap(params: SwapParams): Promise<{ payload: GlobalPayload }>;
 
   /* Helpers */
   getPoolInfo?(symbolIn: string, symbolOut: string): Promise<any>;
@@ -119,13 +114,15 @@ export class ConnectorGateway {
   // instance fields we'll populate — declare them as optional so TS is happy before init
   merkle?: PerpConnector;
   hyperion?: SwapConnector;
-
+  kanalabs?: PerpConnector;
+  
   private spotConnectors: SwapConnector[] = [];
   private perpConnectors: PerpConnector[] = [];
 
   static AvailableConnectors = {
     perp: {
       merkle: MerkleTradeConnector as PerpCtor,
+      kanalabs: KanalabsConnector as PerpCtor,
     },
     spot: {
       hyperion: HyperionConnector as SpotCtor,

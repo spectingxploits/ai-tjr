@@ -155,6 +155,12 @@ export const tokens = {
     "symbol": "thAPT",
     "name": "Thala APT"
   },
+  "ILGI": {
+    "address": "0xc5f28a8d08e01089fc4ef4e1665115f95b23baf130fbf46f02bcec0aa74c7a00",
+    "decimals": 8,
+    "symbol": "ILGI",
+    "name": "I Love Genshin Impact"
+  },
   "RETURD": {
     "address": "0x6fc55bbe8e323b3bd766745e6ede41ae1ad4be711ccb79c00f3dcc4ccb8219f2",
     "decimals": 8,
@@ -221,12 +227,6 @@ export const tokens = {
     "symbol": "TIN",
     "name": "Token IN"
   },
-  "USDT": {
-    "address": "0xc5ad4b024a7500877b1429835a45ad3df20d60fd59ea265463784ab68b29d730",
-    "decimals": 6,
-    "symbol": "USDT",
-    "name": "USDT"
-  },
   "MKL": {
     "address": "0x878370592f9129e14b76558689a4b570ad22678111df775befbfcbc9fb3d90ab",
     "decimals": 6,
@@ -256,6 +256,12 @@ export const tokens = {
     "decimals": 6,
     "symbol": "NL",
     "name": "netherlands-token.vercel.app"
+  },
+  "USDT": {
+    "address": "0xc5ad4b024a7500877b1429835a45ad3df20d60fd59ea265463784ab68b29d730",
+    "decimals": 6,
+    "symbol": "USDT",
+    "name": "USDT"
   },
   "PEPE": {
     "address": "0x08bbc1e07f934be0862be6df1477dbab54d6ccdf594f1569a64fa2941cbfe368",
@@ -353,18 +359,6 @@ export const tokens = {
     "symbol": "xBTC",
     "name": "OKX Wrapped BTC"
   },
-  "brBTC": {
-    "address": "0x8e51106b139001f1f25a320066621a2e0d140724ee9be1d49aaf9e76ceb24d75",
-    "decimals": 8,
-    "symbol": "brBTC",
-    "name": "Bedrock BTC"
-  },
-  "uniBTC": {
-    "address": "0xf764dbfd6999067ac052a8e722ae359bec389bd7dba19ead586801b99b81b075",
-    "decimals": 8,
-    "symbol": "uniBTC",
-    "name": "Universal BTC"
-  },
   "lzWETH": {
     "address": "0xebbe631401ed3b465a68a4c6f5a96a90339153c582aa71ca817bdbf33d50fd21",
     "decimals": 6,
@@ -400,6 +394,18 @@ export const tokens = {
     "decimals": 8,
     "symbol": "tAPT",
     "name": "Tortuga Staked Aptos"
+  },
+  "brBTC": {
+    "address": "0x8e51106b139001f1f25a320066621a2e0d140724ee9be1d49aaf9e76ceb24d75",
+    "decimals": 8,
+    "symbol": "brBTC",
+    "name": "Bedrock BTC"
+  },
+  "uniBTC": {
+    "address": "0xf764dbfd6999067ac052a8e722ae359bec389bd7dba19ead586801b99b81b075",
+    "decimals": 8,
+    "symbol": "uniBTC",
+    "name": "Universal BTC"
   },
   "Sidelined": {
     "address": "0x073992b487d517a8fc710acf953248b2045e381e5eb6fd9a92828db64a269530",
@@ -479,12 +485,6 @@ export const tokens = {
     "symbol": "EDOG",
     "name": "EDOG"
   },
-  "ADOGE": {
-    "address": "0xf47d008dede4796882a86e6327f6b34333eae3657489ba1881636633428f6b46",
-    "decimals": 8,
-    "symbol": "ADOGE",
-    "name": "ADoge"
-  },
   "TRX-USDT": {
     "address": "0x3c30f770ec67ac4f50a322adc74415ef09453bc18e7092e1347586b37b23d524",
     "decimals": 8,
@@ -497,23 +497,23 @@ export const tokens = {
     "symbol": "TRX-ETH",
     "name": "TRX-USDT"
   },
-  "WAW": {
-    "address": "0x113287c881d8dff4f62f9bc532bbc34faf634fec79f98b30e61a79453059cb93",
+  "ADOGE": {
+    "address": "0xf47d008dede4796882a86e6327f6b34333eae3657489ba1881636633428f6b46",
     "decimals": 8,
-    "symbol": "WAW",
-    "name": "WAW"
-  },
-  "BAPTMAN": {
-    "address": "0xe9c6ae7a056ba49901fcc19ab3fcff0938f882cfd7f2cc5a72eea362d29f5b8f",
-    "decimals": 9,
-    "symbol": "BAPTMAN",
-    "name": "BAPTMAN"
+    "symbol": "ADOGE",
+    "name": "ADoge"
   },
   "$MAGA": {
     "address": "0x7de8985f8ea1be5fdfec3d5b3ec6d8dec24c73905b2eb8fed8ea017b198ea459",
     "decimals": 8,
     "symbol": "$MAGA",
     "name": "MAGA"
+  },
+  "WAW": {
+    "address": "0x113287c881d8dff4f62f9bc532bbc34faf634fec79f98b30e61a79453059cb93",
+    "decimals": 8,
+    "symbol": "WAW",
+    "name": "WAW"
   },
   "kAPT": {
     "address": "0x821c94e69bc7ca058c913b7b5e6b0a5c9fd1523d58723a966fb8c1f5ea888105",
@@ -526,6 +526,12 @@ export const tokens = {
     "decimals": 8,
     "symbol": "GLITCH",
     "name": "GLITCH"
+  },
+  "BAPTMAN": {
+    "address": "0xe9c6ae7a056ba49901fcc19ab3fcff0938f882cfd7f2cc5a72eea362d29f5b8f",
+    "decimals": 9,
+    "symbol": "BAPTMAN",
+    "name": "BAPTMAN"
   },
   "🐡": {
     "address": "0x5949756fe946c5e609f559df03198c11523ca582f2826e29acae0f9cace1bc18",
@@ -587,12 +593,6 @@ export const tokens = {
     "symbol": "FFF",
     "name": "FFF"
   },
-  "YAP": {
-    "address": "0x2c2c34ad1da34eb15b16a457d48de6ead9bfbab05e728c80b27dd2b1399ff590",
-    "decimals": 8,
-    "symbol": "YAP",
-    "name": "Yaptos"
-  },
   "TFA2": {
     "address": "0x654109e8d80ee16b6d6bb67657cbb053a826251a828e4644f1ba5f22f7d7a19b",
     "decimals": 6,
@@ -623,12 +623,6 @@ export const tokens = {
     "symbol": "🐳",
     "name": "🐳 emojicoin"
   },
-  "TKM": {
-    "address": "0x3cb282c89fc86a31540275676156ff9d24c7849b741e291097a293ce0c8aedfe",
-    "decimals": 8,
-    "symbol": "TKM",
-    "name": "tokimonster"
-  },
   "PENGU": {
     "address": "0xdd7dc17fd3ea67f33557f03f9ce36e52c59ee9cc9cfd36e9bcfeab0899adb951",
     "decimals": 8,
@@ -658,6 +652,12 @@ export const tokens = {
     "decimals": 8,
     "symbol": "WARPT",
     "name": "Warptos"
+  },
+  "TKM": {
+    "address": "0x3cb282c89fc86a31540275676156ff9d24c7849b741e291097a293ce0c8aedfe",
+    "decimals": 8,
+    "symbol": "TKM",
+    "name": "tokimonster"
   },
   "WETH": {
     "address": "0xae02f68520afd221a5cd6fda6f5500afedab8d0a2e19a916d6d8bc2b36e758db",
@@ -725,12 +725,6 @@ export const tokens = {
     "symbol": "PIPE",
     "name": "pipe"
   },
-  "VIBE": {
-    "address": "0xeedba439a4ab8987a995cf5cfefebd713000b3365718a29dfbc36bc214445fb8",
-    "decimals": 8,
-    "symbol": "VIBE",
-    "name": "VibrantX token"
-  },
   "TERV": {
     "address": "0x2bcf4c6c6b9df70dfa204ed2b1bd0828d4004b8dcc9762eab0cd76e8d7ebbfdb",
     "decimals": 8,
@@ -742,6 +736,12 @@ export const tokens = {
     "decimals": 8,
     "symbol": "sUSDa",
     "name": "UNKNOWN"
+  },
+  "VIBE": {
+    "address": "0xeedba439a4ab8987a995cf5cfefebd713000b3365718a29dfbc36bc214445fb8",
+    "decimals": 8,
+    "symbol": "VIBE",
+    "name": "VibrantX token"
   },
   "QNTM": {
     "address": "0xa18f72c8c6c5069344966e6ecbce05123643da08a48ae7f7f414bca565965202",
@@ -814,6 +814,18 @@ export const tokens = {
     "decimals": 8,
     "symbol": "🟠",
     "name": "🟠 emojicoin"
+  },
+  "YAP": {
+    "address": "0x2c2c34ad1da34eb15b16a457d48de6ead9bfbab05e728c80b27dd2b1399ff590",
+    "decimals": 8,
+    "symbol": "YAP",
+    "name": "Yaptos"
+  },
+  "MOON": {
+    "address": "0x28dc08119fa813260c3828f70f6215268f7244640d7e174137bb31c4eb81f3a6",
+    "decimals": 6,
+    "symbol": "MOON",
+    "name": "Moon Coin"
   },
   "WBTC": {
     "address": "0x68844a0d7f2587e726ad0579f3d640865bb4162c08a4589eeda3f9689ec52a3d",

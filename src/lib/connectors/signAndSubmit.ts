@@ -6,13 +6,13 @@ import {
 export abstract class signAndSubmit {
   connector_name:
     | "hyperion_swap_connector"
-    | "kana_labs_perpetual_connector"
+    | "kanalabs_perpetual_connector"
     | "merkle_trade_perpetual_connector";
 
   constructor(
     connector_name:
       | "hyperion_swap_connector"
-      | "kana_labs_perpetual_connector"
+      | "kanalabs_perpetual_connector"
       | "merkle_trade_perpetual_connector"
   ) {
     this.connector_name = connector_name;

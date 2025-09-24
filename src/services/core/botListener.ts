@@ -57,23 +57,29 @@ async function setupListeners() {
 
 // Start polling
 (async () => {
-  console.log("Starting bot with long polling...");
-  await bot.init(); // fetch bot info
-  await setupListeners(); // ✅ register listeners before start
-  bot.start({
-    onStart: (info) =>
-      console.log("Bot started as", info.username, "id", info.id),
-  });
+  let connector_gateway = new ConnectorGateway(Network.TESTNET);
+  await connector_gateway.initGatewayConnectors();
+  console.log("connector_gateway", connector_gateway);
+  await connector_gateway.kanalabs?.getTokens(true);
+  // await connector_gateway.hyperion?.getTokens(true);
+  // await connector_gateway.merkle?.getTokens(true);
+  // console.log("Starting bot with long polling...");
+  // await bot.init(); // fetch bot info
+  // await setupListeners(); // ✅ register listeners before start
+  // bot.start({
+  //   onStart: (info) =>
+  //     console.log("Bot started as", info.username, "id", info.id),
+  // });
 
-  // graceful shutdown
-  const shutdown = async () => {
-    console.log("Shutting down bot...");
-    try {
-      await bot.stop();
-    } finally {
-      process.exit(0);
-    }
-  };
-  process.on("SIGINT", shutdown);
-  process.on("SIGTERM", shutdown);
+  // // graceful shutdown
+  // const shutdown = async () => {
+  //   console.log("Shutting down bot...");
+  //   try {
+  //     await bot.stop();
+  //   } finally {
+  //     process.exit(0);
+  //   }
+  // };
+  // process.on("SIGINT", shutdown);
+  // process.on("SIGTERM", shutdown);
 })();
