@@ -1,7 +1,7 @@
 import { Balance, Tokens } from "@/models/interfaces";
 import { Result, SwapConnector } from "../../connector";
 import { HyperionSDK, initHyperionSDK } from "@hyperionxyz/sdk";
-import { Network } from "@aptos-labs/ts-sdk";
+import { Network, SimpleTransaction } from "@aptos-labs/ts-sdk";
 import { PairPriceParams, SwapParams } from "@/models/hyperion/types";
 import {
   PoolInfo,
@@ -64,7 +64,7 @@ export class HyperionConnector extends signAndSubmit implements SwapConnector {
     }
   }
 
-  async swap(params: SwapParams): Promise<SwapPayloadResult> {
+  async swap(params: SwapParams): Promise<Result<SimpleTransaction>> {
     try {
       const poolInfo = await this.getPoolInfoByPair(
         params.symbolIn,
@@ -110,10 +110,16 @@ export class HyperionConnector extends signAndSubmit implements SwapConnector {
         swapParams
       );
       console.log("payload", payload);
-      return { payload };
+
+      let transactionPayload: SimpleTransaction =
+        await this.hyperionAdapter.AptosClient.transaction.build.simple({
+          sender: params.userAddress,
+          data: payload,
+        });
+      return { success: true, data: transactionPayload };
     } catch (err) {
       console.error("[HyperionConnector] swap error:", err);
-      throw err;
+      return { success: false, error: String(err) };
     }
   }
 

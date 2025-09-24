@@ -31,7 +31,7 @@ export interface TokenInfo {
   decimals: number;
   symbol: string;
   name: string;
-  marketId?: number;
+  marketId?: number | string;
 }
 
 // Result of swap estimation

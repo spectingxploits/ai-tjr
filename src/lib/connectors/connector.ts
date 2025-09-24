@@ -5,7 +5,6 @@ import {
 } from "@/models/hyperion/types";
 import {
   Balance,
-  GlobalPayload,
   GlobalSignal,
   OrderResult,
   PerpCloseParams,
@@ -20,7 +19,7 @@ import {
 import { Order, Position } from "@merkletrade/ts-sdk";
 import { MerkleTradeConnector } from "./perpetual/merkleTrade/merkleTrade";
 import { HyperionConnector } from "./spot/hyperion/hyperion";
-import { Network } from "@aptos-labs/ts-sdk";
+import { Network, SimpleTransaction } from "@aptos-labs/ts-sdk";
 import { getConnectedStatus } from "@/services/db/user";
 import { connect } from "http2";
 import { sendOpenSignPageButton } from "@/app/controllers/trade/confirmButton";
@@ -39,16 +38,16 @@ export interface PerpConnector {
   buySpot?(symbol: string, qty: number, price?: number): Promise<OrderResult>;
   sellSpot?(symbol: string, qty: number, price?: number): Promise<OrderResult>;
 
-  openLong(params: PerpOpenParams): Promise<Result<GlobalPayload>>;
-  openShort(params: PerpOpenParams): Promise<Result<GlobalPayload>>;
+  openLong(params: PerpOpenParams): Promise<Result<SimpleTransaction>>;
+  openShort(params: PerpOpenParams): Promise<Result<SimpleTransaction>>;
 
-  closeLong(params: PerpCloseParams): Promise<Result<GlobalPayload>>;
-  closeShort(params: PerpCloseParams): Promise<Result<GlobalPayload>>;
+  closeLong(params: PerpCloseParams): Promise<Result<SimpleTransaction>>;
+  closeShort(params: PerpCloseParams): Promise<Result<SimpleTransaction>>;
 
   /* Modify/auxiliary */
   setLeverage?(symbol: string, leverage: number): Promise<boolean>;
-  setTP_SL?(params: PerpTP_SLParams): Promise<Result<GlobalPayload>>;
-  cancelOrder(params: PerpCloseParams): Promise<Result<GlobalPayload>>;
+  setTP_SL?(params: PerpTP_SLParams): Promise<Result<SimpleTransaction>>;
+  cancelOrder(params: PerpCloseParams): Promise<Result<SimpleTransaction>>;
   fetchOrder(params: PerpCloseParams): Promise<Result<Order>>;
   fetchPosition(params: PerpCloseParams): Promise<Result<Position>>;
   listOpenPositions(params: PerpCloseParams): Promise<Result<Position[]>>;
@@ -75,7 +74,7 @@ export interface SwapConnector {
   getQuote(params: PairPriceParams): Promise<number>;
 
   /* Execute swaps (wallet signing / chain broadcast handled by implementor) */
-  swap(params: SwapParams): Promise<{ payload: GlobalPayload }>;
+  swap(params: SwapParams): Promise<Result<SimpleTransaction>>;
 
   /* Helpers */
   getPoolInfo?(symbolIn: string, symbolOut: string): Promise<any>;
@@ -115,7 +114,7 @@ export class ConnectorGateway {
   merkle?: PerpConnector;
   hyperion?: SwapConnector;
   kanalabs?: PerpConnector;
-  
+
   private spotConnectors: SwapConnector[] = [];
   private perpConnectors: PerpConnector[] = [];
 
@@ -210,7 +209,7 @@ export class ConnectorGateway {
     }
 
     // preparing the payload for the supported dexes
-    let payloads: Record<string, GlobalPayload> = {};
+    let payloads: Record<string, SimpleTransaction> = {};
 
     // the swaps only happen if the trade is market
     if (signal.market) {
@@ -230,7 +229,10 @@ export class ConnectorGateway {
             (signal.lq ?? 10) * 10 ** connector.getCustomQuotes()[0].decimals, // 10$ if no lq was provided
           userAddress: user_address,
         });
-        payloads[connector.name] = payload;
+        if (!payload.success) {
+          return Promise.reject(payload.error);
+        }
+        payloads[connector.name] = payload.data;
       }
     }
 
@@ -252,7 +254,10 @@ export class ConnectorGateway {
           side: "long",
           mainnet: this.network === Network.MAINNET,
         });
-        payloads[connector.name] = payload;
+        if (!payload.success) {
+          return Promise.reject(payload.error);
+        }
+        payloads[connector.name] = payload.data!;
       } else {
         const payload = await connector.openShort({
           base: signal.symbol,
@@ -268,7 +273,10 @@ export class ConnectorGateway {
           side: "short",
           mainnet: this.network === Network.MAINNET,
         });
-        payloads[connector.name] = payload;
+        if (!payload.success) {
+          return Promise.reject(payload.error);
+        }
+        payloads[connector.name] = payload.data!;
       }
     }
 

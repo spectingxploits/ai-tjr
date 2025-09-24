@@ -6,7 +6,7 @@ import {
   Order,
   Position,
 } from "@merkletrade/ts-sdk";
-import { Aptos, Network } from "@aptos-labs/ts-sdk";
+import { Aptos, Network, SimpleTransaction } from "@aptos-labs/ts-sdk";
 import { PerpConnector, Result } from "../../connector";
 import {
   OrderResult,
@@ -65,19 +65,19 @@ export class MerkleTradeConnector
   }
 
   /** ---------- Open Long / Short ---------- */
-  async openLong(params: PerpOpenParams): Promise<Result<MerkleTradePayload>> {
+  async openLong(params: PerpOpenParams): Promise<Result<SimpleTransaction>> {
     this.checkClients();
     return this.openPerp({ ...params, side: "long" });
   }
 
-  async openShort(params: PerpOpenParams): Promise<Result<MerkleTradePayload>> {
+  async openShort(params: PerpOpenParams): Promise<Result<SimpleTransaction>> {
     this.checkClients();
     return this.openPerp({ ...params, side: "short" });
   }
 
   private async openPerp(
     params: PerpOpenParams
-  ): Promise<Result<MerkleTradePayload>> {
+  ): Promise<Result<SimpleTransaction>> {
     this.checkClients();
     try {
       const pairId = `${params.base}_USD`;
@@ -130,7 +130,13 @@ export class MerkleTradeConnector
         return { success: false, error: "entryType must be market or limit" };
       }
 
-      return { success: true, data: payload };
+      let transactionPayload: SimpleTransaction =
+        await this.aptos_client.transaction.build.simple({
+          sender: params.userAddress,
+          data: payload,
+        });
+
+      return { success: true, data: transactionPayload };
     } catch (err) {
       console.log("err", err);
       return { success: false, error: (err as Error).message };
@@ -138,23 +144,21 @@ export class MerkleTradeConnector
   }
 
   /** ---------- Close Long / Short ---------- */
-  async closeLong(
-    params: PerpCloseParams
-  ): Promise<Result<MerkleTradePayload>> {
+  async closeLong(params: PerpCloseParams): Promise<Result<SimpleTransaction>> {
     this.checkClients();
     return this.closePerp(params);
   }
 
   async closeShort(
     params: PerpCloseParams
-  ): Promise<Result<MerkleTradePayload>> {
+  ): Promise<Result<SimpleTransaction>> {
     this.checkClients();
     return this.closePerp(params);
   }
 
   private async closePerp(
     params: PerpCloseParams
-  ): Promise<Result<MerkleTradePayload>> {
+  ): Promise<Result<SimpleTransaction>> {
     this.checkClients();
 
     try {
@@ -180,17 +184,19 @@ export class MerkleTradeConnector
         isLong: position.isLong,
         isIncrease: false,
       });
-
-      return { success: true, data: payload };
+      let transactionPayload: SimpleTransaction =
+        await this.aptos_client.transaction.build.simple({
+          sender: params.userAddress,
+          data: payload,
+        });
+      return { success: true, data: transactionPayload };
     } catch (err) {
       return { success: false, error: (err as Error).message };
     }
   }
 
   /** ---------- Update TP/SL ---------- */
-  async setTP_SL(
-    params: PerpTP_SLParams
-  ): Promise<Result<MerkleUpdatePayload>> {
+  async setTP_SL(params: PerpTP_SLParams): Promise<Result<SimpleTransaction>> {
     this.checkClients();
     try {
       const positions = await this.merkle_client.getPositions({
@@ -214,8 +220,12 @@ export class MerkleTradeConnector
         takeProfitTriggerPrice: BigInt(params.tpPriceInQuote * 10 ** 6),
         stopLossTriggerPrice: BigInt(params.slPriceInQuote * 10 ** 6),
       });
-
-      return { success: true, data: payload };
+      let transactionPayload: SimpleTransaction =
+        await this.aptos_client.transaction.build.simple({
+          sender: params.userAddress,
+          data: payload,
+        });
+      return { success: true, data: transactionPayload };
     } catch (err) {
       return { success: false, error: (err as Error).message };
     }
@@ -224,7 +234,7 @@ export class MerkleTradeConnector
   /** ---------- Cancel Order ---------- */
   async cancelOrder(
     params: PerpCloseParams
-  ): Promise<Result<MerkleCancelOrderPayload>> {
+  ): Promise<Result<SimpleTransaction>> {
     this.checkClients();
 
     try {
@@ -245,8 +255,12 @@ export class MerkleTradeConnector
         userAddress: params.userAddress,
         orderId: BigInt(order.orderId),
       });
-
-      return { success: true, data: payload };
+      let transactionPayload: SimpleTransaction =
+        await this.aptos_client.transaction.build.simple({
+          sender: params.userAddress,
+          data: payload,
+        });
+      return { success: true, data: transactionPayload };
     } catch (err) {
       return { success: false, error: (err as Error).message };
     }
