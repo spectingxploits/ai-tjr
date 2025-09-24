@@ -70,6 +70,7 @@ export class HyperionConnector extends signAndSubmit implements SwapConnector {
         params.symbolIn,
         params.symbolOut
       );
+      console.log("poolInfo", poolInfo);
       if (!poolInfo) {
         throw new Error(
           `No pool found for ${params.symbolIn} -> ${params.symbolOut}`
@@ -78,10 +79,12 @@ export class HyperionConnector extends signAndSubmit implements SwapConnector {
 
       const tokenA: TokenInfo = poolInfo.token1Info;
       const tokenB: TokenInfo = poolInfo.token2Info;
-
+      console.log("tokenA", tokenA);
+      console.log("tokenB", tokenB);
       const tokenIn = tokenA.symbol === params.symbolIn ? tokenA : tokenB;
       const tokenOut = tokenA.symbol === params.symbolIn ? tokenB : tokenA;
-
+      console.log("tokenIn", tokenIn);
+      console.log("tokenOut", tokenOut);
       const currencyAAmount = params.amountIn * 10 ** tokenIn.decimals;
 
       const { amountOut: currencyBAmount, path: poolRoute } =
@@ -89,9 +92,10 @@ export class HyperionConnector extends signAndSubmit implements SwapConnector {
           amount: currencyAAmount,
           from: tokenIn.address,
           to: tokenOut.address,
-          safeMode: false,
+          safeMode: true,
         });
-
+      console.log("currencyBAmount", currencyBAmount);
+      console.log("poolRoute", poolRoute);
       const swapParams = {
         currencyA: tokenIn.address,
         currencyB: tokenOut.address,
@@ -101,11 +105,11 @@ export class HyperionConnector extends signAndSubmit implements SwapConnector {
         poolRoute,
         recipient: params.userAddress,
       };
-
+      console.log("swapParams", swapParams);
       const payload = await this.hyperionAdapter.Swap.swapTransactionPayload(
         swapParams
       );
-
+      console.log("payload", payload);
       return { payload };
     } catch (err) {
       console.error("[HyperionConnector] swap error:", err);
@@ -128,7 +132,21 @@ export class HyperionConnector extends signAndSubmit implements SwapConnector {
         throw new Error(`No pool found for ${tokenA} -> ${tokenB}`);
       }
 
-      return pool.pool;
+      return {
+        token1Info: {
+          address: pool.pool.token1Info.assetType || "",
+          decimals: pool.pool.token1Info.decimals || 1,
+          symbol: pool.pool.token1Info.symbol || "UNKNOWN",
+          name: pool.pool.token1Info.name || "UNKNOWN",
+        },
+        token2Info: {
+          address: pool.pool.token2Info.assetType || "",
+          decimals: pool.pool.token2Info.decimals || 1,
+          symbol: pool.pool.token2Info.symbol || "UNKNOWN",
+          name: pool.pool.token2Info.name || "UNKNOWN",
+        },
+        currentTick: pool.pool.currentTick,
+      };
     } catch (err) {
       console.error("[HyperionConnector] getPoolInfoByPair error:", err);
       throw err;

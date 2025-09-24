@@ -217,6 +217,13 @@ export class ConnectorGateway {
 
     // for spot
     for (const connector of supportedSpotDexes) {
+      console.log(
+        "these are the params for the spot connector",
+        connector.getCustomQuotes()[0].symbol,
+        signal.symbol,
+        (signal.lq ?? 10) * 10 ** connector.getCustomQuotes()[0].decimals,
+        user_address
+      );
       const payload = await connector.swap({
         symbolIn: connector.getCustomQuotes()[0].symbol,
         symbolOut: signal.symbol,

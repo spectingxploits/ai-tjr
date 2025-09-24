@@ -44,10 +44,26 @@ export async function parseRawPotentialSignal(
       contents: JSON.stringify(parsedOutput),
     });
     console.log("Gemini opinion:", geminiOpinion);
-    let parsedGeminiOpinion: GeminiOpinion = JSON.parse(
-      geminiOpinion.replace(/```json|```/g, "").trim()
-    ) as GeminiOpinion;
-    console.log("Gemini opinion:", parsedGeminiOpinion);
+    let parsedGeminiOpinion: GeminiOpinion;
+    try {
+      parsedGeminiOpinion = JSON.parse(
+        geminiOpinion.replace(/```json|```/g, "").trim()
+      ) as GeminiOpinion;
+      console.log("Gemini opinion:", parsedGeminiOpinion);
+    } catch (e) {
+      console.error("Gemini opinion parsing failed, retrying", e);
+      const match = [
+        ...geminiOpinion.matchAll(/\{[\s\S]*?successRate[\s\S]*?\}/g),
+      ].pop();
+      if (!match) {
+        throw new Error("Gemini opinion parsing failed, no successRate found");
+      }
+      try {
+        parsedGeminiOpinion = JSON.parse(match[0]);
+      } catch {
+        throw new Error("Gemini opinion parsing failed, no successRate found");
+      }
+    }
 
     // wait for 3 seconds to avoid rate limit
     await new Promise((resolve) => setTimeout(resolve, 3000));

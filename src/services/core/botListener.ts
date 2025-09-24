@@ -44,7 +44,6 @@ async function setupListeners() {
               admin.user.id
             );
             console.log("Notified admin user", admin.user.id);
-            break;
           } catch (e) {
             console.warn("Failed to DM admin", admin.user.id, e);
           }
