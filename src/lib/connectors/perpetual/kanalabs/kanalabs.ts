@@ -97,7 +97,7 @@ export class KanalabsConnector extends signAndSubmit implements PerpConnector {
           stopLoss: params.slPrice,
         };
         const res = await this.kanalabsApi.get("/placeMarketOrder", {
-          params,
+          params: marketParams,
         });
         const payloadData = res.data.data;
         const transactionPayload =
@@ -118,7 +118,7 @@ export class KanalabsConnector extends signAndSubmit implements PerpConnector {
           stopLoss: params.slPrice,
         };
         const res = await this.kanalabsApi.get("/placeLimitOrder", {
-          params,
+          params: limitParams,
         });
         const payloadData = res.data.data;
         const transactionPayload =
@@ -131,16 +131,45 @@ export class KanalabsConnector extends signAndSubmit implements PerpConnector {
         return Promise.reject("order type is not supported");
       }
     } catch (e) {
-      return Promise.reject(`order type is not supported ${e}`);
+      return { success: false, error: (e as Error).message };
     }
   }
 
   closeLong(params: PerpCloseParams): Promise<Result<SimpleTransaction>> {
-    throw new Error("Method not implemented.");
+    this.checkClients();
+    return this.closePerp(params);
   }
   closeShort(params: PerpCloseParams): Promise<Result<SimpleTransaction>> {
-    throw new Error("Method not implemented.");
+    this.checkClients();
+    return this.closePerp(params);
   }
+
+  private async closePerp(
+    params: PerpCloseParams
+  ): Promise<Result<SimpleTransaction>> {
+    this.checkClients();
+
+    try {
+      const collapseParams = {
+        marketId: params.positionId,
+      };
+      const collapsePayload = await this.kanalabsApi.get("/collapsePosition", {
+        params: collapseParams,
+      });
+
+      const payloadData = collapsePayload.data.data;
+      const transactionPayload =
+        await this.aptosClient.transaction.build.simple({
+          sender: params.userAddress,
+          data: payloadData,
+        });
+
+      return { success: true, data: transactionPayload };
+    } catch (err) {
+      return { success: false, error: (err as Error).message };
+    }
+  }
+
   setLeverage?(symbol: string, leverage: number): Promise<boolean> {
     throw new Error("Method not implemented.");
   }
