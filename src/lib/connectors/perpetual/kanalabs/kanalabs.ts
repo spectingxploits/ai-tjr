@@ -159,6 +159,7 @@ export class KanalabsConnector extends signAndSubmit implements PerpConnector {
           decimals: token.base_decimals,
           symbol: token.base_name.split("_")[0],
           name: token.base_name.split("_")[0],
+          marketId: token.market_id,
         };
       }
       if (updateTokenList) {
