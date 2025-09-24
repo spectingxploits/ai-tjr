@@ -188,8 +188,23 @@ export class KanalabsConnector extends signAndSubmit implements PerpConnector {
   listOpenPositions(params: PerpCloseParams): Promise<Result<Position[]>> {
     throw new Error("Method not implemented.");
   }
-  getTickerPrice(symbol: string, mainnet: boolean): Promise<Result<number>> {
-    throw new Error("Method not implemented.");
+  async getTickerPrice(symbol: string): Promise<Result<number>> {
+    let priceRes = await this.kanalabsApi.get("/getMarketPrice", {
+      params: { marketId: this.tokens[symbol].marketId },
+    });
+
+    if (
+      priceRes.data.data.bestAskPrice == null ||
+      priceRes.data.data.bestBidPrice == null
+    ) {
+      return Promise.resolve({ success: false, error: "No price found" });
+    }
+    return Promise.resolve({
+      success: true,
+      data:
+        Number(priceRes.data.data.bestAskPrice) +
+        Number(priceRes.data.data.bestBidPrice) / 2,
+    });
   }
   async getBalance(
     mainnet: boolean,

@@ -333,10 +333,7 @@ export class MerkleTradeConnector
     }
   }
 
-  async getTickerPrice(
-    symbol: string,
-    mainnet: boolean
-  ): Promise<Result<number>> {
+  async getTickerPrice(symbol: string): Promise<Result<number>> {
     this.checkClients();
 
     try {

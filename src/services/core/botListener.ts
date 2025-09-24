@@ -60,10 +60,7 @@ async function setupListeners() {
   let connector_gateway = new ConnectorGateway(Network.TESTNET);
   await connector_gateway.initGatewayConnectors();
   console.log("connector_gateway", connector_gateway);
-  let balances = await connector_gateway.kanalabs?.getBalance(
-    true,
-    "0x6902e87eba698ac6f57803706482ac5bd69e6ab762ea0d6cb5f6034aa02683e0"
-  );
+  let balances = await connector_gateway.kanalabs?.getTickerPrice("ETH");
   console.log("balances", balances);
   // await connector_gateway.hyperion?.getTokens(true);
   // await connector_gateway.merkle?.getTokens(true);

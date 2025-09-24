@@ -53,7 +53,7 @@ export interface PerpConnector {
   listOpenPositions(params: PerpCloseParams): Promise<Result<Position[]>>;
 
   /* market data & account */
-  getTickerPrice(symbol: string, mainnet: boolean): Promise<Result<number>>;
+  getTickerPrice(symbol: string): Promise<Result<number>>;
   getBalance(mainnet: boolean, userAddress: string): Promise<Result<Balance[]>>;
   getFundingRate?(symbol: string): Promise<number | null>;
   getTokens(updateTokenList: boolean): Promise<Result<Tokens>>;
