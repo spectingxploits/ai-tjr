@@ -14,13 +14,17 @@ export async function POST(req: Request) {
       wallet_address === undefined
     ) {
       return NextResponse.json(
-        { success: false, message: "user_tg_id and connected and shared pubkey and the wallet address are required" },
+        {
+          success: false,
+          message:
+            "user_tg_id and connected and shared pubkey and the wallet address are required",
+        },
         { status: 400 }
       );
     }
 
     const new_status = await setConnectedStatus(
-      Number(user_tg_id),
+      String(user_tg_id),
       Boolean(connected),
       shared_pubkey,
       wallet_address

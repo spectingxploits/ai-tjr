@@ -43,6 +43,7 @@ export async function parseRawPotentialSignal(
       message: GlobalPrompts.feedback,
       contents: JSON.stringify(parsedOutput),
     });
+    console.log("Gemini opinion:", geminiOpinion);
     let parsedGeminiOpinion: GeminiOpinion = JSON.parse(
       geminiOpinion.replace(/```json|```/g, "").trim()
     ) as GeminiOpinion;
@@ -60,6 +61,10 @@ export async function parseRawPotentialSignal(
     }
 
     if (parsedOutput.values.symbol === undefined) {
+      return null;
+    }
+
+    if (parsedOutput.values.lq === undefined) {
       return null;
     }
 

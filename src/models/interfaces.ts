@@ -109,7 +109,7 @@ export interface PerpOpenParams {
   slPrice?: number;
   slPct?: number; // alt: percentage based SL
   reduceOnly?: boolean;
-  clientId?: string;
+  // clientId?: string;
   meta?: any;
 }
 

@@ -426,21 +426,27 @@ export class MerkleTradeConnector
   async isPairSupported(base: string, quote: string): Promise<Result<boolean>> {
     try {
       const pairStates = await this.merkle_client.api.getAllPairStates();
-      pairStates.forEach((pairState) => {
+      for (const pairState of pairStates) {
         // checking for each quote
         if (pairState.pairType.includes(base + "_USD")) {
-          console.log("found pair", pairState.pairType);
+          console.log("found pair in merkle", pairState.pairType);
           return Promise.resolve({ success: true, data: true });
         }
-      });
-      return Promise.resolve({ success: true, data: false });
+      }
+      console.log("no pair found in merkle");
+      return Promise.resolve({ success: false, error: "No pair found" });
     } catch (err) {
       console.error("[MerkleConnector] isPairSupported error:", err);
       return Promise.reject(err);
     }
   }
 
-  getCustomQuotes(): string[] {
-    return ["USDC"];
+  getCustomQuotes(): { symbol: string; decimals: number }[] {
+    return [
+      {
+        symbol: "USDC",
+        decimals: 6,
+      },
+    ];
   }
 }

@@ -1,15 +1,19 @@
 // app/petra/sign/page.tsx (or wherever your PetraSignPage lives)
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import nacl from "tweetnacl";
 import type { SignAndSubmitParams } from "@/models/interfaces";
 import type { GlobalSignal } from "@/models/interfaces"; // if you export it
+import { get } from "http";
 
 const PETRA_LINK_BASE = "https://petra.app/api/v1";
 const APP_INFO = {
-  domain: typeof window !== "undefined" ? window.location.origin : "https://your-dapp",
+  domain:
+    typeof window !== "undefined"
+      ? window.location.origin
+      : "https://your-dapp",
   name: "AI_TJR_APP",
 };
 
@@ -22,7 +26,9 @@ function hexToU8(hex?: string): Uint8Array {
   return arr;
 }
 function u8ToHex(u8: Uint8Array): string {
-  return Array.from(u8).map((b) => b.toString(16).padStart(2, "0")).join("");
+  return Array.from(u8)
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 function utf8ToU8(str: string) {
   return new TextEncoder().encode(str);
@@ -35,9 +41,12 @@ export default function PetraSignPage() {
   const payloadParam = searchParams.get("payload") ?? "";
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [publicKeyHex, setPublicKeyHex] = useState<string | null>(null);
 
   // parse wrapper (SignAndSubmitParams + telegramChatId)
-  const parsedWrapper = useMemo<WrappedParams | { __parseError: true; raw: string } | null>(() => {
+  const parsedWrapper = useMemo<
+    WrappedParams | { __parseError: true; raw: string } | null
+  >(() => {
     if (!payloadParam) return null;
     try {
       const decoded = decodeURIComponent(payloadParam);
@@ -51,13 +60,38 @@ export default function PetraSignPage() {
     }
   }, [payloadParam]);
 
-  const publicKeyHex = typeof window !== "undefined" ? localStorage.getItem("petra_public_key") : null;
-  const sharedKeyHex = typeof window !== "undefined" ? localStorage.getItem("petra_shared_key") : null;
-  const missingKeys = !publicKeyHex || !sharedKeyHex;
+  useEffect(() => {
+    if (!parsedWrapper || !(parsedWrapper as WrappedParams).telegramChatId)
+      return;
+
+    async function fetchPublicKey() {
+      try {
+        const w = parsedWrapper as WrappedParams;
+        const res = await fetch(
+          `/api/users/getConnected?user_tg_id=${encodeURIComponent(
+            w.telegramChatId!
+          )}`
+        );
+        if (!res.ok) {
+          console.warn("getConnected non-ok:", res.status);
+          setError("Failed to fetch public key from server");
+          return;
+        }
+        const data = await res.json();
+        setPublicKeyHex(data.shared_pubkey || null);
+      } catch (err) {
+        console.error(err);
+        setError("Error fetching public key");
+      }
+    }
+
+    fetchPublicKey();
+  }, [parsedWrapper]);
 
   const summary = useMemo(() => {
     if (!parsedWrapper) return null;
-    if ((parsedWrapper as any).__parseError) return { error: "Invalid wrapper JSON", raw: (parsedWrapper as any).raw };
+    if ((parsedWrapper as any).__parseError)
+      return { error: "Invalid wrapper JSON", raw: (parsedWrapper as any).raw };
 
     const w = parsedWrapper as WrappedParams;
 
@@ -103,18 +137,23 @@ export default function PetraSignPage() {
       if (!parsedWrapper || (parsedWrapper as any).__parseError) {
         throw new Error("Invalid or missing payload query parameter");
       }
-      if (!publicKeyHex || !sharedKeyHex) {
-        throw new Error("Missing petra_public_key or petra_shared_key in localStorage. Please connect with Petra first.");
+      if (!publicKeyHex) {
+        throw new Error(
+          "Missing petra_public_key or petra_shared_key in localStorage. Please connect with Petra first."
+        );
       }
 
       const wrapper = parsedWrapper as WrappedParams;
       const innerPayload = wrapper.payload;
       if (!innerPayload) throw new Error("Missing inner transaction payload");
 
-      const payloadB64 = typeof window !== "undefined" ? window.btoa(JSON.stringify(innerPayload)) : Buffer.from(JSON.stringify(innerPayload)).toString("base64");
+      const payloadB64 =
+        typeof window !== "undefined"
+          ? window.btoa(JSON.stringify(innerPayload))
+          : Buffer.from(JSON.stringify(innerPayload)).toString("base64");
 
       const nonce = nacl.randomBytes(24);
-      const sharedSecret = hexToU8(sharedKeyHex!);
+      const sharedSecret = hexToU8(publicKeyHex!);
       if (sharedSecret.length === 0) throw new Error("Invalid shared secret");
 
       const messageU8 = utf8ToU8(payloadB64);
@@ -128,8 +167,13 @@ export default function PetraSignPage() {
         nonce: u8ToHex(nonce),
       };
 
-      const dataB64 = typeof window !== "undefined" ? window.btoa(JSON.stringify(dataObj)) : Buffer.from(JSON.stringify(dataObj)).toString("base64");
-      const url = `${PETRA_LINK_BASE}/signAndSubmit?data=${encodeURIComponent(dataB64)}`;
+      const dataB64 =
+        typeof window !== "undefined"
+          ? window.btoa(JSON.stringify(dataObj))
+          : Buffer.from(JSON.stringify(dataObj)).toString("base64");
+      const url = `${PETRA_LINK_BASE}/signAndSubmit?data=${encodeURIComponent(
+        dataB64
+      )}`;
       window.open(url, "_blank");
     } catch (err) {
       setError((err as Error).message);
@@ -140,7 +184,8 @@ export default function PetraSignPage() {
 
   // small helper to render the signal fields grid (skip nulls)
   const renderSignalGrid = (signal?: GlobalSignal) => {
-    if (!signal) return <div className="text-sm text-slate-400">No signal provided</div>;
+    if (!signal)
+      return <div className="text-sm text-slate-400">No signal provided</div>;
 
     const entries = [
       ["market", String(signal.market)],
@@ -149,7 +194,7 @@ export default function PetraSignPage() {
       ["loss", String(signal.loss)],
       ["tp", String(signal.tp)],
       ["sl", String(signal.sl)],
-      ["lq", String(signal.lq)],
+      ["liquidity", String(signal.lq)],
       ["leverage", String(signal.leverage)],
       ["long", String(signal.long)],
       ["symbol", String(signal.symbol ?? "—")],
@@ -170,9 +215,11 @@ export default function PetraSignPage() {
         <div className="mt-3">
           <div className="text-slate-300 font-medium text-sm mb-1">Reasons</div>
           <div className="text-sm text-slate-200">
-            {Array.isArray(signal.reasons) && signal.reasons.length > 0
-              ? signal.reasons.map((r, i) => <div key={i}>• {r}</div>)
-              : <div className="text-slate-400">—</div>}
+            {Array.isArray(signal.reasons) && signal.reasons.length > 0 ? (
+              signal.reasons.map((r, i) => <div key={i}>• {r}</div>)
+            ) : (
+              <div className="text-slate-400">—</div>
+            )}
           </div>
         </div>
       </>
@@ -182,14 +229,18 @@ export default function PetraSignPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-6 bg-slate-900 text-white">
       <div className="max-w-3xl w-full bg-slate-800/60 backdrop-blur rounded-2xl p-6">
-        <h2 className="text-2xl font-semibold mb-4">Sign & Submit — Review</h2>
+        <h2 className="text-xl font-semibold mb-4">Sign & Submit — Review</h2>
 
         {!payloadParam && (
-          <div className="p-4 rounded bg-yellow-900/30 text-yellow-300">Missing <code>payload</code> query parameter.</div>
+          <div className="p-4 rounded bg-yellow-900/30 text-yellow-300">
+            Missing <code>payload</code> query parameter.
+          </div>
         )}
 
         {parsedWrapper && (parsedWrapper as any).__parseError && (
-          <div className="p-4 rounded bg-red-900/40 text-red-300">Failed to parse payload. Raw: {(parsedWrapper as any).raw}</div>
+          <div className="p-4 rounded bg-red-900/40 text-red-300">
+            Failed to parse payload. Raw: {(parsedWrapper as any).raw}
+          </div>
         )}
 
         {summary && !("error" in summary) && (
@@ -198,20 +249,32 @@ export default function PetraSignPage() {
               <h3 className="font-semibold mb-2">Request details</h3>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
-                  <div className="text-slate-300 font-medium">User (telegram userAddress)</div>
-                  <div className="text-slate-200 truncate">{String(summary.wrapper.userAddress ?? "—")}</div>
+                  <div className="text-slate-300 font-medium">
+                    User (telegram userAddress)
+                  </div>
+                  <div className="text-slate-200 truncate">
+                    {String(summary.wrapper.userAddress ?? "—")}
+                  </div>
                 </div>
                 <div>
-                  <div className="text-slate-300 font-medium">Telegram chat id</div>
-                  <div className="text-slate-200 truncate">{String(summary.wrapper.telegramChatId ?? "—")}</div>
+                  <div className="text-slate-300 font-medium">
+                    Telegram chat id
+                  </div>
+                  <div className="text-slate-200 truncate">
+                    {String(summary.wrapper.telegramChatId ?? "—")}
+                  </div>
                 </div>
                 <div>
-                  <div className="text-slate-300 font-medium">Connector</div>
-                  <div className="text-slate-200 truncate">{String(summary.wrapper.connectorName ?? "—")}</div>
+                  <div className="text-slate-300 font-sm">Connector</div>
+                  <div className="text-slate-200 break-words max-w-xs font-sm">
+                    {String(summary.wrapper.connectorName ?? "—")}
+                  </div>
                 </div>
                 <div>
                   <div className="text-slate-300 font-medium">Mainnet</div>
-                  <div className="text-slate-200 truncate">{String(summary.wrapper.mainnet ?? false)}</div>
+                  <div className="text-slate-200 truncate">
+                    {String(summary.wrapper.mainnet ?? false)}
+                  </div>
                 </div>
               </div>
             </section>
@@ -223,8 +286,12 @@ export default function PetraSignPage() {
               <div className="max-h-56 overflow-y-auto p-3 bg-slate-800/50 rounded">
                 {renderSignalGrid(summary.wrapper.signal)}
                 <div className="mt-3 border-t border-slate-700 pt-3">
-                  <div className="text-slate-300 font-medium text-sm mb-2">Raw signal JSON</div>
-                  <pre className="whitespace-pre-wrap text-xs text-slate-200">{JSON.stringify(summary.wrapper.signal ?? {}, null, 2)}</pre>
+                  <div className="text-slate-300 font-medium text-sm mb-2">
+                    Raw signal JSON
+                  </div>
+                  <pre className="whitespace-pre-wrap text-xs text-slate-200">
+                    {JSON.stringify(summary.wrapper.signal ?? {}, null, 2)}
+                  </pre>
                 </div>
               </div>
             </section>
@@ -232,17 +299,37 @@ export default function PetraSignPage() {
             <section className="p-4 bg-slate-900/30 rounded">
               <h3 className="font-semibold mb-2">Transaction preview</h3>
               {summary.txSummary && summary.txSummary.error ? (
-                <div className="text-red-300 text-sm">{summary.txSummary.error}</div>
+                <div className="text-red-300 text-sm">
+                  {summary.txSummary.error}
+                </div>
               ) : (
                 <>
-                  <div className="text-sm"><strong>Type:</strong> {String(summary.txSummary.type ?? "—")}</div>
-                  <div className="text-sm"><strong>Function:</strong> {String(summary.txSummary.function ?? "—")}</div>
-                  <div className="text-sm"><strong>Type args:</strong> {Array.isArray(summary.txSummary.typeArgs) ? (summary.txSummary.typeArgs.join(", ") || "—") : "—"}</div>
-                  <div className="text-sm"><strong>Arguments:</strong> {String(summary.txSummary.argsCount)}</div>
+                  <div className="text-sm">
+                    <strong>Type:</strong>{" "}
+                    {String(summary.txSummary.type ?? "—")}
+                  </div>
+                  <div className="text-sm">
+                    <strong>Function:</strong>{" "}
+                    {String(summary.txSummary.function ?? "—")}
+                  </div>
+                  <div className="text-sm">
+                    <strong>Type args:</strong>{" "}
+                    {Array.isArray(summary.txSummary.typeArgs)
+                      ? summary.txSummary.typeArgs.join(", ") || "—"
+                      : "—"}
+                  </div>
+                  <div className="text-sm">
+                    <strong>Arguments:</strong>{" "}
+                    {String(summary.txSummary.argsCount)}
+                  </div>
 
                   <details className="mt-2 p-3 bg-slate-900/20 rounded">
-                    <summary className="cursor-pointer">Full transaction payload</summary>
-                    <pre className="whitespace-pre-wrap text-sm mt-2">{JSON.stringify(summary.txSummary.raw, null, 2)}</pre>
+                    <summary className="cursor-pointer">
+                      Full transaction payload
+                    </summary>
+                    <pre className="whitespace-pre-wrap text-sm mt-2">
+                      {JSON.stringify(summary.txSummary.raw, null, 2)}
+                    </pre>
                   </details>
                 </>
               )}
@@ -251,9 +338,11 @@ export default function PetraSignPage() {
         )}
 
         <div className="mt-6 flex flex-col gap-3">
-          {missingKeys && (
+          {!publicKeyHex! && (
             <div className="p-3 rounded bg-red-900/30 text-red-200">
-              Missing Petra keys in localStorage. Please connect to Petra first (store <code>petra_public_key</code> and <code>petra_shared_key</code>).
+              Missing Petra keys in localStorage. Please connect to Petra first
+              (store <code>petra_public_key</code> and{" "}
+              <code>petra_shared_key</code>).
             </div>
           )}
 
@@ -266,27 +355,21 @@ export default function PetraSignPage() {
           <div className="flex gap-3">
             <button
               onClick={handleSignAndSubmit}
-              disabled={busy || !parsedWrapper || missingKeys}
+              disabled={busy || !parsedWrapper || !publicKeyHex!}
               className="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 font-semibold disabled:opacity-50"
             >
               {busy ? "Preparing..." : "Sign & Submit with Petra"}
             </button>
 
-            <a
-              className="px-4 py-2 rounded-xl border border-slate-700 hover:bg-slate-700/30"
-              href={
-                parsedWrapper
-                  ? `data:application/json,${encodeURIComponent(JSON.stringify(parsedWrapper, null, 2))}`
-                  : "#"
-              }
-              download="wrapped_payload.json"
+            <button
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-red-600 font-semibold disabled:opacity-50"
+              onClick={() => {
+                const tg = (window as any).Telegram?.WebApp;
+                tg?.close?.();
+              }}
             >
-              Download Full Request
-            </a>
-          </div>
-
-          <div className="text-sm text-slate-400 mt-2">
-            Petra will redirect back to <code>/petra/response</code> with a <code>response</code> and <code>data</code> parameter.
+              Cancel
+            </button>
           </div>
         </div>
       </div>

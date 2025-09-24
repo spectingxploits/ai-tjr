@@ -1,7 +1,7 @@
 import { supabase } from "@/middleware/supabase";
 
 export async function setConnectedStatus(
-  user_tg_id: number,
+  user_tg_id: string,
   connected: boolean,
   shared_pubkey: string,
   wallet_address: string
@@ -31,7 +31,7 @@ export async function setConnectedStatus(
   return { new_status: user.connected };
 }
 
-export async function getConnectedStatus(user_tg_id: number): Promise<{
+export async function getConnectedStatus(user_tg_id: string): Promise<{
   connected: boolean;
   shared_pubkey: string;
   wallet_address: string;
@@ -40,7 +40,7 @@ export async function getConnectedStatus(user_tg_id: number): Promise<{
     .from("users")
     .select("connected, shared_pubkey, wallet_address")
     .eq("tg_id", user_tg_id)
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.log("Fetch error:", error.message);

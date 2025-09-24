@@ -261,19 +261,24 @@ export class HyperionConnector extends signAndSubmit implements SwapConnector {
         return (t1 === base && t2 === quote) || (t1 === quote && t2 === base);
       });
       if (!pool) {
-        return Promise.resolve({ success: true, data: false });
+        console.log("no pair found in hyperion");
+        return Promise.resolve({ success: false, error: "No pool found" });
       } else {
-        console.log("found pair", pool.pool);
+        console.log("found pair in hyperion", pool.pool);
         return Promise.resolve({ success: true, data: true });
       }
-      return Promise.resolve({ success: true, data: pool != null });
     } catch (err) {
       console.error("[HyperionConnector] isPairSupported error:", err);
       return Promise.reject(err);
     }
   }
 
-  getCustomQuotes(): string[] {
-    return ["USDT"];
+  getCustomQuotes(): { symbol: string; decimals: number }[] {
+    return [
+      {
+        symbol: "USDT",
+        decimals: 6,
+      },
+    ];
   }
 }

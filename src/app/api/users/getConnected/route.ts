@@ -14,7 +14,7 @@ export async function GET(req: Request) {
   }
 
   try {
-    const res = await getConnectedStatus(Number(user_tg_id));
+    const res = await getConnectedStatus(String(user_tg_id));
 
     if (res === undefined) {
       return NextResponse.json(
