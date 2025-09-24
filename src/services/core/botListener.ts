@@ -57,7 +57,7 @@ async function setupListeners() {
 
 // Start polling
 (async () => {
-  let connector_gateway = new ConnectorGateway(Network.TESTNET);
+  let connector_gateway = new ConnectorGateway(Network.MAINNET);
   await connector_gateway.initGatewayConnectors();
   console.log("connector_gateway", connector_gateway);
   let balances = await connector_gateway.kanalabs?.getTickerPrice("ETH");

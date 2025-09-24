@@ -199,11 +199,13 @@ export class KanalabsConnector extends signAndSubmit implements PerpConnector {
     ) {
       return Promise.resolve({ success: false, error: "No price found" });
     }
+    console.log("priceRes", priceRes.data.data);
     return Promise.resolve({
       success: true,
       data:
-        Number(priceRes.data.data.bestAskPrice) +
-        Number(priceRes.data.data.bestBidPrice) / 2,
+        (Number(priceRes.data.data.bestAskPrice) +
+          Number(priceRes.data.data.bestBidPrice)) /
+        2,
     });
   }
   async getBalance(
