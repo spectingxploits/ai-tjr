@@ -7,6 +7,7 @@ import nacl from "tweetnacl";
 import type { SignAndSubmitParams } from "@/models/interfaces";
 import type { GlobalSignal } from "@/models/interfaces"; // if you export it
 import { get } from "http";
+import SuperJSON from "superjson";
 
 const PETRA_LINK_BASE = "https://petra.app/api/v1";
 const APP_INFO = {
@@ -50,10 +51,10 @@ export default function PetraSignPage() {
     if (!payloadParam) return null;
     try {
       const decoded = decodeURIComponent(payloadParam);
-      return JSON.parse(decoded) as WrappedParams;
+      return SuperJSON.parse(decoded) as WrappedParams;
     } catch (e) {
       try {
-        return JSON.parse(payloadParam) as WrappedParams;
+        return SuperJSON.parse(payloadParam) as WrappedParams;
       } catch (err) {
         return { __parseError: true, raw: payloadParam } as any;
       }
@@ -149,8 +150,8 @@ export default function PetraSignPage() {
 
       const payloadB64 =
         typeof window !== "undefined"
-          ? window.btoa(JSON.stringify(innerPayload))
-          : Buffer.from(JSON.stringify(innerPayload)).toString("base64");
+          ? window.btoa(SuperJSON.stringify(innerPayload))
+          : Buffer.from(SuperJSON.stringify(innerPayload)).toString("base64");
 
       const nonce = nacl.randomBytes(24);
       const sharedSecret = hexToU8(publicKeyHex!);
@@ -169,8 +170,8 @@ export default function PetraSignPage() {
 
       const dataB64 =
         typeof window !== "undefined"
-          ? window.btoa(JSON.stringify(dataObj))
-          : Buffer.from(JSON.stringify(dataObj)).toString("base64");
+          ? window.btoa(SuperJSON.stringify(dataObj))
+          : Buffer.from(SuperJSON.stringify(dataObj)).toString("base64");
       const url = `${PETRA_LINK_BASE}/signAndSubmit?data=${encodeURIComponent(
         dataB64
       )}`;
@@ -190,15 +191,15 @@ export default function PetraSignPage() {
     const entries = [
       ["market", String(signal.market)],
       ["enter", String(signal.enter)],
-      ["profit", String(signal.profit)],
-      ["loss", String(signal.loss)],
+      ["profit %", String(signal.profit)],
+      ["loss %", String(signal.loss)],
       ["tp", String(signal.tp)],
       ["sl", String(signal.sl)],
       ["liquidity", String(signal.lq)],
       ["leverage", String(signal.leverage)],
       ["long", String(signal.long)],
       ["symbol", String(signal.symbol ?? "—")],
-      ["aiDetectedSuccessRate", String(signal.aiDetectedSuccessRate ?? "—")],
+      ["aiDetectedSuccessRate %", String(signal.aiDetectedSuccessRate ?? "—")],
     ] as [string, string][];
 
     return (
@@ -250,15 +251,16 @@ export default function PetraSignPage() {
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
                   <div className="text-slate-300 font-medium">
-                    User (telegram userAddress)
+                    Wallet Address
                   </div>
                   <div className="text-slate-200 truncate">
-                    {String(summary.wrapper.userAddress ?? "—")}
+                    {String(summary.wrapper.userAddress ?? "—").slice(0, 6)}...
+                    {String(summary.wrapper.userAddress ?? "—").slice(-4)}
                   </div>
                 </div>
                 <div>
                   <div className="text-slate-300 font-medium">
-                    Telegram chat id
+                    Telegram User id
                   </div>
                   <div className="text-slate-200 truncate">
                     {String(summary.wrapper.telegramChatId ?? "—")}
@@ -290,45 +292,27 @@ export default function PetraSignPage() {
                     Raw signal JSON
                   </div>
                   <pre className="whitespace-pre-wrap text-xs text-slate-200">
-                    {JSON.stringify(summary.wrapper.signal ?? {}, null, 2)}
+                    {
+                      SuperJSON.stringify(summary.wrapper.signal ?? {}).split(
+                        '"text":'
+                      )[0]
+                    }
                   </pre>
                 </div>
               </div>
             </section>
 
             <section className="p-4 bg-slate-900/30 rounded">
-              <h3 className="font-semibold mb-2">Transaction preview</h3>
+              <h3 className="font-semibold mb-2"> Full transaction payload</h3>
               {summary.txSummary && summary.txSummary.error ? (
                 <div className="text-red-300 text-sm">
                   {summary.txSummary.error}
                 </div>
               ) : (
                 <>
-                  <div className="text-sm">
-                    <strong>Type:</strong>{" "}
-                    {String(summary.txSummary.type ?? "—")}
-                  </div>
-                  <div className="text-sm">
-                    <strong>Function:</strong>{" "}
-                    {String(summary.txSummary.function ?? "—")}
-                  </div>
-                  <div className="text-sm">
-                    <strong>Type args:</strong>{" "}
-                    {Array.isArray(summary.txSummary.typeArgs)
-                      ? summary.txSummary.typeArgs.join(", ") || "—"
-                      : "—"}
-                  </div>
-                  <div className="text-sm">
-                    <strong>Arguments:</strong>{" "}
-                    {String(summary.txSummary.argsCount)}
-                  </div>
-
                   <details className="mt-2 p-3 bg-slate-900/20 rounded">
-                    <summary className="cursor-pointer">
-                      Full transaction payload
-                    </summary>
-                    <pre className="whitespace-pre-wrap text-sm mt-2">
-                      {JSON.stringify(summary.txSummary.raw, null, 2)}
+                    <pre className="whitespace-pre-wrap text-sm mt-2 overflow-auto">
+                      {SuperJSON.stringify(summary.txSummary.raw)}
                     </pre>
                   </details>
                 </>

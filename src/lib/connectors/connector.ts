@@ -28,6 +28,7 @@ import { Network } from "@aptos-labs/ts-sdk";
 import { getConnectedStatus } from "@/services/db/user";
 import { connect } from "http2";
 import { sendOpenSignPageButton } from "@/app/controllers/trade/confirmButton";
+import SuperJSON from "superjson";
 /** Standardized response wrapper for safer integrations */
 export type Result<T> =
   | { success: true; data: T }
@@ -283,7 +284,7 @@ export class ConnectorGateway {
       };
 
       // encode the wrapper for safe URL transport
-      const encoded = encodeURIComponent(JSON.stringify(wrapper));
+      const encoded = encodeURIComponent(SuperJSON.stringify(wrapper));
 
       const webAppUrl = `${process.env.MINI_APP_BASE_URL}/trade/sign?payload=${encoded}`;
 

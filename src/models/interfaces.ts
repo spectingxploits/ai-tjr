@@ -136,7 +136,7 @@ export interface Balance {
 
 // connector
 
-export type GlobalPayload =
+export type  GlobalPayload =
   | MerkleTradePayload
   | MerkleUpdatePayload
   | MerkleCancelOrderPayload

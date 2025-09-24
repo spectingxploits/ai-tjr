@@ -80,12 +80,15 @@ export class MerkleTradeConnector
   ): Promise<Result<MerkleTradePayload>> {
     this.checkClients();
     try {
-      const pairId = `${params.base}_${params.quote}`;
+      const pairId = `${params.base}_USD`;
 
       const [pairInfo, pairState] = await Promise.all([
         this.merkle_client.getPairInfo({ pairId }),
         this.merkle_client.getPairState({ pairId }),
       ]);
+
+      console.log("pairInfo", pairInfo);
+      console.log("pairState", pairState);
 
       // USDC always 6 decimals
       const paySize = dec<6>(BigInt(params.size_in_quote * 10 ** 6));
@@ -97,6 +100,10 @@ export class MerkleTradeConnector
         pairState
       );
 
+      console.log("collateral", collateral);
+      console.log("size", size);
+      console.log("paySize", paySize);
+
       let payload: MerkleTradePayload;
       if (params.entryType === "market") {
         payload = this.merkle_client.payloads.placeMarketOrder({
@@ -107,6 +114,7 @@ export class MerkleTradeConnector
           isLong: params.side === "long",
           isIncrease: true,
         });
+        console.log("payload market", payload);
       } else if (params.entryType === "limit" && params.entryPrice) {
         payload = this.merkle_client.payloads.placeLimitOrder({
           pair: pairId,
@@ -117,12 +125,14 @@ export class MerkleTradeConnector
           isIncrease: true,
           price: BigInt(params.entryPrice),
         });
+        console.log("payload limit", payload);
       } else {
         return { success: false, error: "entryType must be market or limit" };
       }
 
       return { success: true, data: payload };
     } catch (err) {
+      console.log("err", err);
       return { success: false, error: (err as Error).message };
     }
   }

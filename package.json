@@ -23,6 +23,7 @@
     "node-vault": "^0.10.5",
     "react": "19.1.0",
     "react-dom": "19.1.0",
+    "superjson": "^2.2.2",
     "telegram": "^2.26.22",
     "tweetnacl": "^1.0.3"
   },
