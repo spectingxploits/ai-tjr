@@ -191,11 +191,21 @@ export class KanalabsConnector extends signAndSubmit implements PerpConnector {
   getTickerPrice(symbol: string, mainnet: boolean): Promise<Result<number>> {
     throw new Error("Method not implemented.");
   }
-  getBalance(
+  async getBalance(
     mainnet: boolean,
     userAddress: string
   ): Promise<Result<Balance[]>> {
-    throw new Error("Method not implemented.");
+    let balances: Balance[] = [];
+
+    let aptBal = await this.kanalabsApi.get("/getAccountAptBalance", {
+      params: { userAddress },
+    });
+    balances.push({ asset: "APT", amount: aptBal.data.data });
+    let usdtBal = await this.kanalabsApi.get("/getProfileBalanceSnapshot", {
+      params: { userAddress },
+    });
+    balances.push({ asset: "USDT", amount: usdtBal.data.data });
+    return Promise.resolve({ success: true, data: balances });
   }
   getFundingRate?(symbol: string): Promise<number | null> {
     throw new Error("Method not implemented.");
@@ -247,7 +257,10 @@ export class KanalabsConnector extends signAndSubmit implements PerpConnector {
     }
   }
   isPairSupported(base: string, quote: string): Promise<Result<boolean>> {
-    throw new Error("Method not implemented.");
+    return Promise.resolve({
+      success: true,
+      data: this.tokens[base].marketId != undefined,
+    });
   }
   getCustomQuotes(): { symbol: string; decimals: number }[] {
     return [

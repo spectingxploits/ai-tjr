@@ -57,10 +57,14 @@ async function setupListeners() {
 
 // Start polling
 (async () => {
-  let connector_gateway = new ConnectorGateway(Network.MAINNET);
+  let connector_gateway = new ConnectorGateway(Network.TESTNET);
   await connector_gateway.initGatewayConnectors();
   console.log("connector_gateway", connector_gateway);
-  await connector_gateway.kanalabs?.getTokens(true);
+  let balances = await connector_gateway.kanalabs?.getBalance(
+    true,
+    "0x6902e87eba698ac6f57803706482ac5bd69e6ab762ea0d6cb5f6034aa02683e0"
+  );
+  console.log("balances", balances);
   // await connector_gateway.hyperion?.getTokens(true);
   // await connector_gateway.merkle?.getTokens(true);
   // console.log("Starting bot with long polling...");
