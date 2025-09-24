@@ -215,25 +215,29 @@ export class ConnectorGateway {
     // preparing the payload for the supported dexes
     let payloads: Record<string, GlobalPayload> = {};
 
-    // for spot
-    for (const connector of supportedSpotDexes) {
-      console.log(
-        "these are the params for the spot connector",
-        connector.getCustomQuotes()[0].symbol,
-        signal.symbol,
-        (signal.lq ?? 10) * 10 ** connector.getCustomQuotes()[0].decimals,
-        user_address
-      );
-      const payload = await connector.swap({
-        symbolIn: connector.getCustomQuotes()[0].symbol,
-        symbolOut: signal.symbol,
-        amountIn:
-          (signal.lq ?? 10) * 10 ** connector.getCustomQuotes()[0].decimals, // 10$ if no lq was provided
-        userAddress: user_address,
-      });
-      payloads[connector.name] = payload;
+    // the swaps only happen if the trade is market
+    if (signal.market) {
+      // for spot
+      for (const connector of supportedSpotDexes) {
+        console.log(
+          "these are the params for the spot connector",
+          connector.getCustomQuotes()[0].symbol,
+          signal.symbol,
+          (signal.lq ?? 10) * 10 ** connector.getCustomQuotes()[0].decimals,
+          user_address
+        );
+        const payload = await connector.swap({
+          symbolIn: connector.getCustomQuotes()[0].symbol,
+          symbolOut: signal.symbol,
+          amountIn:
+            (signal.lq ?? 10) * 10 ** connector.getCustomQuotes()[0].decimals, // 10$ if no lq was provided
+          userAddress: user_address,
+        });
+        payloads[connector.name] = payload;
+      }
     }
 
+    // the perpetual and spot trades are supported even if the trade type is limit or even market
     // for perpetual
     for (const connector of supportedPerpDexes) {
       if (signal.long) {
@@ -281,12 +285,29 @@ export class ConnectorGateway {
     type WRAPPER = SignAndSubmitParams & { telegramChatId?: string };
 
     for (const payload of Object.keys(payloads)) {
+      let tempSignal: GlobalSignal | null = null;
+      if (payload.includes("swap_connector")) {
+        tempSignal = {
+          market: true,
+          enter: null,
+          profit: null,
+          loss: null,
+          tp: null,
+          sl: null,
+          lq: signal.lq ?? 10,
+          leverage: null,
+          long: null,
+          symbol: signal.symbol,
+          aiDetectedSuccessRate: null,
+          reasons: [],
+        };
+      }
       const wrapper: WRAPPER = {
         payload: payloads[payload],
         userAddress: user_address,
         mainnet: this.network === Network.MAINNET,
         connectorName: payload as any,
-        signal,
+        signal: tempSignal ? tempSignal : signal,
         telegramChatId: String(user_chat_id), // added field
       };
 
