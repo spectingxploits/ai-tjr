@@ -3,6 +3,7 @@ import axios, { AxiosInstance } from "axios";
 import { PerpConnector, Result } from "../../connector";
 import {
   Balance,
+  GlobalPositions,
   OrderResult,
   PerpCloseParams,
   PerpOpenParams,
@@ -27,6 +28,9 @@ import fs from "fs";
 import {
   KanalabsOrderPayload,
   KanalabsResponse,
+  KanaPositionsResponse,
+  ParsedKanaPosition,
+  parseKanaPosition,
 } from "@/models/kanalabs/types";
 
 import { tokens as tokens_mainnet } from "@/models/kanalabs/tokens_mainnet";
@@ -185,8 +189,22 @@ export class KanalabsConnector extends signAndSubmit implements PerpConnector {
   fetchPosition(params: PerpCloseParams): Promise<Result<Position>> {
     throw new Error("Method not implemented.");
   }
-  listOpenPositions(params: PerpCloseParams): Promise<Result<Position[]>> {
-    throw new Error("Method not implemented.");
+  async listOpenPositions(
+    userAddress: `0x${string}`
+  ): Promise<Result<GlobalPositions>> {
+    let positionsRes: KanaPositionsResponse = (
+      await this.kanalabsApi.get("/getPositions", {
+        params: { userAddress: userAddress },
+      })
+    ).data;
+    if (!positionsRes.success) {
+      return Promise.reject(positionsRes.message);
+    }
+    let parsedPositions: ParsedKanaPosition[] = [];
+    for (const p of positionsRes.data) {
+      parsedPositions.push(parseKanaPosition(p));
+    }
+    return Promise.resolve({ success: true, data: parsedPositions });
   }
   async getTickerPrice(symbol: string): Promise<Result<number>> {
     let priceRes = await this.kanalabsApi.get("/getMarketPrice", {

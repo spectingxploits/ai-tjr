@@ -5,6 +5,7 @@ import {
 } from "@/models/hyperion/types";
 import {
   Balance,
+  GlobalPositions,
   GlobalSignal,
   OrderResult,
   PerpCloseParams,
@@ -50,7 +51,9 @@ export interface PerpConnector {
   cancelOrder(params: PerpCloseParams): Promise<Result<SimpleTransaction>>;
   fetchOrder(params: PerpCloseParams): Promise<Result<Order>>;
   fetchPosition(params: PerpCloseParams): Promise<Result<Position>>;
-  listOpenPositions(params: PerpCloseParams): Promise<Result<Position[]>>;
+  listOpenPositions(
+    userAddress: `0x${string}`
+  ): Promise<Result<GlobalPositions>>;
 
   /* market data & account */
   getTickerPrice(symbol: string): Promise<Result<number>>;

@@ -15,6 +15,7 @@ import {
   PerpTP_SLParams,
   Balance,
   Tokens,
+  GlobalPositions,
 } from "@/models/interfaces";
 import {
   MerkleCancelOrderPayload,
@@ -314,13 +315,13 @@ export class MerkleTradeConnector
   }
 
   async listOpenPositions(
-    params: PerpCloseParams
-  ): Promise<Result<Position[]>> {
+    userAddress: `0x${string}`
+  ): Promise<Result<GlobalPositions>> {
     this.checkClients();
 
     try {
       const positions = await this.merkle_client.getPositions({
-        address: params.userAddress,
+        address: userAddress,
       });
 
       if (!positions || positions.length === 0) {
