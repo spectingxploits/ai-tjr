@@ -69,19 +69,17 @@ export async function parseRawPotentialSignal(
     await new Promise((resolve) => setTimeout(resolve, 3000));
 
     // in this section we check the neseccary values that should have been filled by the raw signal and if they are present we fill them with the suggested values by gemini
-    if (parsedOutput.values.enter === undefined) {
+    if (parsedOutput.values.enter == null) {
+      return null; // catches both null and undefined
+    }
+    if (parsedOutput.values.long == null) {
       return null;
     }
-    if (parsedOutput.values.long === undefined) {
+    if (parsedOutput.values.symbol == null) {
       return null;
     }
-
-    if (parsedOutput.values.symbol === undefined) {
-      return null;
-    }
-
-    if (parsedOutput.values.lq === undefined) {
-      return null;
+    if (parsedOutput.values.lq == null) {
+      parsedOutput.values.lq = 10;
     }
 
     // filling the null values with suggested values by gemini
@@ -109,6 +107,9 @@ export async function parseRawPotentialSignal(
 
     console.log("Gemini enhanced output:", parsedGeminiEnhancedOutput);
 
+    if (parsedGeminiEnhancedOutput.values.lq == null) {
+      parsedGeminiEnhancedOutput.values.lq = 10;
+    }
     return parsedGeminiEnhancedOutput;
   } catch (e) {
     console.error("Gemini request failed:", e);

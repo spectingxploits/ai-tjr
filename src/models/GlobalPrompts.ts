@@ -76,7 +76,7 @@ don't touch the market value, just fill the rest of the values.
 Input:
 You will receive a JSON object with a detected trading signal. 
 Some fields may be null and must be filled with safe, realistic, and achievable values:
-note that lq is the budget and and the trading amount for this trade.
+note that lq is the budget and and the trading amount for this trade. if lq is not provided it will be set to 10.
 note that the profit and the loss are the percentage of the profit and the loss and not the actual amount of the profit and the loss on the trading amount.
 dor example enter is in 4000 and the tp is 5000 so the profit is 25% and if the sl is 3500 the loss is 12.5%.
 {

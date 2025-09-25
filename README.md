@@ -1,212 +1,172 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI_TJR
 
-## Getting Started
+First AI-driven, automated trading telegram bot on Aptos !
 
-First, run the development server:
+designed to operate within the Telegram ecosystem. It leverages a sophisticated architecture to parse trading signals
+from Telegram channel messages, identify compatible decentralized exchanges on the Aptos blockchain, and empower users to execute trades seamlessly through a Telegram
+Mini App.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+it also is a interface for interacting with your favorite dexes through a telegram bot which can make everything faster and easier. such as monitoring the history of the trades, positions and orders, get real time price of different dexes tokens, opening perpetual and spot potions, and more.
+This Bot is the first trading bot on the telegram platform which is based on aptos and also has a seamless flow to connect aptos wallets to telegram mini apps.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Supported DEXes
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Hyperion(Aptos)
+- Kanalabs(Aptos)
+- MerkleTrade(Aptos)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Supported Platforms
 
-## Learn More
+- Aptos
 
-To learn more about Next.js, take a look at the following resources:
+## Supported Wallets
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Petra Wallet
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Features
 
-## Deploy on Vercel
+- Supports multiple exchanges
+- Limit and Market orders
+- Perpetual, Spot and swap trades
+- Automated trading signal fetcher
+- Seamless integration with Telegram
+- Full trade submitting support(tp|sl|increase|reduce)
+- Managing open positions and orders
+- Monitor full history of orders and positions
+- Real time price monitoring from different dexes
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# AI Integration: The Universal Signal Parser
 
+At its core, this project's uniqueness lies in its use of Google's Gemini model as an intelligent translation layer. We employ dynamic prompt engineering to instruct the
+AI to function as an expert financial analyst, capable of discerning actionable trading signals from noisy, unstructured text within Telegram messages.
 
-APT hina123
-APT bunbo
-APT kittyyyy
-APT full
-APT BA16
-APT DarkGray
-APT BA17
-APT BA18
-APT BA20
-APT BA21
-APT BA22
-APT BA23
-APT BA24
-APT BA25
-APT BA14
-APT hfShaq
-APT SUV
-USDC USDT
-APT 123456
-APT DBALL
-APT GOAT
-APT DEGG
-APT BUSLEEP
-APT CATSM
-APT b
-APT buncha
-APT USDC
-APT FOX
-APT AME
-APT Zimmer
-APT BA27
-APT BA28
-APT tu ban
-APT karin
-APT BA29
-APT tom
-APT com
-APT lazyw
-APT MON
-APT BA26
-APT FRI
-APT BA30
-APT BA31
-APT SUV
-APT BA32
-APT BA33
-APT TRUMP
-APT BA34
-APT PHO
-APT CNC
-APT BA35
-APT BA40
-APT CUP
-APT CUP2
-APT BA41
-APT TUE
-APT PX
-APT BA42
-APT BA43
-APT BA44
-APT BA45
-APT BA46
-APT HOME
-APT BA50
-APT BA60
-APT BA70
-APT BA80
-APT BA90
-APT BA120
-APT BA122
-APT BA141
-APT BA142
-APT BA150
-APT BA151
-APT BA160
-APT KATE001
-APT KATE002
-APT BA170
-APT BA190
-APT BA210
-APT BA220
-APT BA221
-APT BA222
-APT BA223
-APT BA224
-APT BA225
-APT BA230
-APT CBK2
-APT CBK3
-APT FGO
-APT FGO
-APT FGO
-APT FGO
-APT FGO
-APT FGO
-APT FGO
-APT FGO
-APT FGO
-APT FGO
-APT FGO
-APT FGO
-APT FGO
-APT FGO
-APT FGO
-USDT USDC
-APT CBK4
-APT CBK4
-APT CBK4
-APT CBK4
-APT CBK5
-APT CBK5
-APT CBK6
-APT CBK6
-APT CB7
-APT CBK9
-APT MTK
-APT FGO
-APT CBK11
-APT CBK11
-APT CBK12
-APT CBK12
-APT CBK13
-APT 🌐
-APT CBK13
-APT TUE1
-APT TUE1
-APT TUE
-APT RND
-APT KAT001
-APT KAT003
-APT KATE003
-APT CBK2
-APT Katee004
-APT KATE006
-APT TUE
-APT CBK14
-APT CBK14
-APT CBK14
-APT CBK14
-APT CBK14
-APT CBK14
-APT CBK14
-APT CBK14
-APT CBK14
-APT CBK14
-APT CBK14
-APT CBK14
-APT CBK14
-APT TUE
-APT CBK16
-APT CBK16
-APT CBK14
-APT CBK18
-APT CBK19
-APT CBK15
-APT CBK23
-APT CBK20
-APT CBK20
-APT CBK25
-APT CBK21
-APT CBK22
-APT 👻
-APT CBK24
-APT CBK25
-APT 🌐
-APT USDC
-APT SUV
-APT CBK1
-APT TUE2
-APT KAT01
-APT Cyberk1
-APT CBK1
-APT SUN
-APT MON
+The prompt guides the model to identify and extract a precise set of parameters—asset, entry/exit points, stop-loss, take-profit, and trade direction—and structure this
+data into a machine-readable GlobalSignal object. This is the critical step that transforms human conversation into a command for the trading gateway.
+
+This AI-first approach makes our bot a universal adapter for trading signals. It bypasses the need for brittle, regex-based parsers that would require custom logic for
+each signal format. Instead, our bot is instantly compatible with a vast array of signal sources, making it exceptionally scalable and robust.
+
+# Technical Security
+
+> No sensitive data is neither requested nor stored in the bot.
+
+> No Transaction can be singed or submitted on behalf of the user without his consent. User will be prompted to sign the transactions with clear messages while considering speed and security.
+
+> No unwanted or accidental data will be included in transactions. the trade parameters are totally editable before submitting the transaction.
+
+> This bot requires integration with a trusted third party service to handle signal automation named [telefeed](https://t.me/tg_feedbot).
+
+# Technical Specification
+
+Core Technologies
+
+- Framework: Next.js 15 (App Router) with React 19
+- Language: TypeScript
+- Blockchain: Aptos (@aptos-labs/ts-sdk)
+- AI Engine: Google Gemini (@google/genai) for signal parsing and analysis.
+- Backend-as-a-Service: Supabase for user data and session management.
+- Telegram Integration: grammy for bot interaction and Mini App orchestration.
+- Testing: Vitest for unit and integration testing.
+
+Architectural Highlights
+
+- Modular Connector Gateway: The system is built around a ConnectorGateway that abstracts trading logic. It utilizes distinct interfaces (PerpConnector, SwapConnector) to
+  create a plug-and-play architecture. This allows for rapid integration of new decentralized exchanges with minimal code changes.
+
+  - Current Perpetual Connectors: Kanalabs, MerkleTrade
+  - Current Spot/Swap Connectors: Hyperion
+
+- AI-Powered Signal Parsing: A core feature is the signalParser, which uses the Gemini AI model to interpret unstructured text from Telegram messages and convert it into a
+  structured, actionable GlobalSignal object.
+
+- Seamless User Workflow: The entire trading lifecycle is designed for convenience:
+
+  1.  The bot listens to channel posts in real-time.
+  2.  AI parses a signal and the ConnectorGateway prepares transactions for all compatible exchanges.
+  3.  The user receives a direct message with simple "Sign" buttons, each opening a pre-configured Telegram Mini App.
+  4.  The user signs the transaction in-app using their connected Aptos wallet (e.g., Petra), completing the trade.
+
+- API and Middleware: Backend logic is handled by Next.js API Routes. Critical services like database access are managed through dedicated middleware, ensuring a clean
+  separation of concerns.
+
+# Extras
+
+## Telegram bot commands
+
+### `/connect_wallet`
+
+This command is used to connect your wallet to the bot. It will prompt you to connect your Petra wallet and then store the wallet address and public key in the database.
+
+### `/disconnect_wallet`
+
+This command is used to disconnect your wallet from the bot. It will remove the wallet address and public key from the database.
+
+### `/setup_automation`
+
+This command is used to setup the signal automation for the bot.
+
+> NOTE: This command will prompt you to connect your telegram account with the [telefeed](https://t.me/tg_feedbot) service. WE Highly recommend to create a new telegram account for signal automation. Also there was not even a single report of any kind of abuse of personal information or any other kind of threat for the telegram accounts while they used this service. but anyhow, DYOR.
+
+### `/automate_new_channel`
+
+This command is used to automate a new channel.
+
+### `/deactivate_automated_channel`
+
+This command is used to deactivate the automated channel.
+
+### `/get_open_orders`
+
+This command is used to get the open orders for the user. It will return the open orders in a table format.
+
+### `/get_open_positions`
+
+This command is used to get the positions for the user. It will return the positions in a table format.
+
+### `/get_order_history`
+
+This command is used to get the order history for the user. It will return the order history in a table format.
+
+### `/get_position_history`
+
+This command is used to get the position history for the user. It will return the position history in a table format.
+
+### `/get_price`
+
+This command is used to get the price for the specified token. It will return the price in a table format.
+
+### `/get_balance`
+
+This command is used to get the balance for the specified token. It will return the balance in a table format.
+
+### `/cancel_order`
+
+This command is used to cancel an order.
+
+### `/close_position`
+
+This command is used to close a position.
+
+### `/update_tp_sl`
+
+This command is used to update the TP and SL for a position.
+
+> Also all these commands are visually available via the following commands
+
+### `/wallet`
+
+Returns buttons with wallet options
+
+### `/automation`
+
+Returns buttons with automation options
+
+### `/trade`
+
+Returns buttons with trade options
+
+### `/help`
+
+Returns every commands with description
