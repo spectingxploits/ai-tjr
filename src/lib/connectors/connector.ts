@@ -1,11 +1,13 @@
 import {
   PairPriceParams,
+  PoolInfo,
   SwapParams,
   TokenInfo,
 } from "@/models/hyperion/types";
 import {
   Balance,
   GlobalOrders,
+  GlobalPayload,
   GlobalPositions,
   GlobalSignal,
   OrderResult,
@@ -21,7 +23,7 @@ import {
 import { Order, Position } from "@merkletrade/ts-sdk";
 import { MerkleTradeConnector } from "./perpetual/merkleTrade/merkleTrade";
 import { HyperionConnector } from "./spot/hyperion/hyperion";
-import { Network, SimpleTransaction } from "@aptos-labs/ts-sdk";
+import { Network } from "@aptos-labs/ts-sdk";
 import { getConnectedStatus } from "@/services/db/user";
 import { connect } from "http2";
 import { sendOpenSignPageButton } from "@/app/controllers/trade/confirmButton";
@@ -40,19 +42,19 @@ export interface PerpConnector {
   buySpot?(symbol: string, qty: number, price?: number): Promise<OrderResult>;
   sellSpot?(symbol: string, qty: number, price?: number): Promise<OrderResult>;
 
-  openLong(params: PerpOpenParams): Promise<Result<SimpleTransaction>>;
-  openShort(params: PerpOpenParams): Promise<Result<SimpleTransaction>>;
+  openLong(params: PerpOpenParams): Promise<Result<GlobalPayload>>;
+  openShort(params: PerpOpenParams): Promise<Result<GlobalPayload>>;
 
-  closeLong(params: PerpCloseParams): Promise<Result<SimpleTransaction>>;
-  closeShort(params: PerpCloseParams): Promise<Result<SimpleTransaction>>;
+  closeLong(params: PerpCloseParams): Promise<Result<GlobalPayload>>;
+  closeShort(params: PerpCloseParams): Promise<Result<GlobalPayload>>;
 
   /* Modify/auxiliary */
   setLeverage?(symbol: string, leverage: number): Promise<boolean>;
-  setTP_SL?(params: PerpTP_SLParams): Promise<Result<SimpleTransaction>>;
+  setTP_SL?(params: PerpTP_SLParams): Promise<Result<GlobalPayload>>;
   cancelOrder(
     orders: GlobalOrders,
     userAddress: `0x${string}`
-  ): Promise<Result<SimpleTransaction>>;
+  ): Promise<Result<GlobalPayload>>;
   listOpenOrders(userAddress: `0x${string}`): Promise<Result<GlobalOrders>>;
   fetchPosition(params: PerpCloseParams): Promise<Result<Position>>;
   listOpenPositions(
@@ -81,10 +83,10 @@ export interface SwapConnector {
   getQuote(params: PairPriceParams): Promise<number>;
 
   /* Execute swaps (wallet signing / chain broadcast handled by implementor) */
-  swap(params: SwapParams): Promise<Result<SimpleTransaction>>;
+  swap(params: SwapParams): Promise<Result<any>>;
 
   /* Helpers */
-  getPoolInfo?(symbolIn: string, symbolOut: string): Promise<any>;
+  getPoolInfoByPair(tokenA: string, tokenB: string): Promise<PoolInfo>;
   getTokenBalance?(address: string, token: string): Promise<number>;
   estimateGas?(
     symbolIn: string,
@@ -216,7 +218,7 @@ export class ConnectorGateway {
     }
 
     // preparing the payload for the supported dexes
-    let payloads: Record<string, SimpleTransaction> = {};
+    let payloads: Record<string, GlobalPayload> = {};
 
     // the swaps only happen if the trade is market
     if (signal.market) {

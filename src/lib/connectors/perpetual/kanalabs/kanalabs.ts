@@ -12,18 +12,9 @@ import {
   Tokens,
 } from "@/models/interfaces";
 import { signAndSubmit } from "../../signAndSubmit";
-import {
-  MerkleTradePayload,
-  MerkleUpdatePayload,
-  MerkleCancelOrderPayload,
-} from "@/models/merkleTrade/models";
+
 import { Order, Position } from "@merkletrade/ts-sdk";
-import {
-  Aptos,
-  AptosConfig,
-  Network,
-  SimpleTransaction,
-} from "@aptos-labs/ts-sdk";
+import { Aptos, AptosConfig, Network } from "@aptos-labs/ts-sdk";
 import path, { parse } from "path";
 import fs from "fs";
 import {
@@ -80,19 +71,17 @@ export class KanalabsConnector extends signAndSubmit implements PerpConnector {
   sellSpot?(symbol: string, qty: number, price?: number): Promise<OrderResult> {
     throw new Error("Method not implemented.");
   }
-  openLong(params: PerpOpenParams): Promise<Result<any>> {
+  openLong(params: PerpOpenParams): Promise<Result<KanalabsOrderPayload>> {
     this.checkClients();
-    // return this.openPerp({ ...params, side: "long" });
-    return Promise.reject("openLong not implemented");
+    return this.openPerp({ ...params, side: "long" });
   }
-  openShort(params: PerpOpenParams): Promise<Result<any>> {
+  openShort(params: PerpOpenParams): Promise<Result<KanalabsOrderPayload>> {
     this.checkClients();
-    // return this.openPerp({ ...params, side: "short" });
-    return Promise.reject("openShort not implemented");
+    return this.openPerp({ ...params, side: "short" });
   }
   private async openPerp(
     params: PerpOpenParams
-  ): Promise<Result<SimpleTransaction>> {
+  ): Promise<Result<KanalabsOrderPayload>> {
     try {
       if (params.entryType == "market") {
         const marketParams = {
@@ -108,12 +97,7 @@ export class KanalabsConnector extends signAndSubmit implements PerpConnector {
           params: marketParams,
         });
         const payloadData = res.data.data;
-        const transactionPayload =
-          await this.aptosClient.transaction.build.simple({
-            sender: params.userAddress,
-            data: payloadData,
-          });
-        return Promise.resolve({ success: true, data: transactionPayload });
+        return Promise.resolve({ success: true, data: payloadData });
       } else if (params.entryType == "limit") {
         const limitParams = {
           marketId: this.tokens[params.base].marketId,
@@ -129,12 +113,7 @@ export class KanalabsConnector extends signAndSubmit implements PerpConnector {
           params: limitParams,
         });
         const payloadData = res.data.data;
-        const transactionPayload =
-          await this.aptosClient.transaction.build.simple({
-            sender: params.userAddress,
-            data: payloadData,
-          });
-        return Promise.resolve({ success: true, data: transactionPayload });
+        return Promise.resolve({ success: true, data: payloadData });
       } else {
         return Promise.reject("order type is not supported");
       }
@@ -143,18 +122,18 @@ export class KanalabsConnector extends signAndSubmit implements PerpConnector {
     }
   }
 
-  closeLong(params: PerpCloseParams): Promise<Result<SimpleTransaction>> {
+  closeLong(params: PerpCloseParams): Promise<Result<KanalabsOrderPayload>> {
     this.checkClients();
     return this.closePerp(params);
   }
-  closeShort(params: PerpCloseParams): Promise<Result<SimpleTransaction>> {
+  closeShort(params: PerpCloseParams): Promise<Result<KanalabsOrderPayload>> {
     this.checkClients();
     return this.closePerp(params);
   }
 
   private async closePerp(
     params: PerpCloseParams
-  ): Promise<Result<SimpleTransaction>> {
+  ): Promise<Result<KanalabsOrderPayload>> {
     this.checkClients();
 
     try {
@@ -166,13 +145,8 @@ export class KanalabsConnector extends signAndSubmit implements PerpConnector {
       });
 
       const payloadData = collapsePayload.data.data;
-      const transactionPayload =
-        await this.aptosClient.transaction.build.simple({
-          sender: params.userAddress,
-          data: payloadData,
-        });
 
-      return { success: true, data: transactionPayload };
+      return { success: true, data: payloadData };
     } catch (err) {
       return { success: false, error: (err as Error).message };
     }
@@ -181,13 +155,13 @@ export class KanalabsConnector extends signAndSubmit implements PerpConnector {
   setLeverage?(symbol: string, leverage: number): Promise<boolean> {
     throw new Error("Method not implemented.");
   }
-  setTP_SL?(params: PerpTP_SLParams): Promise<Result<SimpleTransaction>> {
+  setTP_SL?(params: PerpTP_SLParams): Promise<Result<KanalabsOrderPayload>> {
     throw new Error("Method not implemented.");
   }
   async cancelOrder(
     order: ParsedKanaOrder,
     userAddress: `0x${string}`
-  ): Promise<Result<SimpleTransaction>> {
+  ): Promise<Result<KanalabsOrderPayload>> {
     try {
       if (!order.orderId || !order.marketId) {
         return {
@@ -210,12 +184,7 @@ export class KanalabsConnector extends signAndSubmit implements PerpConnector {
 
       const payloadData = res.data.data;
 
-      let transactionPayload: SimpleTransaction =
-        await this.aptosClient.transaction.build.simple({
-          sender: userAddress,
-          data: payloadData,
-        });
-      return { success: true, data: transactionPayload };
+      return { success: true, data: payloadData };
     } catch (e) {
       console.error("cancelOrder failed:", e);
       return { success: false, error: (e as Error).message };
@@ -366,356 +335,3 @@ export class KanalabsConnector extends signAndSubmit implements PerpConnector {
     }
   }
 }
-
-// // kanaPerpsClient.ts
-// import axios, { AxiosInstance } from "axios";
-
-// /* --- Minimal types used by your code (expand as needed) --- */
-// export type Result<T> = { success: true; data: T } | { success: false; message: string };
-// export type OrderResult = Result<any>;
-// export type Balance = { symbol: string; amount: number };
-// export type Tokens = { markets: any[] }; // raw market objects from API
-// export type Position = any;
-// export type Order = any;
-
-// /* The Merkle payload shapes you referenced (keep these if you use them downstream) */
-// export type MerkleTradePayload = {
-//   function: `0x${string}::${string}`;
-//   typeArguments: string[];
-//   functionArguments: any[];
-//   abi?: any;
-// };
-// export type MerkleUpdatePayload = MerkleTradePayload;
-// export type MerkleCancelOrderPayload = MerkleTradePayload;
-
-// /* Convenient Perp param shapes (adjust to your project types) */
-// export type PerpOpenParams = {
-//   symbol: string;      // e.g. "APT" (base)
-//   size: number;        // size in base units (not scaled)
-//   leverage: number;
-//   takeProfit?: number;
-//   stopLoss?: number;
-//   userAddress?: string;
-// };
-
-// export type PerpCloseParams = {
-//   symbol: string;
-//   size: number;
-//   leverage: number;
-//   userAddress?: string;
-//   orderId?: string;
-// };
-
-// export type PerpTP_SLParams = {
-//   symbol: string;
-//   tradeSideIsLong: boolean;
-//   newPrice: number;
-// };
-
-// /* --- SDK class --- */
-// export class KanaPerpsClient {
-//   private api: AxiosInstance;
-//   private baseUrl: string;
-//   private marketsCache: any[] | null = null;
-//   private apiKey?: string;
-
-//   constructor(opts: { apiKey?: string; network?: "testnet" | "mainnet" } = {}) {
-//     const network = opts.network ?? "testnet";
-//     this.apiKey = opts.apiKey;
-//     this.baseUrl =
-//       network === "mainnet"
-//         ? "https://perps-tradeapi.kana.trade"
-//         : "https://perps-tradeapi.kanalabs.io";
-//     this.api = axios.create({
-//       baseURL: this.baseUrl,
-//       headers: opts.apiKey ? { "x-api-key": opts.apiKey } : undefined,
-//       timeout: 15_000,
-//     });
-//   }
-
-//   /* ---------- Helpers ---------- */
-
-//   private makeResult<T>(resp: any): Result<T> {
-//     if (!resp) return { success: false, message: "No response" };
-//     if (resp.success === true || resp.data) {
-//       return { success: true, data: resp.data ?? resp };
-//     }
-//     return { success: false, message: resp.message ?? "api error" };
-//   }
-
-//   private async fetchMarkets(): Promise<Result<any[]>> {
-//     // cached
-//     if (this.marketsCache) return { success: true, data: this.marketsCache };
-
-//     try {
-//       const res = await this.api.get("/getPerpetualAssetsInfo/allMarkets");
-//       const parsed = this.makeResult<any[]>(res.data);
-//       if (parsed.success) {
-//         this.marketsCache = parsed.data!;
-//         return parsed;
-//       }
-//       return parsed;
-//     } catch (err: any) {
-//       return { success: false, message: err.message ?? String(err) };
-//     }
-//   }
-
-//   /** Find marketId by symbol (base symbol like "APT" or "ETH") */
-//   private async findMarketBySymbol(symbol: string): Promise<number | null> {
-//     const r = await this.fetchMarkets();
-//     if (!r.success) return null;
-//     const markets = r.data!;
-//     // docs show `base_name` like "APT/USDC" — prefer startsWith
-//     const found = markets.find((m: any) =>
-//       String(m.base_name || "").toUpperCase().startsWith(symbol.toUpperCase())
-//     );
-//     if (!found) return null;
-//     return Number(found.market_id ?? found.market_id);
-//   }
-
-//   /* ---------- Market data & account ---------- */
-
-//   async getTokens(updateTokenList = false): Promise<Result<Tokens>> {
-//     if (updateTokenList) this.marketsCache = null;
-//     const r = await this.fetchMarkets();
-//     if (!r.success) return { success: false, message: r.message };
-//     return { success: true, data: { markets: r.data! } };
-//   }
-
-//   async isPairSupported(base: string, quote: string): Promise<Result<boolean>> {
-//     // simple heuristic: check if any market has base starting with base and counter includes quote
-//     const r = await this.fetchMarkets();
-//     if (!r.success) return { success: false, message: r.message };
-//     const found = r.data!.some((m: any) =>
-//       (m.base_name || "").toUpperCase() === `${base.toUpperCase()}/${quote.toUpperCase()}`
-//     );
-//     return { success: true, data: !!found };
-//   }
-
-//   getCustomQuotes(): { symbol: string; decimals: number }[] {
-//     // default per your spec
-//     return [{ symbol: "USDT", decimals: 6 }];
-//   }
-
-//   async getTickerPrice(symbol: string, mainnet: boolean): Promise<Result<number>> {
-//     // find marketId and call getMarketPrice
-//     const marketId = await this.findMarketBySymbol(symbol);
-//     if (!marketId) return { success: false, message: `Market for ${symbol} not found` };
-
-//     try {
-//       const res = await this.api.get("/getMarketPrice", { params: { marketId } });
-//       const parsed = this.makeResult<{ bestAskPrice: number; bestBidPrice: number }>(res.data);
-//       if (!parsed.success) return parsed as any;
-//       const { bestAskPrice, bestBidPrice } = parsed.data!;
-//       // return mid price if available
-//       const mid = (Number(bestAskPrice) + Number(bestBidPrice)) / 2;
-//       return { success: true, data: mid };
-//     } catch (err: any) {
-//       return { success: false, message: err.message ?? String(err) };
-//     }
-//   }
-
-//   async getBalance(mainnet: boolean, userAddress: string): Promise<Result<Balance[]>> {
-//     try {
-//       const res = await this.api.get("/getWalletAccountBalance", { params: { userAddress } });
-//       const parsed = this.makeResult<number>(res.data);
-//       if (!parsed.success) return parsed as any;
-//       // API returns a single number in examples — present as array under USDC/USDT (best-effort)
-//       return { success: true, data: [{ symbol: "USDC", amount: Number(parsed.data) }] };
-//     } catch (err: any) {
-//       return { success: false, message: err.message ?? String(err) };
-//     }
-//   }
-
-//   /* ---------- Orders / positions / trades ---------- */
-
-//   private async placeMarketOrderInternal(params: {
-//     marketId: number;
-//     tradeSide: boolean; // true = long, false = short
-//     direction: boolean; // false = open, true = close
-//     size: number;
-//     leverage: number;
-//     takeProfit?: number;
-//     stopLoss?: number;
-//   }): Promise<Result<MerkleTradePayload>> {
-//     try {
-//       const res = await this.api.get("/placeMarketOrder", {
-//         params: {
-//           marketId: params.marketId,
-//           tradeSide: params.tradeSide,
-//           direction: params.direction,
-//           size: params.size,
-//           leverage: params.leverage,
-//           ...(params.takeProfit !== undefined ? { takeProfit: params.takeProfit } : {}),
-//           ...(params.stopLoss !== undefined ? { stopLoss: params.stopLoss } : {}),
-//         },
-//       });
-//       return this.makeResult<MerkleTradePayload>(res.data);
-//     } catch (err: any) {
-//       return { success: false, message: err.message ?? String(err) };
-//     }
-//   }
-
-//   async openLong(params: PerpOpenParams): Promise<Result<MerkleTradePayload>> {
-//     const marketId = await this.findMarketBySymbol(params.symbol);
-//     if (!marketId) return { success: false, message: "market not found" };
-//     // tradeSide = true (long), direction = false (open)
-//     return this.placeMarketOrderInternal({
-//       marketId,
-//       tradeSide: true,
-//       direction: false,
-//       size: params.size ?? params.size,
-//       leverage: params.leverage,
-//       takeProfit: params.takeProfit,
-//       stopLoss: params.stopLoss,
-//     });
-//   }
-
-//   async openShort(params: PerpOpenParams): Promise<Result<MerkleTradePayload>> {
-//     const marketId = await this.findMarketBySymbol(params.symbol);
-//     if (!marketId) return { success: false, message: "market not found" };
-//     // tradeSide = false (short), direction = false (open)
-//     return this.placeMarketOrderInternal({
-//       marketId,
-//       tradeSide: false,
-//       direction: false,
-//       size: params.size ?? params.size,
-//       leverage: params.leverage,
-//       takeProfit: params.takeProfit,
-//       stopLoss: params.stopLoss,
-//     });
-//   }
-
-//   async closeLong(params: PerpCloseParams): Promise<Result<MerkleTradePayload>> {
-//     const marketId = await this.findMarketBySymbol(params.symbol);
-//     if (!marketId) return { success: false, message: "market not found" };
-//     // tradeSide true (long), direction true (close)
-//     return this.placeMarketOrderInternal({
-//       marketId,
-//       tradeSide: true,
-//       direction: true,
-//       size: params.size,
-//       leverage: params.leverage,
-//     });
-//   }
-
-//   async closeShort(params: PerpCloseParams): Promise<Result<MerkleTradePayload>> {
-//     const marketId = await this.findMarketBySymbol(params.symbol);
-//     if (!marketId) return { success: false, message: "market not found" };
-//     // tradeSide false (short), direction true (close)
-//     return this.placeMarketOrderInternal({
-//       marketId,
-//       tradeSide: false,
-//       direction: true,
-//       size: params.size,
-//       leverage: params.leverage,
-//     });
-//   }
-
-//   async setTP_SL?(params: PerpTP_SLParams): Promise<Result<MerkleUpdatePayload>> {
-//     const marketId = await this.findMarketBySymbol(params.symbol);
-//     if (!marketId) return { success: false, message: "market not found" };
-//     try {
-//       // route to updateTakeProfit; if user wants SL use updateStopLoss endpoint
-//       const res = await this.api.get("/updateTakeProfit", {
-//         params: { marketId, tradeSide: params.tradeSideIsLong, newTakeProfitPrice: params.newPrice },
-//       });
-//       return this.makeResult<MerkleUpdatePayload>(res.data);
-//     } catch (err: any) {
-//       return { success: false, message: err.message ?? String(err) };
-//     }
-//   }
-
-//   async cancelOrder(params: PerpCloseParams): Promise<Result<MerkleCancelOrderPayload>> {
-//     const marketId = await this.findMarketBySymbol(params.symbol);
-//     if (!marketId) return { success: false, message: "market not found" };
-//     try {
-//       // Cancel single order by id via cancelMultipleOrders (wrap single)
-//       if (!params.orderId) return { success: false, message: "orderId required" };
-//       const body = {
-//         marketId,
-//         cancelOrderIds: [params.orderId],
-//         orderSides: [true], // caller should pass correct side if needed; assume true for now
-//       };
-//       const res = await this.api.post("/cancelMultipleOrders", body, {
-//         headers: { "Content-Type": "application/json" },
-//       });
-//       return this.makeResult<MerkleCancelOrderPayload>(res.data);
-//     } catch (err: any) {
-//       return { success: false, message: err.message ?? String(err) };
-//     }
-//   }
-
-//   async fetchOrder(params: PerpCloseParams): Promise<Result<Order>> {
-//     const marketId = await this.findMarketBySymbol(params.symbol);
-//     if (!marketId) return { success: false, message: "market not found" };
-//     if (!params.orderId) return { success: false, message: "orderId required" };
-//     try {
-//       const res = await this.api.get("/getOrderStatusByOrderId", {
-//         params: { marketId, orderId: params.orderId },
-//       });
-//       return this.makeResult<Order>(res.data);
-//     } catch (err: any) {
-//       return { success: false, message: err.message ?? String(err) };
-//     }
-//   }
-
-//   async fetchPosition(params: PerpCloseParams): Promise<Result<Position>> {
-//     const marketId = await this.findMarketBySymbol(params.symbol);
-//     if (!marketId) return { success: false, message: "market not found" };
-//     try {
-//       const res = await this.api.get("/getPositions", { params: { userAddress: params.userAddress, marketId } });
-//       return this.makeResult<Position>(res.data);
-//     } catch (err: any) {
-//       return { success: false, message: err.message ?? String(err) };
-//     }
-//   }
-
-//   async listOpenPositions(params: PerpCloseParams): Promise<Result<Position[]>> {
-//     try {
-//       const res = await this.api.get("/getPositions", { params: { userAddress: params.userAddress } });
-//       return this.makeResult<Position[]>(res.data);
-//     } catch (err: any) {
-//       return { success: false, message: err.message ?? String(err) };
-//     }
-//   }
-
-//   /* optional convenience spot buy/sell mapping to market order */
-//   async buySpot?(symbol: string, qty: number, price?: number): Promise<OrderResult> {
-//     // Map to placeMarketOrder; but note: Kana perps endpoints are for perps — adapt as needed
-//     const marketId = await this.findMarketBySymbol(symbol);
-//     if (!marketId) return { success: false, message: "market not found" };
-//     try {
-//       const res = await this.api.get("/placeMarketOrder", {
-//         params: { marketId, tradeSide: true, direction: false, size: qty, leverage: 1 },
-//       });
-//       return this.makeResult(res.data);
-//     } catch (err: any) {
-//       return { success: false, message: err.message ?? String(err) };
-//     }
-//   }
-
-//   async sellSpot?(symbol: string, qty: number, price?: number): Promise<OrderResult> {
-//     const marketId = await this.findMarketBySymbol(symbol);
-//     if (!marketId) return { success: false, message: "market not found" };
-//     try {
-//       const res = await this.api.get("/placeMarketOrder", {
-//         params: { marketId, tradeSide: false, direction: false, size: qty, leverage: 1 },
-//       });
-//       return this.makeResult(res.data);
-//     } catch (err: any) {
-//       return { success: false, message: err.message ?? String(err) };
-//     }
-//   }
-
-//   async getFundingRate?(symbol: string): Promise<number | null> {
-//     // Not in minimal set; if needed, can be implemented using `getPerpetualAssetsInfo` data
-//     return null;
-//   }
-
-//   async setLeverage?(symbol: string, leverage: number): Promise<boolean> {
-//     // Not directly provided in the minimal endpoints — leverage is passed during placeMarketOrder
-//     // We expose this as a no-op convenience (or return false)
-//     return false;
-//   }
-// }

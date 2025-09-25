@@ -111,12 +111,7 @@ export class HyperionConnector extends signAndSubmit implements SwapConnector {
       );
       console.log("payload", payload);
 
-      let transactionPayload: SimpleTransaction =
-        await this.hyperionAdapter.AptosClient.transaction.build.simple({
-          sender: params.userAddress,
-          data: payload,
-        });
-      return { success: true, data: transactionPayload };
+      return { success: true, data: payload };
     } catch (err) {
       console.error("[HyperionConnector] swap error:", err);
       return { success: false, error: String(err) };

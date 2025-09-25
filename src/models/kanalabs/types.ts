@@ -1,4 +1,10 @@
-export type FunctionArgument = string | number | boolean;
+export type FunctionArgument =
+  | string
+  | number
+  | boolean
+  | boolean[]
+  | number[]
+  | string[];
 
 // the inner payload (data)
 export interface KanalabsOrderPayload {
