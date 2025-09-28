@@ -7,6 +7,7 @@ export async function sendOpenAuthPageButton(chat_id: string) {
     body: JSON.stringify({
       chat_id: chat_id,
       text: "Open Connect Wallet Page:",
+      
       reply_markup: {
         inline_keyboard: [
           [

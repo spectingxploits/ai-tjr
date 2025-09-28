@@ -26,7 +26,7 @@ import { HyperionConnector } from "./spot/hyperion/hyperion";
 import { Network } from "@aptos-labs/ts-sdk";
 import { getConnectedStatus } from "@/services/db/user";
 import { connect } from "http2";
-import { sendOpenSignPageButton } from "@/app/controllers/trade/confirmButton";
+import { sendOpenSignPageButton } from "@/lib/responds/confirmButton";
 import SuperJSON from "superjson";
 import { KanalabsConnector } from "./perpetual/kanalabs/kanalabs";
 /** Standardized response wrapper for safer integrations */
