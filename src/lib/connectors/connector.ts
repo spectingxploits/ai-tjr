@@ -328,7 +328,7 @@ export class ConnectorGateway {
       // encode the wrapper for safe URL transport
       const encoded = encodeURIComponent(SuperJSON.stringify(wrapper));
 
-      const webAppUrl = `${process.env.MINI_APP_BASE_URL}/trade/sign?payload=${encoded}`;
+      const webAppUrl = `${process.env.NEXT_PUBLIC_MINI_APP_BASE_URL}/trade/sign?payload=${encoded}`;
 
       const parsed_connector_name = payload.split("_")[0];
       magicLinks.push({

@@ -13,7 +13,7 @@ export async function sendOpenSignPageButton(
   }[]
 ) {
   const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-  const MINI_APP_BASE_URL = process.env.MINI_APP_BASE_URL;
+  const MINI_APP_BASE_URL = process.env.NEXT_PUBLIC_MINI_APP_BASE_URL;
   if (!BOT_TOKEN || !MINI_APP_BASE_URL) {
     throw new Error("Missing env: TELEGRAM_BOT_TOKEN or MINI_APP_BASE_URL");
   }

@@ -11,13 +11,9 @@ import SuperJSON from "superjson";
 
 const PETRA_LINK_BASE = "https://petra.app/api/v1";
 const APP_INFO = {
-  domain:
-    typeof window !== "undefined"
-      ? window.location.origin
-      : "https://your-dapp",
-  name: "AI_TJR_APP",
+  domain: `${process.env.NEXT_PUBLIC_MINI_APP_BASE_URL}/auth`,
+  name: "AI_TJR",
 };
-
 function hexToU8(hex?: string): Uint8Array {
   if (!hex) return new Uint8Array(0);
   const clean = hex.startsWith("0x") ? hex.slice(2) : hex;
@@ -26,11 +22,13 @@ function hexToU8(hex?: string): Uint8Array {
   for (let i = 0; i < len; i++) arr[i] = parseInt(clean.substr(i * 2, 2), 16);
   return arr;
 }
+
 function u8ToHex(u8: Uint8Array): string {
   return Array.from(u8)
     .map((b) => b.toString(16).padStart(2, "0"))
     .join("");
 }
+
 function utf8ToU8(str: string) {
   return new TextEncoder().encode(str);
 }
@@ -43,7 +41,7 @@ export default function PetraSignPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [publicKeyHex, setPublicKeyHex] = useState<string | null>(null);
-
+  const [userPubKey, setUserPubKey] = useState<string | null>(null);
   // parse wrapper (SignAndSubmitParams + telegramChatId)
   const parsedWrapper = useMemo<
     WrappedParams | { __parseError: true; raw: string } | null
@@ -51,10 +49,10 @@ export default function PetraSignPage() {
     if (!payloadParam) return null;
     try {
       const decoded = decodeURIComponent(payloadParam);
-      return SuperJSON.parse(decoded) as WrappedParams;
+      return SuperJSON.parse(decoded) as WrappedParams; // necessary with super json
     } catch (e) {
       try {
-        return SuperJSON.parse(payloadParam) as WrappedParams;
+        return SuperJSON.parse(payloadParam) as WrappedParams; // necessary with super json
       } catch (err) {
         return { __parseError: true, raw: payloadParam } as any;
       }
@@ -62,6 +60,7 @@ export default function PetraSignPage() {
   }, [payloadParam]);
 
   useEffect(() => {
+    // window.open(window.location.href);
     if (!parsedWrapper || !(parsedWrapper as WrappedParams).telegramChatId)
       return;
 
@@ -69,7 +68,7 @@ export default function PetraSignPage() {
       try {
         const w = parsedWrapper as WrappedParams;
         const res = await fetch(
-          `/api/users/getConnected?user_tg_id=${encodeURIComponent(
+          `/api/users/getSharedKey?user_tg_id=${encodeURIComponent(
             w.telegramChatId!
           )}`
         );
@@ -79,7 +78,8 @@ export default function PetraSignPage() {
           return;
         }
         const data = await res.json();
-        setPublicKeyHex(data.shared_pubkey || null);
+        setPublicKeyHex(data.shared_key || null);
+        setUserPubKey(data.user_pub_key || null);
       } catch (err) {
         console.error(err);
         setError("Error fetching public key");
@@ -95,7 +95,7 @@ export default function PetraSignPage() {
       return { error: "Invalid wrapper JSON", raw: (parsedWrapper as any).raw };
 
     const w = parsedWrapper as WrappedParams;
-
+    console.log("payload type:", typeof w.payload, w.payload);
     // tx summary from w.payload (best-effort)
     let txSummary: any = null;
     try {
@@ -103,10 +103,12 @@ export default function PetraSignPage() {
       if (inner == null) txSummary = { info: "No inner payload" };
       else {
         const p = inner as Record<string, any>;
-        const type = p.type ?? p.transaction ?? "unknown";
-        const fn = p.function ?? p.function_name ?? p.function ?? "—";
-        const typeArgs = p.type_arguments ?? p.typeArguments ?? [];
-        const args = p.arguments ?? p.args ?? p.arguments ?? [];
+        const type = p.type ?? p.transaction ?? "entry_function_payload";
+        const fn = p.function ?? p.function_name ?? "—";
+        const typeArgs =
+          p.type_arguments ?? p.typeArguments ?? p.typeArgs ?? [];
+        const args = p.arguments ?? p.args ?? p.functionArguments ?? [];
+
         txSummary = {
           type,
           function: fn,
@@ -148,34 +150,47 @@ export default function PetraSignPage() {
       const innerPayload = wrapper.payload;
       if (!innerPayload) throw new Error("Missing inner transaction payload");
 
-      const payloadB64 =
-        typeof window !== "undefined"
-          ? window.btoa(SuperJSON.stringify(innerPayload))
-          : Buffer.from(SuperJSON.stringify(innerPayload)).toString("base64");
-
       const nonce = nacl.randomBytes(24);
-      const sharedSecret = hexToU8(publicKeyHex!);
-      if (sharedSecret.length === 0) throw new Error("Invalid shared secret");
+      console.log("testing super jason");
 
-      const messageU8 = utf8ToU8(payloadB64);
-      const encrypted = nacl.box.after(messageU8, nonce, sharedSecret);
+      // const tx = {
+      //   type: "entry_function_payload",
+      //   function:
+      //     "0x732f891290449af5e9369866537a51a8e7dc566791aec61a468223ed840b1eb4::perpetual_scripts::place_market_order",
+      //   type_arguments: [],
+      //   arguments: [
+      //     "2387", // use string for numbers/bigints
+      //     true, // boolean ok
+      //     false,
+      //     BigInt(1).toString(), // big number as string, big number till three decimnals, with out tokens decimals
+      //     "1",
+      //     "0",
+      //     "0",
+      //   ],
+      // };
+      let payload = btoa(stringifyJsonWithBigInt(wrapper.payload));
+      const encrypted = nacl.box.after(
+        Buffer.from(stringifyJsonWithBigInt(payload)),
+        nonce,
+        Uint8Array.from(Buffer.from(publicKeyHex, "hex"))
+      );
+      const dataObj = btoa(
+        stringifyJsonWithBigInt({
+          appInfo: APP_INFO,
+          payload: Buffer.from(encrypted).toString("hex"),
+          redirectLink: `https://rebeca-multivalued-nevaeh.ngrok-free.dev/trade/response?source=miniapp&ref=ai_tjr`,
+          dappEncryptionPublicKey: userPubKey,
+          nonce: Buffer.from(nonce).toString("hex"),
+        })
+      );
 
-      const dataObj = {
-        appInfo: APP_INFO,
-        payload: u8ToHex(encrypted),
-        redirectLink: `${window.location.origin}/petra/response?source=miniapp&ref=ai_tjr`,
-        dappEncryptionPublicKey: publicKeyHex,
-        nonce: u8ToHex(nonce),
-      };
-
-      const dataB64 =
-        typeof window !== "undefined"
-          ? window.btoa(SuperJSON.stringify(dataObj))
-          : Buffer.from(SuperJSON.stringify(dataObj)).toString("base64");
-      const url = `${PETRA_LINK_BASE}/signAndSubmit?data=${encodeURIComponent(
-        dataB64
-      )}`;
-      window.open(url, "_blank");
+      const url = `${PETRA_LINK_BASE}/signAndSubmit?data=${dataObj}`;
+      if ((window as any).aptos) {
+        await (window as any).aptos.signAndSubmitTransaction({
+          payload: wrapper.payload,
+        });
+      }
+      window.open(url);
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -293,9 +308,9 @@ export default function PetraSignPage() {
                   </div>
                   <pre className="whitespace-pre-wrap text-xs text-slate-200">
                     {
-                      SuperJSON.stringify(summary.wrapper.signal ?? {}).split(
-                        '"text":'
-                      )[0]
+                      stringifyJsonWithBigInt(
+                        summary.wrapper.signal ?? {}
+                      ).split('"text":')[0]
                     }
                   </pre>
                 </div>
@@ -312,7 +327,7 @@ export default function PetraSignPage() {
                 <>
                   <details className="mt-2 p-3 bg-slate-900/20 rounded">
                     <pre className="whitespace-pre-wrap text-sm mt-2 overflow-auto">
-                      {SuperJSON.stringify(summary.txSummary.raw)}
+                      {stringifyJsonWithBigInt(summary.txSummary.raw)}
                     </pre>
                   </details>
                 </>
@@ -358,5 +373,11 @@ export default function PetraSignPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function stringifyJsonWithBigInt(json: any): string {
+  return JSON.stringify(json, (_, v) =>
+    typeof v === "bigint" ? v.toString() : v
   );
 }

@@ -1,9 +1,11 @@
 // src/services/core/botPoll.ts
+import { sendOpenAuthPageButton } from "@/app/controllers/wallet/connectButton";
 import { ConnectorGateway } from "@/lib/connectors/connector";
 import { parseRawPotentialSignal } from "@/lib/helpers/signalParser";
 import { Network } from "@aptos-labs/ts-sdk";
 import "dotenv/config";
 import { Bot } from "grammy";
+import nacl from "tweetnacl";
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 if (!token) throw new Error("TELEGRAM_BOT_TOKEN env var not found.");
@@ -11,7 +13,7 @@ if (!token) throw new Error("TELEGRAM_BOT_TOKEN env var not found.");
 const bot = new Bot(token);
 
 async function setupListeners() {
-  const connector_gateway = new ConnectorGateway(Network.MAINNET);
+  const connector_gateway = new ConnectorGateway(Network.TESTNET);
   await connector_gateway.initGatewayConnectors();
 
   bot.on("channel_post", async (ctx) => {
@@ -53,6 +55,40 @@ async function setupListeners() {
       console.error("getChatAdministrators failed:", e);
     }
   });
+
+  bot.on("message:text", async (ctx) => {
+    console.log("Received message:", ctx.message.text);
+    console.log("this is the id ", ctx.chat.id.toString());
+    if (ctx.message.text.trim().includes("/connect_wallet")) {
+      console.log("command detected");
+      await sendOpenAuthPageButton(ctx.chat.id.toString());
+    }
+    // if (ctx.message.text.trim().includes("/test_confirm_page")) {
+    //   await sendOpenSignPageButton(ctx.chat.id.toString(), {
+    //     payload: "some_payload",
+    //     userAddress: "0x0",
+    //     mainnet: false,
+    //     connectorName: "hyperion_swap_connector",
+    //     signal: {
+    //       market: false,
+    //       enter: null,
+    //       profit: null,
+    //       loss: null,
+    //       tp: null,
+    //       sl: null,
+    //       lq: null,
+    //       leverage: null,
+    //       long: null,
+    //       symbol: "",
+    //       reasons: [],
+    //     },
+    //   });
+    // }
+  });
+
+  bot.catch((err) => {
+    console.error("Bot error:", err);
+  });
 }
 
 // Start polling
@@ -71,7 +107,9 @@ async function setupListeners() {
     onStart: (info) =>
       console.log("Bot started as", info.username, "id", info.id),
   });
-
+  // let keyPair = nacl.box.keyPair();
+  // console.log("public key ", Buffer.from(keyPair.publicKey).toString("hex"));
+  // console.log("priv key ", Buffer.from(keyPair.secretKey).toString("hex"));
   // graceful shutdown
   const shutdown = async () => {
     console.log("Shutting down bot...");

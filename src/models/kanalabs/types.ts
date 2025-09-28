@@ -1,16 +1,23 @@
-export type FunctionArgument =
-  | string
-  | number
-  | boolean
-  | boolean[]
-  | number[]
-  | string[];
+import { normalizeArgument } from "@/lib/helpers/utils";
+import { AptosStandardPayload, FunctionArgument } from "../interfaces";
+
 
 // the inner payload (data)
 export interface KanalabsOrderPayload {
   function: `${string}::${string}::${string}`;
   functionArguments: FunctionArgument[];
   typeArguments: string[];
+}
+
+export function kanalabsToAptosStandardPayload(
+  payload: KanalabsOrderPayload
+): AptosStandardPayload {
+  return {
+    type: "entry_function_payload",
+    function: payload.function,
+    type_arguments: payload.typeArguments,
+    arguments: payload.functionArguments.map(normalizeArgument),
+  };
 }
 
 export interface KanalabsOrderPayloadResponse {

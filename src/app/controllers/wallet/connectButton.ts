@@ -13,13 +13,7 @@ export async function sendOpenAuthPageButton(chat_id: string) {
             {
               text: "Connect Wallet Page",
               web_app: {
-                url: `${process.env.MINI_APP_BASE_URL}/auth?ref=telegram&userId=${chat_id}`,
-              },
-            },
-            {
-              text: "another Connect Wallet Page",
-              web_app: {
-                url: `${process.env.MINI_APP_BASE_URL}/auth?ref=telegram&userId=${chat_id}`,
+                url: `${process.env.NEXT_PUBLIC_MINI_APP_BASE_URL}/auth?ref=telegram&userId=${chat_id}`,
               },
             },
           ],

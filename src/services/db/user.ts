@@ -31,14 +31,66 @@ export async function setConnectedStatus(
   return { new_status: user.connected };
 }
 
+export async function setSec(
+  user_tg_id: string,
+  sec: string
+): Promise<boolean> {
+  let { data: user, error: upsertError } = await supabase
+    .from("users")
+    .upsert(
+      {
+        tg_id: user_tg_id,
+        sec,
+      },
+      { onConflict: "tg_id" } // 👈 ensures conflict handled by updating
+    )
+    .select()
+    .single();
+
+  if (upsertError) {
+    console.error("Upsert error:", upsertError.message);
+    throw new Error(
+      `error setting user sec:
+      ${upsertError.message}
+    `
+    );
+  }
+  return user.sec != null;
+}
+
+export async function setPubKey(user_tg_id: string, pub: string): Promise<boolean> {
+  let { data: user, error: upsertError } = await supabase
+    .from("users")
+    .upsert(
+      {
+        tg_id: user_tg_id,
+        pub,
+      },
+      { onConflict: "tg_id" } // 👈 ensures conflict handled by updating
+    )
+    .select()
+    .single();
+
+  if (upsertError) {
+    console.error("Upsert error:", upsertError.message);
+    throw new Error(
+      `error setting user pub:
+      ${upsertError.message}
+    `
+    );
+  }
+  return user.pub != null;
+}
 export async function getConnectedStatus(user_tg_id: string): Promise<{
   connected: boolean;
   shared_pubkey: string;
   wallet_address: string;
+  sec: string;
+  user_pub_key: string;
 }> {
   let { data, error } = await supabase
     .from("users")
-    .select("connected, shared_pubkey, wallet_address")
+    .select("connected, shared_pubkey, wallet_address, sec, pub")
     .eq("tg_id", user_tg_id)
     .maybeSingle();
 
@@ -56,6 +108,8 @@ export async function getConnectedStatus(user_tg_id: string): Promise<{
       connected: false,
       shared_pubkey: "",
       wallet_address: "",
+      sec: "",
+      user_pub_key: "",
     };
   }
 
@@ -63,5 +117,7 @@ export async function getConnectedStatus(user_tg_id: string): Promise<{
     connected: data.connected,
     shared_pubkey: data.shared_pubkey || "",
     wallet_address: data.wallet_address || "",
+    sec: data.sec || "",
+    user_pub_key: data.pub || "",
   };
 }

@@ -7,6 +7,9 @@ import {
 import { useEffect, useRef, useState } from "react";
 import nacl from "tweetnacl";
 import { useSearchParams } from "next/navigation";
+// cryptoHelpers.ts
+import * as crypto from "crypto";
+import { decodeUTF8 } from "tweetnacl-util";
 
 /**
  * Robust MiniAppPage
@@ -42,7 +45,7 @@ export default function MiniAppPage() {
   const processedMapRef = useRef<Map<string, number>>(new Map());
 
   const APP_INFO = {
-    domain: `${process.env.MINI_APP_BASE_URL}/auth`,
+    domain: `${process.env.NEXT_PUBLIC_MINI_APP_BASE_URL}/auth`,
     name: "AI_TJR",
   };
 
@@ -66,7 +69,7 @@ export default function MiniAppPage() {
       const initStart = tg.initDataUnsafe?.start_param;
       const sharedPubKey = tg.initDataUnsafe?.shared_pubkey;
       if (typeof initStart === "string") {
-        handleStartParam(initStart, /*from=*/ "initData", "");
+        handleStartParam(initStart, /*from=*/ "initData");
       }
 
       // use initDataUnsafe.user if we don't yet have userTgId
@@ -136,30 +139,44 @@ export default function MiniAppPage() {
 
   // -------------------- 3) process URL search params (or startapp from query) --------------------
   useEffect(() => {
-    // prefer tgWebAppStartParam, then startapp (some clients use different names)
+    // log the full redirect URL
+    window.alert(window.location.href);
+
     const startParamFromUrl =
       searchParams.get("tgWebAppStartParam") ||
       searchParams.get("startapp") ||
       null;
+
     const sharedPubKey = searchParams.get("shared_pubkey") || "";
     const userIdParam = searchParams.get("userId");
+
+    window.alert(
+      JSON.stringify(
+        {
+          href: window.location.href, // 👈 full url
+          startParamFromUrl,
+          sharedPubKey,
+          userIdParam,
+          raw: Object.fromEntries(searchParams.entries()),
+        },
+        null,
+        2
+      )
+    );
 
     if (userIdParam && !userTgId) {
       setUserTgId(userIdParam);
     }
 
     if (startParamFromUrl) {
-      handleStartParam(startParamFromUrl, /*from=*/ "url", sharedPubKey);
+      handleStartParam(startParamFromUrl, "url");
     }
-    // intentionally only depend on searchParams (we don't want setting userTgId inside to re-trigger this)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   // -------------------- helper to handle start_param safely --------------------
-  function handleStartParam(
+  async function handleStartParam(
     startParam: string,
-    from: "initData" | "url",
-    shared_pubkey: string
+    from: "initData" | "url"
   ) {
     if (!startParam || typeof startParam !== "string") return;
 
@@ -177,8 +194,7 @@ export default function MiniAppPage() {
     console.debug(`Processing startParam (from=${from}):`, startParam);
 
     if (startParam.startsWith("callbackUserId_")) {
-      const [userPart, keys] = startParam.split("_shared_pubkey_");
-      const [pubkeyPart, walletAddress] = keys.split("_wallet_address_");
+      const [userPart, token] = startParam.split("_token_");
       const callbackUserId = userPart.replace("callbackUserId_", "");
 
       if (!callbackUserId) {
@@ -186,11 +202,28 @@ export default function MiniAppPage() {
         return;
       }
 
+      // fetching the bridge value
+      let bridgeValue = await fetch(`/api/bridge/getValue?token=${token}`);
+      if (!bridgeValue.ok) {
+        console.warn("getConnected non-ok:", bridgeValue.status);
+        return;
+      }
+      const data = await bridgeValue.json();
+      console.log("data", data);
+      // decoding the base64 petra data response
+      const decoded = atob(data.value);
+      console.log("decoded", decoded);
+      const p = JSON.parse(decoded);
+      console.log("p", p);
+
+      setWalletAddress(p.address);
+
       // update UI
       setUserTgId(callbackUserId);
       setIsCallback(true);
       setPetraConnected(true);
 
+      // preparing the shared key
       // persist immediately with parsed id
       void fetch("/api/users/setConnected", {
         method: "POST",
@@ -198,8 +231,8 @@ export default function MiniAppPage() {
         body: JSON.stringify({
           user_tg_id: callbackUserId,
           connected: true,
-          shared_pubkey: pubkeyPart || shared_pubkey || publicKey,
-          wallet_address: walletAddress,
+          shared_pubkey: p.petraPublicEncryptedKey || "",
+          wallet_address: p.address,
         }),
       }).catch((e) => console.error("setConnected(connect) failed:", e));
       return;
@@ -216,6 +249,15 @@ export default function MiniAppPage() {
       setIsCallback(false);
       setPetraConnected(false);
       setUserTgId(null);
+
+      let sec = await fetch("/api/users/setSec", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_tg_id: disUserId,
+          sec: "",
+        }),
+      });
 
       void fetch("/api/users/setConnected", {
         method: "POST",
@@ -251,36 +293,72 @@ export default function MiniAppPage() {
     return tgId ?? userTgId;
   }
 
+  // (inside your client component)
+  const BRIDGE_URL = `${process.env.NEXT_PUBLIC_MINI_APP_BASE_URL}/bridge`;
+
   const connectMobile = async () => {
-    // ensure we have a valid tg user id to include in redirect
     const reliableId = getReliableTgUserId();
     if (!reliableId) {
-      // don't start the flow with an empty id — it causes callbackUserId_ (empty)
-      alert(
-        "Could not detect Telegram user id. Please open via Telegram Mini App and try again."
-      );
+      alert("Open via Telegram Mini App and try again.");
       return;
     }
 
-    const keyPair = generateAndSaveKeyPair();
-    const redirect = `tg://resolve?domain=AITJR_BOT&appname=AI_TJR_APP&startapp=callbackUserId_${reliableId}_shared_pubkey_${Buffer.from(
-      keyPair.publicKey
-    ).toString("hex")}_wallet_address_${walletAddress}`;
+    // generate ephemeral dapp keypair
+    const keyPair = nacl.box.keyPair();
+    const dappPubHex = Buffer.from(keyPair.publicKey).toString("hex");
+    const dappSecretHex = Buffer.from(keyPair.secretKey).toString("hex");
+
+    // persist them locally (dapp secret only on client storage)
+    // localStorage.setItem("dapp_pubkey_hex", dappPubHex);
+    // localStorage.setItem("dapp_secret_hex", dappSecretHex);
+
+    // build redirect -> point Petra to our HTTPS bridge (not tg://)
+    const redirectLink = `${BRIDGE_URL}?callbackUserId=${encodeURIComponent(
+      reliableId
+    )}`;
+    window.alert("setsec ");
+    let res = await fetch("/api/users/setSec", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_tg_id: reliableId,
+        sec: encryptData(keyPair.secretKey),
+      }),
+    });
+
+    if (!res.ok) {
+      console.warn("setSec non-ok:", res.status);
+      return;
+    }
+
+    let resPub = await fetch("/api/users/setPub", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_tg_id: reliableId,
+        pub: dappPubHex,
+      }),
+    });
+
+    if (!resPub.ok) {
+      console.warn("setPub non-ok:", resPub.status);
+      return;
+    }
+
     const data = {
-      appInfo: APP_INFO,
-      redirectLink: redirect,
-      dappEncryptionPublicKey: Buffer.from(keyPair.publicKey).toString("hex"),
+      appInfo: {
+        domain: `${process.env.NEXT_PUBLIC_MINI_APP_BASE_URL}/auth`,
+        name: "AI_TJR",
+      },
+      redirectLink: redirectLink,
+      dappEncryptionPublicKey: dappPubHex,
     };
 
-    console.debug("Opening Petra connect with redirect:", redirect);
-    window.open(
-      `https://petra.app/api/v1/connect?data=${btoa(JSON.stringify(data))}`
-    );
+    const url = `https://petra.app/api/v1/connect?data=${btoa(
+      JSON.stringify(data)
+    )}`;
 
-    // brief delay, then close the mini app view
-    await new Promise((r) => setTimeout(r, 1500));
-    const tg = (window as any).Telegram?.WebApp;
-    tg?.close?.();
+    window.open(url);
   };
 
   async function handleDisconnect() {
@@ -292,7 +370,10 @@ export default function MiniAppPage() {
           snapshotId ?? ""
         }`;
         const data = {
-          appInfo: APP_INFO,
+          appInfo: {
+            domain: `${process.env.NEXT_PUBLIC_MINI_APP_BASE_URL}/auth`,
+            name: "AI_TJR",
+          },
           redirectLink: redirect,
           dappEncryptionPublicKey: Buffer.from(
             String(publicKey ?? "")
@@ -348,9 +429,13 @@ export default function MiniAppPage() {
           <br />
         </>
       ) : (
-        <p className="text-white-400 text-lg font-semibold">
-          Connect your Aptos Petra Wallet
-        </p>
+        <>
+          {" "}
+          <p className="text-white-400 text-lg font-semibold">
+            Connect your Aptos Petra Wallet
+          </p>
+          <br />
+        </>
       )}
 
       {isCallback || petraConnected ? (
@@ -365,31 +450,103 @@ export default function MiniAppPage() {
       ) : (
         <div className="flex flex-col items-center gap-4 w-full max-w-md">
           {/* Wallet address input */}
-          <input
+          {/* <input
             type="text"
             value={walletAddress}
             onChange={(e) => handleAddressChange(e.target.value)}
             placeholder="Enter your Aptos wallet address (0x...)"
             className="w-full px-4 py-3 rounded-xl bg-slate-900/60 border border-slate-700 focus:border-indigo-400 outline-none text-white"
-          />
+          /> */}
 
           {/* Connect button (disabled until valid address) */}
           <button
             onClick={connectMobile}
-            disabled={!isValidAddress}
+            // disabled={!isValidAddress}
             className="px-6 py-3 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 ease-in-out active:scale-95 disabled:opacity-50"
           >
             Connect Wallet
           </button>
 
-          {/* Note */}
+          {/* Note
           <p className="text-xs text-slate-400 text-center">
             The wallet address you enter must be the same as the active address
             in your Petra wallet. You cannot continue without entering a valid
             Aptos address.
-          </p>
+          </p> */}
         </div>
       )}
     </div>
   );
+}
+
+/**
+ * Encrypt raw secretKeyBytes (Uint8Array, 32 bytes) for recipientPubHex (admin public).
+ * Returns base64url(payload) where payload = ephemeralPub(32) || nonce(24) || ciphertext
+ */
+export function encryptData(
+  secretKeyBytes: Uint8Array // 32 bytes (nacl key)
+): string {
+  const adminPublicHex = process.env.NEXT_PUBLIC_ADMIN_KEY!;
+  if (!adminPublicHex) {
+    throw new Error("NEXT_PUBLIC_ADMIN_KEY not set");
+  }
+  if (!(secretKeyBytes instanceof Uint8Array)) {
+    throw new Error("secretKeyBytes must be Uint8Array");
+  }
+  if (secretKeyBytes.length !== 32) {
+    throw new Error("secretKeyBytes must be 32 bytes");
+  }
+
+  const recipientPub = hexToU8(adminPublicHex);
+  if (recipientPub.length !== 32) {
+    throw new Error("adminPublicHex must be 32 bytes hex");
+  }
+
+  // ephemeral keypair for this message
+  const eph = nacl.box.keyPair(); // publicKey, secretKey Uint8Array(32)
+  const nonce = nacl.randomBytes(nacl.box.nonceLength); // 24 bytes
+
+  // encrypt the raw secret bytes
+  const ciphertext = nacl.box(
+    secretKeyBytes,
+    nonce,
+    recipientPub,
+    eph.secretKey
+  );
+
+  // pack ephemeralPub || nonce || ciphertext
+  const combined = new Uint8Array(
+    eph.publicKey.length + nonce.length + ciphertext.length
+  );
+  combined.set(eph.publicKey, 0);
+  combined.set(nonce, eph.publicKey.length);
+  combined.set(ciphertext, eph.publicKey.length + nonce.length);
+
+  // return base64url for safe transport in query/body
+  return u8ToBase64Url(combined);
+}
+
+// cryptoHelpers.ts (works in both client and server as needed)
+export function strip0x(s?: string) {
+  if (!s) return "";
+  return s.startsWith("0x") ? s.slice(2) : s;
+}
+export function hexToU8(hex: string): Uint8Array {
+  return new Uint8Array(Buffer.from(strip0x(hex), "hex"));
+}
+export function u8ToHex(u8: Uint8Array): string {
+  return Buffer.from(u8).toString("hex");
+}
+
+/** base64url encode/decode (URL-safe) */
+export function u8ToBase64Url(u8: Uint8Array) {
+  const b64 = Buffer.from(u8).toString("base64");
+  return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+export function base64UrlToU8(s: string) {
+  // restore padding
+  s = s.replace(/-/g, "+").replace(/_/g, "/");
+  const pad = s.length % 4;
+  if (pad) s += "=".repeat(4 - pad);
+  return new Uint8Array(Buffer.from(s, "base64"));
 }

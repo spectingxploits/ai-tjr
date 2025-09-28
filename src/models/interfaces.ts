@@ -173,3 +173,25 @@ export type GlobalOrders =
   | Order
   | ParsedKanaOrder[]
   | ParsedKanaOrder;
+
+export type AptosStandardPayload = {
+  type: string;
+  function: string;
+  type_arguments: string[];
+  arguments: string[];
+};
+
+// Broader FunctionArgument type
+export type FunctionArgument =
+  | string
+  | number
+  | boolean
+  | bigint
+  | null
+  | undefined
+  | `0x${string}`
+  | Uint8Array
+  | Record<string, any>
+  | Array<FunctionArgument>; // nested arrays
+
+
