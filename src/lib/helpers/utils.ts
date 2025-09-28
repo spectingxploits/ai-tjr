@@ -1,4 +1,22 @@
-import { FunctionArgument } from "@/models/interfaces";
+import {
+  HyperionSwapPayload,
+  hyperionToAptosStandardPayload,
+} from "@/models/hyperion/types";
+import {
+  AptosStandardPayload,
+  FunctionArgument,
+  GlobalPayload,
+} from "@/models/interfaces";
+import {
+  KanalabsOrderPayload,
+  kanalabsToAptosStandardPayload,
+} from "@/models/kanalabs/types";
+import {
+  MerkleCancelOrderPayload,
+  merkletoAptosStandardPayload,
+  MerkleTradePayload,
+  MerkleUpdatePayload,
+} from "@/models/merkleTrade/models";
 
 // Utility: normalize arguments recursively
 export function normalizeArgument(arg: FunctionArgument): string {
@@ -11,4 +29,51 @@ export function normalizeArgument(arg: FunctionArgument): string {
   if (Array.isArray(arg)) return JSON.stringify(arg.map(normalizeArgument));
   if (typeof arg === "object") return JSON.stringify(arg);
   return String(arg);
+}
+
+export function toAptosStandardPayload(
+  payload: GlobalPayload
+): AptosStandardPayload {
+  if (isMerklePayload(payload)) {
+    return merkletoAptosStandardPayload(payload);
+  }
+
+  if (isKanalabsPayload(payload)) {
+    return kanalabsToAptosStandardPayload(payload);
+  }
+
+  if (isHyperionPayload(payload)) {
+    return hyperionToAptosStandardPayload(payload);
+  }
+
+  throw new Error("Payload not supported");
+}
+
+function isMerklePayload(
+  payload: any
+): payload is
+  | MerkleTradePayload
+  | MerkleUpdatePayload
+  | MerkleCancelOrderPayload {
+  return (
+    typeof payload?.function === "string" &&
+    payload.function.includes("::managed_trading::") &&
+    Array.isArray(payload?.functionArguments)
+  );
+}
+
+function isKanalabsPayload(payload: any): payload is KanalabsOrderPayload {
+  return (
+    typeof payload?.function === "string" &&
+    payload.function.includes("::perpetual_scripts::") &&
+    Array.isArray(payload?.functionArguments)
+  );
+}
+
+function isHyperionPayload(payload: any): payload is HyperionSwapPayload {
+  return (
+    typeof payload?.function === "string" &&
+    payload.function.includes("::router_v3::swap_batch") &&
+    Array.isArray(payload?.functionArguments)
+  );
 }

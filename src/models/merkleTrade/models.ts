@@ -25,7 +25,7 @@ export type MerkleCancelOrderPayload = {
 };
 
 // Converter
-export function MerkletoAptosStandardPayload(
+export function merkletoAptosStandardPayload(
   payload:
     | {
         function: `0x${string}::managed_trading::place_order_v3`;

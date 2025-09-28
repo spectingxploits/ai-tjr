@@ -8,6 +8,7 @@ import type { SignAndSubmitParams } from "@/models/interfaces";
 import type { GlobalSignal } from "@/models/interfaces"; // if you export it
 import { get } from "http";
 import SuperJSON from "superjson";
+import { toAptosStandardPayload } from "@/lib/helpers/utils";
 
 const PETRA_LINK_BASE = "https://petra.app/api/v1";
 const APP_INFO = {
@@ -151,24 +152,10 @@ export default function PetraSignPage() {
       if (!innerPayload) throw new Error("Missing inner transaction payload");
 
       const nonce = nacl.randomBytes(24);
-      console.log("testing super jason");
 
-      // const tx = {
-      //   type: "entry_function_payload",
-      //   function:
-      //     "0x732f891290449af5e9369866537a51a8e7dc566791aec61a468223ed840b1eb4::perpetual_scripts::place_market_order",
-      //   type_arguments: [],
-      //   arguments: [
-      //     "2387", // use string for numbers/bigints
-      //     true, // boolean ok
-      //     false,
-      //     BigInt(1).toString(), // big number as string, big number till three decimnals, with out tokens decimals
-      //     "1",
-      //     "0",
-      //     "0",
-      //   ],
-      // };
-      let payload = btoa(stringifyJsonWithBigInt(wrapper.payload));
+      let parsed_payload = toAptosStandardPayload(wrapper.payload);
+
+      let payload = btoa(stringifyJsonWithBigInt(parsed_payload));
       const encrypted = nacl.box.after(
         Buffer.from(stringifyJsonWithBigInt(payload)),
         nonce,
