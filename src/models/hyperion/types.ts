@@ -1,3 +1,6 @@
+import { normalizeArgument } from "@/lib/helpers/utils";
+import { AptosStandardPayload, FunctionArgument } from "../interfaces";
+
 export type PairPriceParams = {
   symbolIn: string;
   symbolOut: string;
@@ -17,6 +20,23 @@ export type SwapParams = {
     meta?: any;
   };
 };
+
+export type HyperionSwapPayload = {
+  function: `${string}::${string}::${string}`;
+  typeArguments: string[];
+  functionArguments: FunctionArgument[];
+};
+
+export function hyperionToAptosStandardPayload(
+  payload: HyperionSwapPayload
+): AptosStandardPayload {
+  return {
+    type: "entry_function_payload",
+    function: payload.function,
+    type_arguments: payload.typeArguments,
+    arguments: payload.functionArguments.map(normalizeArgument),
+  };
+}
 
 // Pool information for a trading pair
 export interface PoolInfo {

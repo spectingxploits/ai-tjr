@@ -87,6 +87,9 @@ export async function parseRawPotentialSignal(
       message: GlobalPrompts.fillParams,
       contents: JSON.stringify(parsedOutput),
     });
+
+    console.log(geminiEnhancedOutput);
+
     let parsedGeminiEnhancedOutput: GeminiResponse = JSON.parse(
       geminiEnhancedOutput.replace(/```json|```/g, "").trim()
     ) as GeminiResponse;
@@ -116,3 +119,5 @@ export async function parseRawPotentialSignal(
     return null;
   }
 }
+
+

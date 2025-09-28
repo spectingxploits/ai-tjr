@@ -83,7 +83,7 @@ export interface SwapConnector {
   getQuote(params: PairPriceParams): Promise<number>;
 
   /* Execute swaps (wallet signing / chain broadcast handled by implementor) */
-  swap(params: SwapParams): Promise<Result<any>>;
+  swap(params: SwapParams): Promise<Result<GlobalPayload>>;
 
   /* Helpers */
   getPoolInfoByPair(tokenA: string, tokenB: string): Promise<PoolInfo>;

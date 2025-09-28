@@ -1,5 +1,5 @@
 import { Order, Position } from "@merkletrade/ts-sdk";
-import { TokenInfo } from "./hyperion/types";
+import { HyperionSwapPayload, TokenInfo } from "./hyperion/types";
 import {
   KanalabsOrderPayload,
   ParsedKanaOrder,
@@ -147,6 +147,7 @@ export type GlobalPayload =
   | MerkleUpdatePayload
   | MerkleCancelOrderPayload
   | KanalabsOrderPayload
+  | HyperionSwapPayload
   | any;
 
 export type SignAndSubmitParams = {
@@ -181,17 +182,14 @@ export type AptosStandardPayload = {
   arguments: string[];
 };
 
-// Broader FunctionArgument type
 export type FunctionArgument =
   | string
   | number
-  | boolean
   | bigint
+  | boolean
   | null
   | undefined
-  | `0x${string}`
-  | Uint8Array
-  | Record<string, any>
+  | `0x${string}` // hex-encoded address/string
+  | Uint8Array // raw bytes
+  | Record<string, any> // objects like AccountAddressInput
   | Array<FunctionArgument>; // nested arrays
-
-

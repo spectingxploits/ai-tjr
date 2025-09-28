@@ -13,7 +13,7 @@ if (!token) throw new Error("TELEGRAM_BOT_TOKEN env var not found.");
 const bot = new Bot(token);
 
 async function setupListeners() {
-  const connector_gateway = new ConnectorGateway(Network.TESTNET);
+  const connector_gateway = new ConnectorGateway(Network.MAINNET);
   await connector_gateway.initGatewayConnectors();
 
   bot.on("channel_post", async (ctx) => {
