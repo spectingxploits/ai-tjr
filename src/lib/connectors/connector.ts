@@ -348,6 +348,11 @@ export class ConnectorGateway {
 
     return Promise.resolve({ success: true, data: true });
   }
+
+  async getBalance(userAddress: string): Promise<Balance[]> {
+    return Promise.resolve([]);
+  }
+  
   getSpotConnectors() {
     return this.spotConnectors;
   }

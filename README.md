@@ -1,5 +1,33 @@
 # AI_TJR
 
+<p align="center">
+  <img src="public/AI-TJR-LOGO.png" alt="Odyssey Logo" width="600"/>
+</p>
+
+<p align="center">
+  <a href="https://github.com/Javadyakuza/ai-tjr/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/Javadyakuza/ai-tjr?style=plastic" alt="License"/>
+  </a>
+  <a href="https://github.com/Javadyakuza/ai-tjr/blob/main/package.json">
+    <img src="https://img.shields.io/github/package-json/v/Javadyakuza/ai-tjr?style=plastic" alt="Version"/>
+  </a>
+  <a href="https://github.com/Javadyakuza/ai-tjr/issues">
+    <img src="https://img.shields.io/github/issues/Javadyakuza/ai-tjr?style=plastic" alt="Issues"/>
+  </a>
+  <a href="https://github.com/Javadyakuza/ai-tjr/pulls">
+    <img src="https://img.shields.io/github/issues-pr/Javadyakuza/ai-tjr?style=plastic" alt="Pull Requests"/>
+  </a>
+  <a href="https://github.com/Javadyakuza/ai-tjr/stargazers">
+    <img src="https://img.shields.io/github/stars/Javadyakuza/ai-tjr?style=plastic" alt="Stars"/>
+  </a>
+  <a href="https://github.com/Javadyakuza/ai-tjr/network/members">
+    <img src="https://img.shields.io/github/forks/Javadyakuza/ai-tjr?style=plastic" alt="Forks"/>
+  </a>
+  <a href="https://github.com/Javadyakuza/ai-tjr/commits/main">
+    <img src="https://img.shields.io/github/last-commit/Javadyakuza/ai-tjr?style=plastic" alt="Last Commit"/>
+  </a>
+</p>
+
 First AI-driven, automated trading telegram bot on Aptos !
 
 designed to operate within the Telegram ecosystem. It leverages a sophisticated architecture to parse trading signals
@@ -108,10 +136,6 @@ This command is used to disconnect your wallet from the bot. It will remove the 
 This command is used to setup the signal automation for the bot.
 
 > NOTE: This command will prompt you to connect your telegram account with the [telefeed](https://t.me/tg_feedbot) service. WE Highly recommend to create a new telegram account for signal automation. Also there was not even a single report of any kind of abuse of personal information or any other kind of threat for the telegram accounts while they used this service. but anyhow, DYOR.
-
-### `/automate_new_channel`
-
-This command is used to automate a new channel.
 
 ### `/deactivate_automated_channel`
 
