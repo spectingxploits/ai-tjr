@@ -2,6 +2,7 @@
   "name": "ai-tjr",
   "version": "1.6.7",
   "private": true,
+  "license": "GPL-3.0-or-later",
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
