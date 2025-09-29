@@ -81,26 +81,38 @@ export default function PetraResponsePage() {
           </div>
         )}
 
-        <div className="mb-4 break-words">
+        <div className="mb-4 ">
           <strong>Raw data param:</strong>
-          <pre className="mt-2 p-3 bg-slate-900/20 rounded text-sm ">
+          <pre className="mt-2 p-3 bg-slate-900/20 rounded text-sm overflow-x-auto whitespace-pre">
             {dataParam ?? "none"}
           </pre>
         </div>
 
         <div className="mb-4">
           <strong>Decoded data:</strong>
-          <pre className="mt-2 p-3 bg-slate-900/20 rounded text-sm">
+          <pre className="mt-2 p-3 bg-slate-900/20 rounded text-sm overflow-x-auto whitespace-pre">
             {decoded ? JSON.stringify(decoded, null, 2) : "No data decoded"}
           </pre>
         </div>
 
         {txHash ? (
-          <div className="p-3 rounded bg-green-900/30 text-green-200">
+          <div className="p-3 rounded bg-green-900/30 text-green-200 ">
             ✅ Transaction hash:{" "}
-            <code className="block mt-1">{String(txHash)}</code>
+            <code className="block mt-1 break-words max-w-xs">
+              {String(txHash)}
+            </code>
             <div className="mt-2 text-sm text-slate-300">
               You can inspect this hash on a block explorer.
+              <a
+                href={`https://explorer.aptoslabs.com/txn/${String(
+                  txHash
+                )}?network=mainnet`}
+                className="ml-2"
+              >
+                <button className="ml-2 text-sm text-indigo-400 underline">
+                  View on Aptos Explorer
+                </button>
+              </a>
             </div>
           </div>
         ) : (
