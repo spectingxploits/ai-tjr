@@ -1,5 +1,6 @@
 import { getGatewayId } from "@/services/db/gateway";
 import { InlineKeyboard, Keyboard } from "grammy";
+import { MESSAGES } from "../messages";
 
 export async function respondAutomation(ctx: any) {
   // fetching the user gateway status
@@ -7,21 +8,7 @@ export async function respondAutomation(ctx: any) {
 
   if (!user_gateway_id) {
     ctx.reply(
-      `
-⚠️ No gateway forwarding channel found.  
-
-👉 Follow these steps to create one:
-
-1️⃣ Create a new **Telegram Channel** from your account.  
-2️⃣ Add **AI-TJR Bot** as an **Admin** of the channel.  
-
-📌 **Important Notes:**  
-- Do **not** add any other users to the channel.  
-- Make sure the bot has **admin rights**.  
-
-✅ Once that’s done, the bot will automatically detect it and guide you through the next steps.
-
-    `
+      MESSAGES.no_gateway_found
     );
     return;
   }

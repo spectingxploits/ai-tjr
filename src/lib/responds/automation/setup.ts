@@ -1,7 +1,8 @@
 import { getGatewayId } from "@/services/db/gateway";
 import { type Conversation } from "@grammyjs/conversations";
 import { Bot, type Context, InlineKeyboard } from "grammy";
-import { checkAndFetchPhoneNumber } from "./contact";
+import { checkAndFetchPhoneNumber } from "../contact";
+import { MESSAGES } from "../messages";
 
 /**
  * Ask the user to forward a message from the channel to automate,
@@ -71,50 +72,15 @@ export async function respondAutomate(
   if (!phone_number) return;
 
   if (!forward_channel_id) {
-    ctx.reply(
-      `
-⚠️ No gateway forwarding channel found.  
-
-👉 Follow these steps to create one:
-
-1️⃣ Create a new **Telegram Channel** from your account.  
-2️⃣ Add **AI-TJR Bot** as an **Admin** of the channel.  
-
-📌 **Important Notes:**  
-- Do **not** add any other users to the channel.  
-- Make sure the bot has **admin rights**.  
-
-✅ Once that’s done, the bot will automatically detect it and guide you through the next steps.
-
-    `
-    );
+    ctx.reply(MESSAGES.no_gateway_found);
     return;
   }
 
-  const msg = `
-<b>🚀 Follow the steps below to automate your channel:</b>
-
-<b>1️⃣ Setup your Telefeed account</b>
-   • Copy this message: <code>/connect ${phone_number}</code>  
-   • start the <a href="https://t.me/tg_feedbot">Telefeed Bot</a> and pase what you copied above.  
-
-<b>2️⃣ Create a new automation group</b>  
-   • Copy this message and send it to <a href="https://t.me/tg_feedbot">Telefeed Bot</a>:  
-   <code>/redirection add aitjrforw_${String(channel_id)
-     .replace("-100", "")
-     .slice(5)}_${String(forward_channel_id)
-    .replace("-100", "")
-    .slice(5)} on ${phone_number}</code>  
-
-<b>3️⃣ Connect your channels</b>  
-   • Copy this message and send it to <a href="https://t.me/tg_feedbot">Telefeed Bot</a>:  
-   <code>${String(channel_id).replace("-100", "")} - ${String(
+  const msg = MESSAGES.automate_instructions(
+    phone_number,
+    channel_id,
     forward_channel_id
-  ).replace("-100", "")}</code>  
-
-<b>4️⃣ 🎉 Congrats!</b>  
-   Your automation is ready. Enjoy using <b>AI-TJR Bot 🤖</b>  
-`;
+  );
   await ctx.reply(msg, { parse_mode: "HTML" });
 }
 
@@ -135,39 +101,14 @@ export async function respondDeactivate(
   if (!phone_number) return;
 
   if (!forward_channel_id) {
-    ctx.reply(
-      `
-⚠️ No gateway forwarding channel found.  
-
-👉 Follow these steps to create one:
-
-1️⃣ Create a new **Telegram Channel** from your account.  
-2️⃣ Add **AI-TJR Bot** as an **Admin** of the channel.  
-
-📌 **Important Notes:**  
-- Do **not** add any other users to the channel.  
-- Make sure the bot has **admin rights**.  
-
-✅ Once that’s done, the bot will automatically detect it and guide you through the next steps.
-
-    `
-    );
+    ctx.reply(MESSAGES.no_gateway_found);
     return;
   }
 
-  const msg = `
-<b>⚡ Follow the steps below to deactivate channel automation:</b>
-
-<b>1️⃣ Remove the automation group</b>  
-   • Copy this message and send it to <a href="https://t.me/tg_feedbot">Telefeed Bot</a>:  
-   <code>/redirection remove aitjrforw_${String(channel_id)
-     .replace("-100", "")
-     .slice(5)}_${String(forward_channel_id)
-    .replace("-100", "")
-    .slice(5)} on ${phone_number}</code>  
-<b>2️⃣ Done!</b>  
-   Your automations on <b>aitjrforwards</b> have been removed.  
-   If you want automation again, you’ll need to set them up from scratch. 🔄
-`;
+  const msg = MESSAGES.deactivate_instructions(
+    channel_id,
+    forward_channel_id,
+    phone_number
+  );
   await ctx.reply(msg, { parse_mode: "HTML" });
 }

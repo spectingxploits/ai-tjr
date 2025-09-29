@@ -1,5 +1,5 @@
 // src/services/core/botPoll.ts
-import { sendOpenAuthPageButton } from "@/lib/responds/connectButton";
+import { sendOpenAuthPageButton } from "@/lib/responds/wallet/connectButton";
 import { ConnectorGateway } from "@/lib/connectors/connector";
 import { parseRawPotentialSignal } from "@/lib/helpers/signalParser";
 import { Network } from "@aptos-labs/ts-sdk";
@@ -19,7 +19,7 @@ import {
   conversations,
   createConversation,
 } from "@grammyjs/conversations";
-import { checkAndFetchPhoneNumber } from "@/lib/responds/automation/contact";
+import { checkAndFetchPhoneNumber } from "@/lib/responds/contact";
 import { MESSAGES } from "@/lib/responds/messages";
 
 const token = process.env.TELEGRAM_BOT_TOKEN;

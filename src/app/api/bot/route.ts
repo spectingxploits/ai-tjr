@@ -2,8 +2,8 @@ export const dynamic = "force-dynamic";
 
 export const fetchCache = "force-no-store";
 
-import { sendOpenSignPageButton } from "@/lib/responds/confirmButton";
-import { sendOpenAuthPageButton } from "@/lib/responds/connectButton";
+import { sendOpenSignPageButton } from "@/lib/responds/trade/confirmButton";
+import { sendOpenAuthPageButton } from "@/lib/responds/wallet/connectButton";
 
 import { Bot, webhookCallback } from "grammy";
 

@@ -1,3 +1,4 @@
+// all message should be sent with parse_mode: "HTML"
 export const MESSAGES = {
   help: `
 🤖 AI-TJR Bot Help  
@@ -26,5 +27,92 @@ export const MESSAGES = {
 /automation – Automation options  
 /trade – Trade options  
 /help – Show all commands  
+    `,
+  no_gateway_found: `
+⚠️ <b>No gateway forwarding channel found.</b><br><br>
+
+👉 <b>Follow these steps to create one:</b><br><br>
+
+1️⃣ Create a new <b>Telegram Channel</b> from your account.<br>
+2️⃣ Add <b>AI-TJR Bot</b> as an <b>Admin</b> of the channel.<br><br>
+
+📌 <b>Important Notes:</b><br>
+• Do <b>not</b> add any other users to the channel.<br>
+• Make sure the bot has <b>admin rights</b> (post & manage messages).<br><br>
+
+✅ Once that’s done, the bot will automatically detect it and guide you through the next steps.
+`,
+
+  automate_instructions: (
+    phone_number: string,
+    channel_id: string,
+    forward_channel_id: string
+  ) => `
+<b>🚀 Follow the steps below to automate your channel:</b>
+
+<b>1️⃣ Setup your Telefeed account</b>
+   • Copy this message: <code>/connect ${phone_number}</code>  
+   • start the <a href="https://t.me/tg_feedbot">Telefeed Bot</a> and pase what you copied above.  
+
+<b>2️⃣ Create a new automation group</b>  
+   • Copy this message and send it to <a href="https://t.me/tg_feedbot">Telefeed Bot</a>:  
+   <code>/redirection add aitjrforw_${String(channel_id)
+     .replace("-100", "")
+     .slice(5)}_${String(forward_channel_id)
+    .replace("-100", "")
+    .slice(5)} on ${phone_number}</code>  
+
+<b>3️⃣ Connect your channels</b>  
+   • Copy this message and send it to <a href="https://t.me/tg_feedbot">Telefeed Bot</a>:  
+   <code>${String(channel_id).replace("-100", "")} - ${String(
+    forward_channel_id
+  ).replace("-100", "")}</code>  
+
+<b>4️⃣ 🎉 Congrats!</b>  
+   Your automation is ready. Enjoy using <b>AI-TJR Bot 🤖</b>  
+`,
+
+  deactivate_instructions: (
+    channel_id: string,
+    forward_channel_id: string,
+    phone_number: string
+  ) => `
+<b>⚡ Follow the steps below to deactivate channel automation:</b>
+
+<b>1️⃣ Remove the automation group</b>  
+   • Copy this message and send it to <a href="https://t.me/tg_feedbot">Telefeed Bot</a>:  
+   <code>/redirection remove aitjrforw_${String(channel_id)
+     .replace("-100", "")
+     .slice(5)}_${String(forward_channel_id)
+    .replace("-100", "")
+    .slice(5)} on ${phone_number}</code>  
+<b>2️⃣ Done!</b>  
+   Your automations on <b>aitjrforwards</b> have been removed.  
+   If you want automation again, you’ll need to set them up from scratch. 🔄
+`,
+
+  contact_request: `
+✨ <b>AI-TJR Bot Request</b> ✨  
+
+To enable channel automation, we need your phone number.  
+
+📱 <i>Note:</i>  
+• Your number is <b>never</b> stored or shared.  
+• For privacy, we ask each time.  
+
+👉 Tap the button below to share securely.
+`,
+
+  welcome_text: `
+I can help you <b>automate your trading strategy</b> with my powerful AI.  
+
+To start your trading journey, first connect your wallet and then click on automation :  
+
+1️⃣ <b>💼 Wallet</b>  
+2️⃣ <b>⚡ Automation</b>
+3️⃣ <b>📊 Trade</b>
+4️⃣ <b>❓ Help</b>
+
+⚡ Let’s get started and take your trading to the next level!
     `,
 };
