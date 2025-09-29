@@ -81,9 +81,9 @@ export default function PetraResponsePage() {
           </div>
         )}
 
-        <div className="mb-4">
+        <div className="mb-4 break-words">
           <strong>Raw data param:</strong>
-          <pre className="mt-2 p-3 bg-slate-900/20 rounded text-sm">
+          <pre className="mt-2 p-3 bg-slate-900/20 rounded text-sm ">
             {dataParam ?? "none"}
           </pre>
         </div>

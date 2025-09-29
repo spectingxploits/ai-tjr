@@ -292,10 +292,6 @@ export default function MiniAppPage() {
     const dappPubHex = Buffer.from(keyPair.publicKey).toString("hex");
     const dappSecretHex = Buffer.from(keyPair.secretKey).toString("hex");
 
-    // persist them locally (dapp secret only on client storage)
-    // localStorage.setItem("dapp_pubkey_hex", dappPubHex);
-    // localStorage.setItem("dapp_secret_hex", dappSecretHex);
-
     // build redirect -> point Petra to our HTTPS bridge (not tg://)
     const redirectLink = `${BRIDGE_URL}?callbackUserId=${encodeURIComponent(
       reliableId

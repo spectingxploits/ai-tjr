@@ -2,7 +2,7 @@
 
 import { randomBytes } from "crypto";
 import React, { useEffect, useMemo, useState } from "react";
-
+import crypto from "crypto";
 /**
  * PetraHttpsToTelegramBridge
  * - Use this page as the HTTPS redirect target you provide to Petra in your /connect flow.
@@ -47,7 +47,9 @@ export default function PetraHttpsToTelegramBridge() {
   const [tgDeepLink, setTgDeepLink] = useState<string | null>(null);
 
   async function handleSetValue(value: string): Promise<string> {
-    const token = randomBytes(6).toString("hex");
+    // SHA-256 hash of the value, truncated to `bytes`
+    const hash = crypto.createHash("sha256").update(value).digest();
+    const token = hash.slice(0, 12).toString("hex");
     console.log("token", token);
     console.log("value", value);
     await fetch(`/api/bridge/setValue`, {

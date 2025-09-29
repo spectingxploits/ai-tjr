@@ -28,17 +28,16 @@ export const MESSAGES = {
 /trade – Trade options  
 /help – Show all commands  
     `,
-  no_gateway_found: `
-⚠️ <b>No gateway forwarding channel found.</b><br><br>
+  no_gateway_found: `⚠️ <b>No gateway forwarding channel found.</b>
 
-👉 <b>Follow these steps to create one:</b><br><br>
+👉 <b>Follow these steps to create one:</b>
 
-1️⃣ Create a new <b>Telegram Channel</b> from your account.<br>
-2️⃣ Add <b>AI-TJR Bot</b> as an <b>Admin</b> of the channel.<br><br>
+1️⃣ Create a new <b>Telegram Channel</b> from your account.
+2️⃣ Add <b>AI-TJR Bot</b> as an <b>Admin</b> of the channel.
 
-📌 <b>Important Notes:</b><br>
-• Do <b>not</b> add any other users to the channel.<br>
-• Make sure the bot has <b>admin rights</b> (post & manage messages).<br><br>
+📌 <b>Important notes</b>:
+• Do <b>not</b> add any other users to the channel.
+• Make sure the bot has <b>admin rights</b> (post & manage messages).
 
 ✅ Once that’s done, the bot will automatically detect it and guide you through the next steps.
 `,
@@ -52,7 +51,7 @@ export const MESSAGES = {
 
 <b>1️⃣ Setup your Telefeed account</b>
    • Copy this message: <code>/connect ${phone_number}</code>  
-   • start the <a href="https://t.me/tg_feedbot">Telefeed Bot</a> and pase what you copied above.  
+   • start the <a href="https://t.me/tg_feedbot">Telefeed Bot</a> and paste what you copied above.  
 
 <b>2️⃣ Create a new automation group</b>  
    • Copy this message and send it to <a href="https://t.me/tg_feedbot">Telefeed Bot</a>:  
@@ -69,7 +68,7 @@ export const MESSAGES = {
   ).replace("-100", "")}</code>  
 
 <b>4️⃣ 🎉 Congrats!</b>  
-   Your automation is ready. Enjoy using <b>AI-TJR Bot 🤖</b>  
+   Your automation is ready. \n now <b>AI-TJR Bot 🤖</b> will notify you when ever a new trading opportunity is available on this channel.
 `,
 
   deactivate_instructions: (

@@ -17,16 +17,16 @@ export async function POST(req: Request) {
       );
     }
 
-    const new_status = await setBridgeValue(String(token), String(value));
+    const new_value = await setBridgeValue(String(token), String(value));
 
-    if (!new_status) {
+    if (!new_value) {
       return NextResponse.json(
         { ok: false, error: "unknown error" },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({ ok: true, new_status });
+    return NextResponse.json({ ok: true, new_value });
   } catch (err: any) {
     return NextResponse.json(
       { ok: false, error: err.message },
