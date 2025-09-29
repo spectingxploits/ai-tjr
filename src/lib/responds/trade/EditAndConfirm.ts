@@ -8,9 +8,10 @@ export async function respondEditAndConfirm(
 ): Promise<void> {
   // fetching the user gateway status
   const combined = { ai_items, signal };
+  console.log("combined", combined, user_chat_id);
   const keyboard = new InlineKeyboard()
     .text("Edit Signal", `edit_signal:${JSON.stringify(combined)}`)
-    .text("Confirm", `confirm:${JSON.stringify(combined)}`);
+    .text("Confirm", `confirm_signal:${JSON.stringify(combined)}`);
 
   const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
   const MINI_APP_BASE_URL = process.env.NEXT_PUBLIC_MINI_APP_BASE_URL;

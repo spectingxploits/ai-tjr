@@ -74,11 +74,15 @@ async function setupListeners() {
               console.log("No signal parsed.");
               return;
             }
+            console.log("signal", signal);
+            console.log("sending edit and confirm");
+            console.log("admin", admin.user.id);
             await respondEditAndConfirm(
               admin.user.id.toString(),
               signal[0].values,
               signal[1]
             );
+            console.log("sent edit and confirm");
           } catch (e) {
             console.warn("Failed to DM admin", admin.user.id, e);
           }
@@ -222,7 +226,7 @@ async function setupListeners() {
       );
     }
 
-    if (data.startsWith("confirm:")) {
+    if (data.startsWith("confirm_signal:")) {
       const myData = data.split(":")[1];
       const signal: { ai_items: string[]; signal: GlobalSignal } =
         JSON.parse(myData);

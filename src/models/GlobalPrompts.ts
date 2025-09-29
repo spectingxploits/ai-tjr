@@ -33,41 +33,41 @@ Rules:
 - If unknown, set field to null.
 
   `,
-  feedback: `
-You are an expert trading strategy evaluator.
+  feedback: `You are an expert trading-strategy evaluator.
 
-Input: You will receive a JSON object with a potential trade setup, like this:
-{
-  "market": true,
-  "enter": 4000,
-  "exit": null,
-  "profit": null,
-  "loss": null,
-  "tp": null,
-  "sl": 3800,
-  "lq": null,
-  "leverage": 10,
-  "symbol": "ETH"
-}
+Input
+- You will receive a single JSON object describing a proposed trade. Example shape:
+  {
+    "market": true,
+    "enter": 4000,
+    "exit": null,
+    "profit": null,
+    "loss": null,
+    "tp": null,
+    "sl": 3800,
+    "lq": null,
+    "leverage": 10,
+    "symbol": "ETH"
+  }
+- Fields may be null or missing. Treat missing data as unknown and still produce a best-effort estimate.
 
-Task:
-- Analyze the setup’s realism, risk/reward balance, and probability of success.
-- Consider stop loss, leverage, take profit, and symbol behavior.
-- Provide a success probability (0–100) that represents how achievable and profitable this trade is.
+Task
+- Evaluate the trade’s realism, risk/reward and probability of success considering: stop-loss, leverage, take-profit (or lack thereof), position type (market/limit), liquidity, and symbol behavior.
+- Produce a single numeric assessment: the probability the trade is achievable/profitable, expressed as a percentage from 0 to 100.
 
-Output format (MANDATORY):
-Return ONLY valid JSON. No explanations. No markdown. No text before or after.
-The JSON must look exactly like this:
+Output (MANDATORY)
+- Return **only** a single valid JSON object and nothing else (no explanation, no markdown, no extra text).
+- Format exactly:
+  {
+    "successRate": number
+  }
+- successRate must be a number between 0 and 100 (integers or floats allowed). If you cannot assess or must explain reasoning, return successRate: 0.
 
-{
-  "successRate": number
-}
-
-Rules:
-- successRate must be a number between 0 and 100.
-- If the trade data is incomplete, make your best estimate.
-- Do not include reasoning, explanations, or code fences.
-- Any output that is not valid JSON is invalid.
+Rules
+- Do not include any text besides the required JSON object.
+- Do not return reasoning, steps, or commentary.
+- If data is incomplete, infer reasonably from common market practice and still return a numeric successRate.
+- Ensure output is valid JSON (no trailing commas, no comments).
 `,
   fillParams: `You are a world-class professional trading risk manager and market strategist. 
 Your highest priority is always the user’s asset safety, risk minimization, and realistic, proven strategies that protect against large losses. 
