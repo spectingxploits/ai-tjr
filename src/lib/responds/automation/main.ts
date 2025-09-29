@@ -7,9 +7,7 @@ export async function respondAutomation(ctx: any) {
   const user_gateway_id = await getGatewayId(ctx.chat.id.toString());
 
   if (!user_gateway_id) {
-    ctx.reply(
-      MESSAGES.no_gateway_found
-    );
+    ctx.reply(MESSAGES.no_gateway_found, { parse_mode: "HTML" });
     return;
   }
 

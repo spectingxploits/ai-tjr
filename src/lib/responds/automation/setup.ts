@@ -72,7 +72,7 @@ export async function respondAutomate(
   if (!phone_number) return;
 
   if (!forward_channel_id) {
-    ctx.reply(MESSAGES.no_gateway_found);
+    ctx.reply(MESSAGES.no_gateway_found, { parse_mode: "HTML" });
     return;
   }
 
@@ -101,7 +101,7 @@ export async function respondDeactivate(
   if (!phone_number) return;
 
   if (!forward_channel_id) {
-    ctx.reply(MESSAGES.no_gateway_found);
+    ctx.reply(MESSAGES.no_gateway_found, { parse_mode: "HTML" });
     return;
   }
 
