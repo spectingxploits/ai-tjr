@@ -1,7 +1,7 @@
 import { supabase } from "@/middleware/supabase";
 
 export async function getGatewayId(user_tg_id: string): Promise<string> {
-  let { data, error } = await supabase
+  const { data, error } = await supabase
     .from("users")
     .select("gateway_id")
     .eq("tg_id", user_tg_id)
@@ -27,7 +27,7 @@ export async function setGatewayId(
   user_tg_id: string,
   gateway_id: string
 ): Promise<boolean> {
-  let { data: user, error: upsertError } = await supabase
+  const { data: user, error: upsertError } = await supabase
     .from("users")
     .upsert(
       {

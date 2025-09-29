@@ -1,11 +1,8 @@
-// File: next.config.mjs // [!code focus]
+// File: next.config.mjs
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    // [!code ++] // [!code focus]
-    serverComponentsExternalPackages: ["grammy"], // [!code ++] // [!code focus]
-  }, // [!code ++] // [!code focus]
+  serverExternalPackages: ["grammy", "tweetnacl", "tweetnacl-util"], // ✅ move here
 };
 
 export default nextConfig;

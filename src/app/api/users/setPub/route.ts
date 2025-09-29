@@ -24,7 +24,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    let res = await setPubKey(String(user_tg_id), String(pub));
+    const res = await setPubKey(String(user_tg_id), String(pub));
     if (res === undefined) {
       return NextResponse.json(
         { ok: false, error: "unknown error" },

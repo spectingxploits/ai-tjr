@@ -7,9 +7,6 @@ import {
 import { useEffect, useRef, useState } from "react";
 import nacl from "tweetnacl";
 import { useSearchParams } from "next/navigation";
-// cryptoHelpers.ts
-import * as crypto from "crypto";
-import { decodeUTF8 } from "tweetnacl-util";
 
 /**
  * Robust MiniAppPage
@@ -22,32 +19,18 @@ export default function MiniAppPage() {
   const searchParams = useSearchParams();
   const [userTgId, setUserTgId] = useState<string | null>(null);
   const [publicKey, setPublicKey] = useState<string | null>(null);
-  const [secretKey, setSecretKey] = useState<string | null>(null);
   const [isCallback, setIsCallback] = useState(false);
   const [petraConnected, setPetraConnected] = useState(false);
   // add at the top of component
   const [walletAddress, setWalletAddress] = useState("");
-  const [isValidAddress, setIsValidAddress] = useState(false);
 
   // validation function
   function validateAddress(addr: string): boolean {
     return /^0x[0-9a-fA-F]{1,64}$/.test(addr);
   }
 
-  // when user types in input
-  const handleAddressChange = (val: string) => {
-    setWalletAddress(val.trim());
-    setIsValidAddress(validateAddress(val.trim()));
-  };
-  const { disconnect } = useWallet();
-
   // map of start_param -> lastProcessedTimestamp (ms)
   const processedMapRef = useRef<Map<string, number>>(new Map());
-
-  const APP_INFO = {
-    domain: `${process.env.NEXT_PUBLIC_MINI_APP_BASE_URL}/auth`,
-    name: "AI_TJR",
-  };
 
   // -------------------- 1) Poll for Telegram.WebApp (safe, limited attempts) --------------------
   useEffect(() => {
@@ -262,7 +245,6 @@ export default function MiniAppPage() {
   // -------------------- keypair, connect & disconnect flows --------------------
   const generateAndSaveKeyPair = () => {
     const keyPair = nacl.box.keyPair();
-    setSecretKey(Buffer.from(keyPair.secretKey).toString("hex"));
     setPublicKey(Buffer.from(keyPair.publicKey).toString("hex"));
     return keyPair;
   };

@@ -1,6 +1,6 @@
 import { getGatewayId } from "@/services/db/gateway";
 import { type Conversation } from "@grammyjs/conversations";
-import { Bot, type Context, InlineKeyboard } from "grammy";
+import { type Context, InlineKeyboard } from "grammy";
 import { checkAndFetchPhoneNumber } from "../contact";
 import { MESSAGES } from "../messages";
 
@@ -68,7 +68,7 @@ export async function respondAutomate(
 
     return;
   }
-  let phone_number = await checkAndFetchPhoneNumber(conversation, ctx);
+  const phone_number = await checkAndFetchPhoneNumber(conversation, ctx);
   if (!phone_number) return;
 
   if (!forward_channel_id) {
@@ -97,7 +97,7 @@ export async function respondDeactivate(
 
     return;
   }
-  let phone_number = await checkAndFetchPhoneNumber(conversation, ctx);
+  const phone_number = await checkAndFetchPhoneNumber(conversation, ctx);
   if (!phone_number) return;
 
   if (!forward_channel_id) {

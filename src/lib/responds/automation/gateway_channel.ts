@@ -1,5 +1,3 @@
-import { InlineKeyboard } from "grammy";
-
 export async function respondChannelUpdates(
   added: boolean,
   chat_id: string,

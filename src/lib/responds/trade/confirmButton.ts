@@ -1,6 +1,5 @@
 // server/sendOpenAuthPageButton.ts
 import fetch from "node-fetch";
-import type { SignAndSubmitParams } from "@/models/interfaces";
 
 export async function sendOpenSignPageButton(
   chat_id: string,

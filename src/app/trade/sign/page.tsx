@@ -1,7 +1,7 @@
 // app/petra/sign/page.tsx (or wherever your PetraSignPage lives)
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import nacl from "tweetnacl";
 import type { SignAndSubmitParams } from "@/models/interfaces";
@@ -15,24 +15,6 @@ const APP_INFO = {
   domain: `${process.env.NEXT_PUBLIC_MINI_APP_BASE_URL}/auth`,
   name: "AI_TJR",
 };
-function hexToU8(hex?: string): Uint8Array {
-  if (!hex) return new Uint8Array(0);
-  const clean = hex.startsWith("0x") ? hex.slice(2) : hex;
-  const len = clean.length / 2;
-  const arr = new Uint8Array(len);
-  for (let i = 0; i < len; i++) arr[i] = parseInt(clean.substr(i * 2, 2), 16);
-  return arr;
-}
-
-function u8ToHex(u8: Uint8Array): string {
-  return Array.from(u8)
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-}
-
-function utf8ToU8(str: string) {
-  return new TextEncoder().encode(str);
-}
 
 type WrappedParams = SignAndSubmitParams & { telegramChatId?: string };
 
@@ -165,7 +147,7 @@ export default function PetraSignPage() {
         stringifyJsonWithBigInt({
           appInfo: APP_INFO,
           payload: Buffer.from(encrypted).toString("hex"),
-          redirectLink: `https://rebeca-multivalued-nevaeh.ngrok-free.dev/trade/response?source=miniapp&ref=ai_tjr`,
+          redirectLink: `${process.env.NEXT_PUBLIC_MINI_APP_BASE_URL}/trade/response?source=miniapp&ref=ai_tjr`,
           dappEncryptionPublicKey: userPubKey,
           nonce: Buffer.from(nonce).toString("hex"),
         })
@@ -230,136 +212,142 @@ export default function PetraSignPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 bg-slate-900 text-white">
-      <div className="max-w-3xl w-full bg-slate-800/60 backdrop-blur rounded-2xl p-6">
-        <h2 className="text-xl font-semibold mb-4">Sign & Submit — Review</h2>
+    <Suspense fallback={<div>Loading...</div>}>
+      <div className="min-h-screen flex items-center justify-center p-6 bg-slate-900 text-white">
+        <div className="max-w-3xl w-full bg-slate-800/60 backdrop-blur rounded-2xl p-6">
+          <h2 className="text-xl font-semibold mb-4">Sign & Submit — Review</h2>
 
-        {!payloadParam && (
-          <div className="p-4 rounded bg-yellow-900/30 text-yellow-300">
-            Missing <code>payload</code> query parameter.
-          </div>
-        )}
+          {!payloadParam && (
+            <div className="p-4 rounded bg-yellow-900/30 text-yellow-300">
+              Missing <code>payload</code> query parameter.
+            </div>
+          )}
 
-        {parsedWrapper && (parsedWrapper as any).__parseError && (
-          <div className="p-4 rounded bg-red-900/40 text-red-300">
-            Failed to parse payload. Raw: {(parsedWrapper as any).raw}
-          </div>
-        )}
+          {parsedWrapper && (parsedWrapper as any).__parseError && (
+            <div className="p-4 rounded bg-red-900/40 text-red-300">
+              Failed to parse payload. Raw: {(parsedWrapper as any).raw}
+            </div>
+          )}
 
-        {summary && !("error" in summary) && (
-          <div className="space-y-4">
-            <section className="p-4 bg-slate-900/30 rounded">
-              <h3 className="font-semibold mb-2">Request details</h3>
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <div className="text-slate-300 font-medium">
-                    Wallet Address
+          {summary && !("error" in summary) && (
+            <div className="space-y-4">
+              <section className="p-4 bg-slate-900/30 rounded">
+                <h3 className="font-semibold mb-2">Request details</h3>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <div className="text-slate-300 font-medium">
+                      Wallet Address
+                    </div>
+                    <div className="text-slate-200 truncate">
+                      {String(summary.wrapper.userAddress ?? "—").slice(0, 6)}
+                      ...
+                      {String(summary.wrapper.userAddress ?? "—").slice(-4)}
+                    </div>
                   </div>
-                  <div className="text-slate-200 truncate">
-                    {String(summary.wrapper.userAddress ?? "—").slice(0, 6)}...
-                    {String(summary.wrapper.userAddress ?? "—").slice(-4)}
+                  <div>
+                    <div className="text-slate-300 font-medium">
+                      Telegram User id
+                    </div>
+                    <div className="text-slate-200 truncate">
+                      {String(summary.wrapper.telegramChatId ?? "—")}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-slate-300 font-sm">Connector</div>
+                    <div className="text-slate-200 break-words max-w-xs font-sm">
+                      {String(summary.wrapper.connectorName ?? "—")}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-slate-300 font-medium">Mainnet</div>
+                    <div className="text-slate-200 truncate">
+                      {String(summary.wrapper.mainnet ?? false)}
+                    </div>
                   </div>
                 </div>
-                <div>
-                  <div className="text-slate-300 font-medium">
-                    Telegram User id
-                  </div>
-                  <div className="text-slate-200 truncate">
-                    {String(summary.wrapper.telegramChatId ?? "—")}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-slate-300 font-sm">Connector</div>
-                  <div className="text-slate-200 break-words max-w-xs font-sm">
-                    {String(summary.wrapper.connectorName ?? "—")}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-slate-300 font-medium">Mainnet</div>
-                  <div className="text-slate-200 truncate">
-                    {String(summary.wrapper.mainnet ?? false)}
-                  </div>
-                </div>
-              </div>
-            </section>
+              </section>
 
-            <section className="p-4 bg-slate-900/30 rounded">
-              <h3 className="font-semibold mb-2">Global signal</h3>
+              <section className="p-4 bg-slate-900/30 rounded">
+                <h3 className="font-semibold mb-2">Global signal</h3>
 
-              {/* scrollable signal box */}
-              <div className="max-h-56 overflow-y-auto p-3 bg-slate-800/50 rounded">
-                {renderSignalGrid(summary.wrapper.signal)}
-                <div className="mt-3 border-t border-slate-700 pt-3">
-                  <div className="text-slate-300 font-medium text-sm mb-2">
-                    Raw signal JSON
-                  </div>
-                  <pre className="whitespace-pre-wrap text-xs text-slate-200">
-                    {
-                      stringifyJsonWithBigInt(
-                        summary.wrapper.signal ?? {}
-                      ).split('"text":')[0]
-                    }
-                  </pre>
-                </div>
-              </div>
-            </section>
-
-            <section className="p-4 bg-slate-900/30 rounded">
-              <h3 className="font-semibold mb-2"> Full transaction payload</h3>
-              {summary.txSummary && summary.txSummary.error ? (
-                <div className="text-red-300 text-sm">
-                  {summary.txSummary.error}
-                </div>
-              ) : (
-                <>
-                  <details className="mt-2 p-3 bg-slate-900/20 rounded">
-                    <pre className="whitespace-pre-wrap text-sm mt-2 overflow-auto">
-                      {stringifyJsonWithBigInt(summary.txSummary.raw)}
+                {/* scrollable signal box */}
+                <div className="max-h-56 overflow-y-auto p-3 bg-slate-800/50 rounded">
+                  {renderSignalGrid(summary.wrapper.signal)}
+                  <div className="mt-3 border-t border-slate-700 pt-3">
+                    <div className="text-slate-300 font-medium text-sm mb-2">
+                      Raw signal JSON
+                    </div>
+                    <pre className="whitespace-pre-wrap text-xs text-slate-200">
+                      {
+                        stringifyJsonWithBigInt(
+                          summary.wrapper.signal ?? {}
+                        ).split('"text":')[0]
+                      }
                     </pre>
-                  </details>
-                </>
-              )}
-            </section>
-          </div>
-        )}
+                  </div>
+                </div>
+              </section>
 
-        <div className="mt-6 flex flex-col gap-3">
-          {!publicKeyHex! && (
-            <div className="p-3 rounded bg-red-900/30 text-red-200">
-              Missing Petra keys in localStorage. Please connect to Petra first
-              (store <code>petra_public_key</code> and{" "}
-              <code>petra_shared_key</code>).
+              <section className="p-4 bg-slate-900/30 rounded">
+                <h3 className="font-semibold mb-2">
+                  {" "}
+                  Full transaction payload
+                </h3>
+                {summary.txSummary && summary.txSummary.error ? (
+                  <div className="text-red-300 text-sm">
+                    {summary.txSummary.error}
+                  </div>
+                ) : (
+                  <>
+                    <details className="mt-2 p-3 bg-slate-900/20 rounded">
+                      <pre className="whitespace-pre-wrap text-sm mt-2 overflow-auto">
+                        {stringifyJsonWithBigInt(summary.txSummary.raw)}
+                      </pre>
+                    </details>
+                  </>
+                )}
+              </section>
             </div>
           )}
 
-          {error && (
-            <div className="p-3 rounded bg-red-900/40 text-red-200">
-              <strong>Error:</strong> {error}
+          <div className="mt-6 flex flex-col gap-3">
+            {!publicKeyHex! && (
+              <div className="p-3 rounded bg-red-900/30 text-red-200">
+                Missing Petra keys in localStorage. Please connect to Petra
+                first (store <code>petra_public_key</code> and{" "}
+                <code>petra_shared_key</code>).
+              </div>
+            )}
+
+            {error && (
+              <div className="p-3 rounded bg-red-900/40 text-red-200">
+                <strong>Error:</strong> {error}
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleSignAndSubmit}
+                disabled={busy || !parsedWrapper || !publicKeyHex!}
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 font-semibold disabled:opacity-50"
+              >
+                {busy ? "Preparing..." : "Sign & Submit with Petra"}
+              </button>
+
+              <button
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-red-600 font-semibold disabled:opacity-50"
+                onClick={() => {
+                  const tg = (window as any).Telegram?.WebApp;
+                  tg?.close?.();
+                }}
+              >
+                Cancel
+              </button>
             </div>
-          )}
-
-          <div className="flex gap-3">
-            <button
-              onClick={handleSignAndSubmit}
-              disabled={busy || !parsedWrapper || !publicKeyHex!}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 font-semibold disabled:opacity-50"
-            >
-              {busy ? "Preparing..." : "Sign & Submit with Petra"}
-            </button>
-
-            <button
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-red-600 font-semibold disabled:opacity-50"
-              onClick={() => {
-                const tg = (window as any).Telegram?.WebApp;
-                tg?.close?.();
-              }}
-            >
-              Cancel
-            </button>
           </div>
         </div>
       </div>
-    </div>
+    </Suspense>
   );
 }
 

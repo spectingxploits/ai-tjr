@@ -37,7 +37,7 @@ export async function getBridgeValue(token: string): Promise<{
   success: boolean;
   value: string;
 }> {
-  let { data, error } = await supabase
+  const { data, error } = await supabase
     .from("bridge")
     .select("value")
     .eq("token", token)

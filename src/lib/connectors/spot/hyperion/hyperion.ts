@@ -1,23 +1,21 @@
 import { Balance, Tokens } from "@/models/interfaces";
 import { Result, SwapConnector } from "../../connector";
 import { HyperionSDK, initHyperionSDK } from "@hyperionxyz/sdk";
-import { Network, SimpleTransaction } from "@aptos-labs/ts-sdk";
+import { Network } from "@aptos-labs/ts-sdk";
 import {
   PairPriceParams,
   SwapParams,
   HyperionSwapPayload,
 } from "@/models/hyperion/types";
 import { PoolInfo, TokenInfo } from "@/models/hyperion/types";
-import { signAndSubmit } from "../../signAndSubmit";
 import path from "path";
 import fs from "fs";
-export class HyperionConnector extends signAndSubmit implements SwapConnector {
+export class HyperionConnector implements SwapConnector {
   name = "hyperion_swap_connector";
   network: Network.MAINNET | Network.TESTNET;
   private hyperionAdapter: HyperionSDK;
 
   constructor(network: Network.MAINNET | Network.TESTNET) {
-    super("hyperion_swap_connector");
     this.network = network;
     const apiKey =
       (this.network === Network.MAINNET
@@ -195,6 +193,7 @@ export class HyperionConnector extends signAndSubmit implements SwapConnector {
     return balances;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   estimateGas?(
     _symbolIn: string,
     _symbolOut: string,
@@ -211,7 +210,7 @@ export class HyperionConnector extends signAndSubmit implements SwapConnector {
       // You can then extract the token information from the pools
       let tokens: Tokens = {};
       pools.forEach((p: any) => {
-        let token1Info = {
+        const token1Info = {
           address: p.pool.token1Info.assetType || "",
           decimals: p.pool.token1Info.decimals || 1,
           symbol: p.pool.token1Info.symbol || "UNKNOWN",
@@ -220,7 +219,7 @@ export class HyperionConnector extends signAndSubmit implements SwapConnector {
 
         tokens[p.pool.token1Info.symbol] = token1Info;
 
-        let token2Info = {
+        const token2Info = {
           address: p.pool.token2Info.assetType || "",
           decimals: p.pool.token2Info.decimals || 1,
           symbol: p.pool.token2Info.symbol || "UNKNOWN",

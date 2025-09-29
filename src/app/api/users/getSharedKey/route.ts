@@ -4,10 +4,10 @@ import nacl from "tweetnacl";
 import dotenv from "dotenv";
 dotenv.config();
 
-import { base64UrlToU8, u8ToHex, strip0x } from "@/lib/helpers/cryptoHelpers";
+import { base64UrlToU8, strip0x } from "@/lib/helpers/cryptoHelpers";
 
 export function decryptData(payloadBase64Url: string): Uint8Array {
-  let adminSecretHex = strip0x(process.env.ADMIN_KEY);
+  const adminSecretHex = strip0x(process.env.ADMIN_KEY);
   if (!adminSecretHex) {
     throw new Error("ADMIN_KEY not set");
   }
@@ -52,7 +52,7 @@ export async function GET(req: Request) {
   }
 
   try {
-    let res = await getConnectedStatus(String(user_tg_id));
+    const res = await getConnectedStatus(String(user_tg_id));
     if (res === undefined) {
       return NextResponse.json(
         { ok: false, error: "unknown error" },
@@ -65,7 +65,7 @@ export async function GET(req: Request) {
     console.log("res.sec", res.sec);
     console.log("res.user_pub_key", res.user_pub_key);
     // decrypting the shared key
-    let shared_sec = decryptData(res.sec);
+    const shared_sec = decryptData(res.sec);
     console.log(
       "derived public key",
       Buffer.from(

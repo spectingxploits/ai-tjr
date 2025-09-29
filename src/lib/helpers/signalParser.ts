@@ -15,12 +15,12 @@ export async function parseRawPotentialSignal(
 ): Promise<GeminiResponse | null> {
   try {
     //parsing the signal
-    let output: string = await MakeGeminiRequest({
+    const output: string = await MakeGeminiRequest({
       message: GlobalPrompts.extractSignal,
       contents: rawText,
     });
 
-    let parsedOutput: GeminiResponse = JSON.parse(
+    const parsedOutput: GeminiResponse = JSON.parse(
       output.replace(/```json|```/g, "").trim()
     ) as GeminiResponse;
     console.log("Gemini output:", output);
@@ -28,7 +28,7 @@ export async function parseRawPotentialSignal(
     if (parsedOutput.values == null || !parsedOutput.signalDetected) {
       return parsedOutput;
     }
-    let nullValues: string[] = [];
+    const nullValues: string[] = [];
 
     Object.keys(parsedOutput.values).forEach((key) => {
       if (parsedOutput.values![key as keyof GlobalSignal] == null) {
@@ -39,7 +39,7 @@ export async function parseRawPotentialSignal(
     // wait for 3 seconds to avoid rate limit
     await new Promise((resolve) => setTimeout(resolve, 3000));
     // getting the gemini opinion
-    let geminiOpinion = await MakeGeminiRequestWithSearch({
+    const geminiOpinion = await MakeGeminiRequestWithSearch({
       message: GlobalPrompts.feedback,
       contents: JSON.stringify(parsedOutput),
     });
@@ -83,14 +83,14 @@ export async function parseRawPotentialSignal(
     }
 
     // filling the null values with suggested values by gemini
-    let geminiEnhancedOutput = await MakeGeminiRequestWithSearch({
+    const geminiEnhancedOutput = await MakeGeminiRequestWithSearch({
       message: GlobalPrompts.fillParams,
       contents: JSON.stringify(parsedOutput),
     });
 
     console.log(geminiEnhancedOutput);
 
-    let parsedGeminiEnhancedOutput: GeminiResponse = JSON.parse(
+    const parsedGeminiEnhancedOutput: GeminiResponse = JSON.parse(
       geminiEnhancedOutput.replace(/```json|```/g, "").trim()
     ) as GeminiResponse;
     console.log("Gemini enhanced output:", parsedGeminiEnhancedOutput);
@@ -119,5 +119,3 @@ export async function parseRawPotentialSignal(
     return null;
   }
 }
-
-

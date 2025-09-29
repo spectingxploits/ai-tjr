@@ -6,7 +6,7 @@ export async function setConnectedStatus(
   shared_pubkey: string,
   wallet_address: string
 ): Promise<{ new_status: boolean }> {
-  let { data: user, error: upsertError } = await supabase
+  const { data: user, error: upsertError } = await supabase
     .from("users")
     .upsert(
       {
@@ -35,7 +35,7 @@ export async function setSec(
   user_tg_id: string,
   sec: string
 ): Promise<boolean> {
-  let { data: user, error: upsertError } = await supabase
+  const { data: user, error: upsertError } = await supabase
     .from("users")
     .upsert(
       {
@@ -58,8 +58,11 @@ export async function setSec(
   return user.sec != null;
 }
 
-export async function setPubKey(user_tg_id: string, pub: string): Promise<boolean> {
-  let { data: user, error: upsertError } = await supabase
+export async function setPubKey(
+  user_tg_id: string,
+  pub: string
+): Promise<boolean> {
+  const { data: user, error: upsertError } = await supabase
     .from("users")
     .upsert(
       {
@@ -88,7 +91,7 @@ export async function getConnectedStatus(user_tg_id: string): Promise<{
   sec: string;
   user_pub_key: string;
 }> {
-  let { data, error } = await supabase
+  const { data, error } = await supabase
     .from("users")
     .select("connected, shared_pubkey, wallet_address, sec, pub")
     .eq("tg_id", user_tg_id)

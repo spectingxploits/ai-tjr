@@ -11,7 +11,6 @@ import {
   PerpTP_SLParams,
   Tokens,
 } from "@/models/interfaces";
-import { signAndSubmit } from "../../signAndSubmit";
 
 import { Order, Position } from "@merkletrade/ts-sdk";
 import { Aptos, AptosConfig, Network } from "@aptos-labs/ts-sdk";
@@ -30,7 +29,7 @@ import {
 
 import { tokens as tokens_mainnet } from "@/models/kanalabs/tokens_mainnet";
 import { tokens as tokens_testnet } from "@/models/kanalabs/tokens_testnet";
-export class KanalabsConnector extends signAndSubmit implements PerpConnector {
+export class KanalabsConnector implements PerpConnector {
   name: string = "kanalabs_perpetual_connector";
   network: Network.MAINNET | Network.TESTNET;
   tokens: Tokens = {} as any;
@@ -39,7 +38,6 @@ export class KanalabsConnector extends signAndSubmit implements PerpConnector {
   aptosClient: Aptos = {} as any;
 
   constructor(network: Network.MAINNET | Network.TESTNET) {
-    super("kanalabs_perpetual_connector");
     this.network = network;
     let apiKey = process.env.KANALABS_API_KEY;
     if (!apiKey) {

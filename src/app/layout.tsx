@@ -8,6 +8,7 @@ import WalletProvider from "@/lib/chains/aptos/walletContext";
 import Script from "next/script";
 
 import "./globals.css";
+import { Suspense } from "react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,7 +35,8 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
+
         <Script
           src="https://telegram.org/js/telegram-web-app.js"
           strategy="beforeInteractive"

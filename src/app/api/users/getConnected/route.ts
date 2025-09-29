@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { getConnectedStatus } from "@/services/db/user";
-import { connect } from "http2";
 
 export async function GET(req: Request) {
   const url = new URL(req.url);

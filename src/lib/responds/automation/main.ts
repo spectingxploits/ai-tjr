@@ -1,5 +1,5 @@
 import { getGatewayId } from "@/services/db/gateway";
-import { InlineKeyboard, Keyboard } from "grammy";
+import { InlineKeyboard } from "grammy";
 import { MESSAGES } from "../messages";
 
 export async function respondAutomation(ctx: any) {
@@ -14,8 +14,6 @@ export async function respondAutomation(ctx: any) {
   const keyboard = new InlineKeyboard()
     .text("Setup Automation", "setup_automation")
     .text("Remove Automation", "deactivate_automated_channel");
-
-  new Keyboard().requestContact;
 
   ctx.reply(
     `

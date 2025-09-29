@@ -19,7 +19,6 @@ import {
   conversations,
   createConversation,
 } from "@grammyjs/conversations";
-import { checkAndFetchPhoneNumber } from "@/lib/responds/contact";
 import { MESSAGES } from "@/lib/responds/messages";
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -146,7 +145,7 @@ async function setupListeners() {
     }
 
     if (ctx.message.text.trim().includes("/help")) {
-      let user_res = await ctx.reply(MESSAGES.help);
+      await ctx.reply(MESSAGES.help);
     }
   });
 

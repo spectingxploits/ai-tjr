@@ -23,13 +23,9 @@ import {
   MerkleTradePayload,
   MerkleUpdatePayload,
 } from "@/models/merkleTrade/models";
-import { signAndSubmit } from "../../signAndSubmit";
 import path from "path";
 import fs from "fs";
-export class MerkleTradeConnector
-  extends signAndSubmit
-  implements PerpConnector
-{
+export class MerkleTradeConnector implements PerpConnector {
   readonly name: string = "merkle_trade_perpetual_connector";
   network: Network.MAINNET | Network.TESTNET;
   private aptos_client: Aptos = {} as any;
@@ -37,7 +33,6 @@ export class MerkleTradeConnector
 
   /** Initialize Merkle + Aptos clients */
   constructor(network: Network.MAINNET | Network.TESTNET) {
-    super("merkle_trade_perpetual_connector");
     this.network = network ? Network.MAINNET : Network.TESTNET;
   }
 
@@ -266,7 +261,7 @@ export class MerkleTradeConnector
     }
   }
 
-  async fetchPosition(params: PerpCloseParams): Promise<Result<Position>> {
+  async fetchPosition(): Promise<Result<Position>> {
     return Promise.reject(
       "fetchPosition not implemented, use list open positions instead"
     );
@@ -350,11 +345,11 @@ export class MerkleTradeConnector
   }
 
   /** ---------- Not implemented yet ---------- */
-  async setLeverage(symbol: string, leverage: number): Promise<boolean> {
+  async setLeverage(): Promise<boolean> {
     return Promise.reject("setLeverage not implemented");
   }
 
-  async getFundingRate(symbol: string): Promise<number | null> {
+  async getFundingRate(): Promise<number | null> {
     return Promise.reject("getFundingRate not implemented");
   }
 
@@ -403,7 +398,7 @@ export class MerkleTradeConnector
       return Promise.reject(e);
     }
   }
-  async isPairSupported(base: string, quote: string): Promise<Result<boolean>> {
+  async isPairSupported(base: string): Promise<Result<boolean>> {
     try {
       const pairStates = await this.merkle_client.api.getAllPairStates();
       for (const pairState of pairStates) {
