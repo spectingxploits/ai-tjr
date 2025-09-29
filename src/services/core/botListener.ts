@@ -20,6 +20,7 @@ import {
   createConversation,
 } from "@grammyjs/conversations";
 import { checkAndFetchPhoneNumber } from "@/lib/responds/automation/contact";
+import { MESSAGES } from "@/lib/responds/messages";
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 if (!token) throw new Error("TELEGRAM_BOT_TOKEN env var not found.");
@@ -95,6 +96,21 @@ async function setupListeners() {
     }
   );
 
+  bot.hears("💼 Wallet", async (ctx) => {
+    await sendOpenAuthPageButton(ctx, true, true);
+  });
+
+  bot.hears("⚡ Automation", async (ctx) => {
+    await respondAutomation(ctx);
+  });
+  bot.hears("❓ Help", async (ctx) => {
+    await ctx.reply(MESSAGES.help);
+  });
+  bot.hears("📊 Trade", async (ctx) => {
+    // await respondTrade(ctx);
+    ctx.reply("trade");
+  });
+
   bot.on("message:text", async (ctx) => {
     console.log("Received message:", ctx.message.text);
     console.log("this is the id ", ctx.chat.id.toString());
@@ -103,17 +119,34 @@ async function setupListeners() {
       await respondStartMessage(ctx);
     }
 
+    if (ctx.message.text.trim().includes("/wallet")) {
+      await sendOpenAuthPageButton(ctx, true, true);
+    }
+
     if (ctx.message.text.trim().includes("/connect_wallet")) {
-      await sendOpenAuthPageButton(ctx.chat.id.toString());
+      await sendOpenAuthPageButton(ctx, true, false);
+    }
+
+    if (ctx.message.text.trim().includes("/disconnect_wallet")) {
+      await sendOpenAuthPageButton(ctx, false, false);
     }
 
     if (ctx.message.text.trim().includes("/automation")) {
       await respondAutomation(ctx);
     }
-    if (ctx.message.text.trim().includes("conversation")) {
-      let user_res = await ctx.reply("Please enter your user id");
+    if (ctx.message.text.trim().includes("/setup_automation")) {
+      ctx.reply(
+        "to automate a channel you have to forward a message from the channel or the group you want to automate to me."
+      );
+    }
+    if (ctx.message.text.trim().includes("/deactivate_automated_channel")) {
+      ctx.reply(
+        "to deactivate a automation a channel you have to forward a message from the channel or the group you want to deactivate automation for."
+      );
+    }
 
-      conversations();
+    if (ctx.message.text.trim().includes("/help")) {
+      let user_res = await ctx.reply(MESSAGES.help);
     }
   });
 
@@ -139,6 +172,7 @@ async function setupListeners() {
   bot.on("msg:contact", async (ctx) => {
     ctx.reply(`phone number shared`);
   });
+
   // then in your main setup:
   bot.on("callback_query:data", async (ctx) => {
     const data = ctx.callbackQuery.data;
@@ -146,6 +180,19 @@ async function setupListeners() {
     if (!data) return;
     await ctx.answerCallbackQuery();
 
+    if (data.startsWith("💼 Walle")) {
+      await sendOpenAuthPageButton(ctx, true, true);
+    }
+    if (data.startsWith("⚡ Automation")) {
+      await respondAutomation(ctx);
+    }
+    if (data.startsWith("❓ Help")) {
+      await ctx.reply(MESSAGES.help);
+    }
+    if (data.startsWith("📊 Trade")) {
+      // await respondTrade(ctx);
+      ctx.reply("trade");
+    }
     if (data.startsWith("automate_instructions:")) {
       const myData = data.split(":")[1]; // the data you passed in
       await ctx.reply(`✅ Automating channel : ${myData.split("_")[1]}`);

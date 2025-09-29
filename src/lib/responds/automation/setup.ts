@@ -100,7 +100,11 @@ export async function respondAutomate(
 
 <b>2️⃣ Create a new automation group</b>  
    • Copy this message and send it to <a href="https://t.me/tg_feedbot">Telefeed Bot</a>:  
-   <code>/redirection add aitjrforwards on ${phone_number}</code>  
+   <code>/redirection add aitjrforw_${String(channel_id)
+     .replace("-100", "")
+     .slice(5)}_${String(forward_channel_id)
+    .replace("-100", "")
+    .slice(5)} on ${phone_number}</code>  
 
 <b>3️⃣ Connect your channels</b>  
    • Copy this message and send it to <a href="https://t.me/tg_feedbot">Telefeed Bot</a>:  
@@ -156,8 +160,11 @@ export async function respondDeactivate(
 
 <b>1️⃣ Remove the automation group</b>  
    • Copy this message and send it to <a href="https://t.me/tg_feedbot">Telefeed Bot</a>:  
-   <code>/redirection remove aitjrforwards on ${phone_number}</code>  
-
+   <code>/redirection remove aitjrforw_${String(channel_id)
+     .replace("-100", "")
+     .slice(5)}_${String(forward_channel_id)
+    .replace("-100", "")
+    .slice(5)} on ${phone_number}</code>  
 <b>2️⃣ Done!</b>  
    Your automations on <b>aitjrforwards</b> have been removed.  
    If you want automation again, you’ll need to set them up from scratch. 🔄

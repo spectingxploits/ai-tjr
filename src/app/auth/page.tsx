@@ -121,7 +121,6 @@ export default function MiniAppPage() {
           return;
         }
         const data = await res.json();
-        window.alert(JSON.stringify(data));
         if (!cancelled) {
           setPetraConnected(Boolean(data.connected));
           setIsCallback(Boolean(data.connected));
@@ -140,7 +139,6 @@ export default function MiniAppPage() {
   // -------------------- 3) process URL search params (or startapp from query) --------------------
   useEffect(() => {
     // log the full redirect URL
-    window.alert(window.location.href);
 
     const startParamFromUrl =
       searchParams.get("tgWebAppStartParam") ||
@@ -149,20 +147,6 @@ export default function MiniAppPage() {
 
     const sharedPubKey = searchParams.get("shared_pubkey") || "";
     const userIdParam = searchParams.get("userId");
-
-    window.alert(
-      JSON.stringify(
-        {
-          href: window.location.href, // 👈 full url
-          startParamFromUrl,
-          sharedPubKey,
-          userIdParam,
-          raw: Object.fromEntries(searchParams.entries()),
-        },
-        null,
-        2
-      )
-    );
 
     if (userIdParam && !userTgId) {
       setUserTgId(userIdParam);
@@ -316,7 +300,6 @@ export default function MiniAppPage() {
     const redirectLink = `${BRIDGE_URL}?callbackUserId=${encodeURIComponent(
       reliableId
     )}`;
-    window.alert("setsec ");
     let res = await fetch("/api/users/setSec", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

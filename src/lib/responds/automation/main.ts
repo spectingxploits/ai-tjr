@@ -30,14 +30,15 @@ export async function respondAutomation(ctx: any) {
     .text("Setup Automation", "setup_automation")
     .text("Remove Automation", "deactivate_automated_channel");
 
-    new Keyboard().requestContact
+  new Keyboard().requestContact;
 
   ctx.reply(
     `
-⚙️ You can either **set up a new automation** or **remove an existing automation** from your gateway channel.
+⚙️ You can either <b>set up a new automation</b> or <b>remove an existing automation</b> from your gateway channel.
     `,
     {
       reply_markup: keyboard,
+      parse_mode: "HTML",
     }
   );
 }
