@@ -20,6 +20,9 @@ import {
   createConversation,
 } from "@grammyjs/conversations";
 import { MESSAGES } from "@/lib/responds/messages";
+import { respondEditAndConfirm } from "@/lib/responds/trade/EditAndConfirm";
+import { GlobalSignal } from "@/models/interfaces";
+import { editConversation } from "@/lib/responds/trade/editConversation";
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 if (!token) throw new Error("TELEGRAM_BOT_TOKEN env var not found.");
@@ -38,6 +41,7 @@ bot.use(createConversation(respondAutomate));
 
 bot.use(createConversation(respondDeactivate));
 
+bot.use(createConversation(editConversation));
 async function setupListeners() {
   const connector_gateway = new ConnectorGateway(Network.MAINNET);
   await connector_gateway.initGatewayConnectors();
@@ -62,16 +66,19 @@ async function setupListeners() {
         if (admin.user && !admin.user.is_bot) {
           try {
             const signal = await parseRawPotentialSignal(content);
-            if (!signal?.signalDetected || !signal?.values) {
+            if (
+              signal == null ||
+              !signal[0].signalDetected ||
+              !signal[0].values
+            ) {
               console.log("No signal parsed.");
               return;
             }
-
-            await connector_gateway.handleIncomingSignal(
-              signal.values,
-              admin.user.id
+            await respondEditAndConfirm(
+              admin.user.id.toString(),
+              signal[0].values,
+              signal[1]
             );
-            console.log("Notified admin user", admin.user.id);
           } catch (e) {
             console.warn("Failed to DM admin", admin.user.id, e);
           }
@@ -202,6 +209,25 @@ async function setupListeners() {
       const myData = data.split(":")[1];
       await ctx.reply(`❌ Deactivating channel : ${myData.split("_")[1]}`);
       await ctx.conversation.enter("respondDeactivate", myData.split("_")[0]);
+    }
+
+    if (data.startsWith("edit_signal:")) {
+      const myData = data.split(":")[1];
+      const signal: { ai_items: string[]; signal: GlobalSignal } =
+        JSON.parse(myData);
+      await ctx.conversation.enter(
+        "editConversation",
+        signal.signal,
+        signal.ai_items
+      );
+    }
+
+    if (data.startsWith("confirm:")) {
+      const myData = data.split(":")[1];
+      const signal: { ai_items: string[]; signal: GlobalSignal } =
+        JSON.parse(myData);
+      await connector_gateway.handleIncomingSignal(signal.signal, ctx.chat!.id);
+      console.log("Notified admin user", ctx.chat!.id);
     }
   });
 

@@ -45,3 +45,63 @@ ${
 ════════════════════
 `;
 }
+
+// export function formatGlobalSignalWithDiff(
+//   // prevText: string,
+//   newSignal: GlobalSignal, 
+//   ai_items: string[]
+// ): string {
+//   const fieldPatterns: Record<string, RegExp> = {
+//     enter: /🚪 <b>Enter:<\/b> ([^🤖\n]+)( 🤖 AI Detect)?/,
+//     profit: /💰 <b>Profit:<\/b> ([^%]+)%?( 🤖 AI Detect)?/,
+//     loss: /📉 <b>Loss:<\/b> ([^%]+)%?( 🤖 AI Detect)?/,
+//     tp: /🎯 <b>TP:<\/b> ([^🤖\n]+)( 🤖 AI Detect)?/,
+//     sl: /🚫 <b>SL:<\/b> ([^🤖\n]+)( 🤖 AI Detect)?/,
+//     lq: /💧 <b>Liquidity:<\/b> ([^🤖\n]+)( 🤖 AI Detect)?/,
+//     leverage: /⚖️ <b>Leverage:<\/b> ([^🤖\n]+)( 🤖 AI Detect)?/,
+//     long: /📊 <b>Side:<\/b> ([^🤖\n]+)( 🤖 AI Detect)?/,
+//     symbol: /🔤 <b>Symbol:<\/b> ([^🤖\n]+)( 🤖 AI Detect)?/,
+//   };
+
+//   // Extract which fields had AI badges before
+//   const prevAiItems: string[] = [];
+//   for (const [key, regex] of Object.entries(fieldPatterns)) {
+//     const match = prevText.match(regex);
+//     if (match?.[2]) prevAiItems.push(key);
+//   }
+
+//   // Format the new signal WITHOUT ai_items
+//   const newTextRaw = formatGLobalSignal(newSignal, []);
+
+//   // Now rebuild the AI badges based on diff
+//   let finalText = newTextRaw;
+
+//   for (const [key, regex] of Object.entries(fieldPatterns)) {
+//     const prevMatch = prevText.match(regex);
+//     const newMatch = newTextRaw.match(regex);
+
+//     if (!prevMatch || !newMatch) continue;
+
+//     const prevValue = prevMatch[1].trim();
+//     const newValue = newMatch[1].trim();
+//     const hadAi = prevAiItems.includes(key);
+
+//     // If value changed → remove AI badge
+//     if (prevValue !== newValue) {
+//       finalText = finalText.replace(
+//         regex,
+//         (_, val) => `${regex.source.includes("%") ? val + "%" : val}`
+//       );
+//     }
+//     // If value unchanged and had AI badge → re-add AI badge
+//     else if (hadAi) {
+//       finalText = finalText.replace(
+//         regex,
+//         (_full, val) =>
+//           `${regex.source.includes("%") ? val + "%" : val} 🤖 AI Detect`
+//       );
+//     }
+//   }
+
+//   return finalText;
+// }

@@ -12,7 +12,7 @@ import { formatGLobalSignal } from "./formatter";
 
 export async function parseRawPotentialSignal(
   rawText: string
-): Promise<GeminiResponse | null> {
+): Promise<[GeminiResponse, string[]] | null> {
   try {
     //parsing the signal
     const output: string = await MakeGeminiRequest({
@@ -26,7 +26,7 @@ export async function parseRawPotentialSignal(
     console.log("Gemini output:", output);
 
     if (parsedOutput.values == null || !parsedOutput.signalDetected) {
-      return parsedOutput;
+      return null;
     }
     const nullValues: string[] = [];
 
@@ -96,7 +96,7 @@ export async function parseRawPotentialSignal(
     console.log("Gemini enhanced output:", parsedGeminiEnhancedOutput);
 
     if (parsedGeminiEnhancedOutput.values == null) {
-      return parsedGeminiEnhancedOutput;
+      return null;
     }
 
     parsedGeminiEnhancedOutput.values!.aiDetectedSuccessRate =
@@ -113,7 +113,7 @@ export async function parseRawPotentialSignal(
     if (parsedGeminiEnhancedOutput.values.lq == null) {
       parsedGeminiEnhancedOutput.values.lq = 10;
     }
-    return parsedGeminiEnhancedOutput;
+    return [parsedGeminiEnhancedOutput, nullValues];
   } catch (e) {
     console.error("Gemini request failed:", e);
     return null;

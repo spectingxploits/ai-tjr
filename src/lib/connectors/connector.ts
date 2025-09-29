@@ -343,6 +343,7 @@ export class ConnectorGateway {
     await sendOpenSignPageButton(
       String(user_chat_id),
       signal.text ?? "data not found",
+      signal,
       magicLinks
     );
 

@@ -1,36 +1,38 @@
-// server/sendOpenAuthPageButton.ts
 import { GlobalSignal } from "@/models/interfaces";
 import { InlineKeyboard } from "grammy";
-import fetch from "node-fetch";
 
-export async function sendOpenSignPageButton(
-  chat_id: string,
-  message: string,
+export async function respondEditAndConfirm(
+  user_chat_id: string,
   signal: GlobalSignal,
-  options: {
-    text: string;
-    web_app: {
-      url: string;
-    };
-  }[]
-) {
+  ai_items: string[]
+): Promise<void> {
+  // fetching the user gateway status
+  const combined = { ai_items, signal };
+  const keyboard = new InlineKeyboard()
+    .text("Edit Signal", `edit_signal:${JSON.stringify(combined)}`)
+    .text("Confirm", `confirm:${JSON.stringify(combined)}`);
+
   const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
   const MINI_APP_BASE_URL = process.env.NEXT_PUBLIC_MINI_APP_BASE_URL;
   if (!BOT_TOKEN || !MINI_APP_BASE_URL) {
     throw new Error("Missing env: TELEGRAM_BOT_TOKEN or MINI_APP_BASE_URL");
   }
 
+  if (signal.text == null) {
+    throw new Error("signal.text is null");
+  }
   await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
 
     body: JSON.stringify({
-      chat_id,
+      user_chat_id,
       parse_mode: "HTML",
-      text: message,
+      text: signal.text,
       reply_markup: {
-        inline_keyboard: [options],
+        inline_keyboard: [keyboard],
       },
     }),
   });
+  return;
 }
