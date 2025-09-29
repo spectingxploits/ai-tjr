@@ -5,9 +5,10 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Javadyakuza/ai-tjr/blob/main/LICENSE">
-    <img src="https://img.shields.io/github/license/Javadyakuza/ai-tjr?style=plastic" alt="License"/>
-  </a>
+<a href="https://github.com/Javadyakuza/ai-tjr/blob/main/LICENSE">
+  <img src="https://img.shields.io/github/license/Javadyakuza/ai-tjr.svg?style=plastic&cacheSeconds=1" alt="License"/>
+</a>
+
   <a href="https://github.com/Javadyakuza/ai-tjr/blob/main/package.json">
     <img src="https://img.shields.io/github/package-json/v/Javadyakuza/ai-tjr?style=plastic" alt="Version"/>
   </a>
