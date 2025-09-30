@@ -171,6 +171,10 @@ async function setupListeners() {
       await connector_gateway.getOpenOrders(ctx);
     }
 
+    if (ctx.message.text.trim().includes("/get_trade_history")) {
+      await connector_gateway.getHistory(ctx);
+    }
+
     if (ctx.message.text.trim().includes("/help")) {
       await ctx.reply(MESSAGES.help);
     }

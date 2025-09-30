@@ -6,6 +6,7 @@ import {
 } from "@/models/hyperion/types";
 import {
   Balance,
+  GlobalHistory,
   GlobalOrders,
   GlobalPayload,
   GlobalPositions,
@@ -61,11 +62,14 @@ export interface PerpConnector {
     userAddress: `0x${string}`
   ): Promise<Result<GlobalPayload>>;
   listOpenOrders(userAddress: `0x${string}`): Promise<Result<GlobalOrders>>;
+
   fetchPosition(params: PerpCloseParams): Promise<Result<Position>>;
   listOpenPositions(
     userAddress: `0x${string}`
   ): Promise<Result<GlobalPositions>>;
-
+  listHistory(
+    userAddress: `0x${string}`
+  ): Promise<Result<GlobalHistory>>;
   /* market data & account */
   getTickerPrice(symbol: string): Promise<Result<number>>;
   getBalance(mainnet: boolean, userAddress: string): Promise<Result<Balance[]>>;
@@ -484,6 +488,39 @@ export class ConnectorGateway {
       ctx.chat.id.toString(),
       message.message_id,
       MESSAGES.open_positions(openPositions),
+      {
+        parse_mode: "HTML",
+      }
+    );
+    return Promise.resolve({ success: true, data: true });
+  }
+
+  async getHistory(ctx: Context) {
+    if (!ctx.chat?.id) {
+      return Promise.reject("No chat id found");
+    }
+    let user_address = await this.getUserAddress(ctx);
+
+    let message = await ctx.reply(
+      ` ✅ Fetching order history for ${user_address.slice(0, 6)}...`
+    );
+
+    let orderHistory: Record<string, GlobalOrders> = {};
+
+    for (const connector of this.perpConnectors) {
+      const res = await connector.(user_address);
+      if (!res.success) {
+        ctx.reply(` ❌ ${res.error}`);
+        return Promise.resolve({ success: false, error: res.error });
+      }
+      orderHistory[connector.name] = res.data;
+    }
+
+    console.log("orderHistory", orderHistory);
+    ctx.api.editMessageText(
+      ctx.chat.id.toString(),
+      message.message_id,
+      MESSAGES.order_history(orderHistory),
       {
         parse_mode: "HTML",
       }

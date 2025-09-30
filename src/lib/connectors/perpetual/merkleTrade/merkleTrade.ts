@@ -260,7 +260,14 @@ export class MerkleTradeConnector implements PerpConnector {
       return { success: false, error: (err as Error).message };
     }
   }
-
+  async listOrderHistory(
+    userAddress: `0x${string}`
+  ): Promise<Result<GlobalOrders>> {
+    this.checkClients();
+  
+  
+  
+  }
   async fetchPosition(): Promise<Result<Position>> {
     return Promise.reject(
       "fetchPosition not implemented, use list open positions instead"

@@ -150,13 +150,9 @@ This command is used to get the open orders for the user. It will return the ope
 
 This command is used to get the positions for the user. It will return the positions in a table format.
 
-### `/get_order_history`
+### `/get_trade_history`
 
 This command is used to get the order history for the user. It will return the order history in a table format.
-
-### `/get_position_history`
-
-This command is used to get the position history for the user. It will return the position history in a table format.
 
 ### `/get_price`
 

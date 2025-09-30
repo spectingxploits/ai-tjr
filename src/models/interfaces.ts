@@ -2,6 +2,7 @@ import { Order, Position } from "@merkletrade/ts-sdk";
 import { HyperionSwapPayload, TokenInfo } from "./hyperion/types";
 import {
   KanalabsOrderPayload,
+  ParsedKanaHistory,
   ParsedKanaOrder,
   ParsedKanaPosition,
 } from "./kanalabs/types";
@@ -174,6 +175,8 @@ export type GlobalOrders =
   | Order
   | ParsedKanaOrder[]
   | ParsedKanaOrder;
+
+export type GlobalHistory = ParsedKanaHistory | ParsedKanaHistory[];
 
 export type AptosStandardPayload = {
   type: string;

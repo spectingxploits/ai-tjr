@@ -1,7 +1,6 @@
 import { normalizeArgument } from "@/lib/helpers/utils";
 import { AptosStandardPayload, FunctionArgument } from "../interfaces";
 
-
 // the inner payload (data)
 export interface KanalabsOrderPayload {
   function: `${string}::${string}::${string}`;
@@ -180,4 +179,70 @@ export function parseKanaOrders(
 ): ParsedKanaOrder[] {
   if (!Array.isArray(list)) return [];
   return list.map(parseKanaOrder);
+}
+
+export interface KanaHistory {
+  address: string;
+  market_id: string; // API returns as string
+  leverage: number;
+  order_type: number;
+  timestamp: number; // unix seconds
+  is_market_order: boolean;
+  size: string; // numeric string
+  price: string; // numeric string
+  order_value: string; // numeric string
+  status: string; // e.g. "Open", "Closed"
+  order_id: string;
+  trade_id: string;
+  last_updated: number; // unix seconds
+  transaction_version: number;
+}
+
+/** API response wrapper for list of orders */
+export interface KanaHistoryResponse {
+  success: boolean;
+  message?: string;
+  data: KanaHistory[];
+}
+
+/** Parsed/normalized version */
+export interface ParsedKanaHistory {
+  address: string;
+  marketId: number;
+  leverage: number;
+  orderType: number;
+  timestamp: number;
+  isMarketOrder: boolean;
+  size: number;
+  price: number;
+  orderValue: number;
+  status: string;
+  orderId: string;
+  tradeId: string;
+  lastUpdated: number;
+  transactionVersion: number;
+}
+
+export function parseKanaHistory(o: KanaHistory): ParsedKanaHistory {
+  const toNum = (v: string | null): number => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
+  };
+
+  return {
+    address: o.address,
+    marketId: Number(o.market_id),
+    leverage: o.leverage,
+    orderType: o.order_type,
+    timestamp: o.timestamp,
+    isMarketOrder: o.is_market_order,
+    size: toNum(o.size),
+    price: toNum(o.price),
+    orderValue: toNum(o.order_value),
+    status: o.status,
+    orderId: o.order_id,
+    tradeId: o.trade_id,
+    lastUpdated: o.last_updated,
+    transactionVersion: o.transaction_version,
+  };
 }

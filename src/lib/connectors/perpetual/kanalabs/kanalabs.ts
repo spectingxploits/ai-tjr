@@ -3,6 +3,7 @@ import axios, { AxiosInstance } from "axios";
 import { PerpConnector, Result } from "../../connector";
 import {
   Balance,
+  GlobalHistory,
   GlobalOrders,
   GlobalPositions,
   OrderResult,
@@ -17,12 +18,15 @@ import { Aptos, AptosConfig, Network } from "@aptos-labs/ts-sdk";
 import path, { parse } from "path";
 import fs from "fs";
 import {
+  KanaHistoryResponse,
   KanalabsOrderPayload,
   KanalabsResponse,
   KanaOrdersResponse,
   KanaPositionsResponse,
+  ParsedKanaHistory,
   ParsedKanaOrder,
   ParsedKanaPosition,
+  parseKanaHistory,
   parseKanaOrder,
   parseKanaPosition,
 } from "@/models/kanalabs/types";
@@ -191,6 +195,7 @@ export class KanalabsConnector implements PerpConnector {
   async listOpenOrders(
     userAddress: `0x${string}`
   ): Promise<Result<GlobalOrders>> {
+    this.checkClients();
     let ordersRes: KanaOrdersResponse = (
       await this.kanalabsApi.get("/getOpenOrders", {
         params: { userAddress: userAddress },
@@ -209,6 +214,7 @@ export class KanalabsConnector implements PerpConnector {
   async listOpenPositions(
     userAddress: `0x${string}`
   ): Promise<Result<GlobalPositions>> {
+    this.checkClients();
     let positionsRes: KanaPositionsResponse = (
       await this.kanalabsApi.get("/getPositions", {
         params: { userAddress: userAddress },
@@ -224,6 +230,36 @@ export class KanalabsConnector implements PerpConnector {
     return Promise.resolve({ success: true, data: parsedPositions });
   }
 
+  async listHistory(
+    userAddress: `0x${string}`
+  ): Promise<Result<GlobalHistory>> {
+    this.checkClients();
+    this.tokens;
+    let historyRes: KanaHistoryResponse[] = [];
+    for (const token of Object.keys(this.tokens)) {
+      historyRes.push(
+        await this.kanalabsApi.get("/getOrderHistory", {
+          params: {
+            userAddress: userAddress,
+            marketId: this.tokens[token].marketId,
+          },
+        })
+      );
+    }
+
+    if (historyRes.length === 0) {
+      return Promise.reject("No history found");
+    }
+
+    let parsedHistories: ParsedKanaHistory[] = [];
+
+    for (const h of historyRes) {
+      for (const h2 of h.data) {
+        parsedHistories.push(parseKanaHistory(h2));
+      }
+    }
+    return Promise.resolve({ success: true, data: parsedHistories });
+  }
   fetchPosition(params: PerpCloseParams): Promise<Result<Position>> {
     throw new Error("Method not implemented. use list all poisons instead");
   }
