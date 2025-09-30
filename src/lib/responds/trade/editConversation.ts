@@ -218,11 +218,11 @@ export async function editConversation(
 
       if (targetKey === "tp" && signal.tp != null) {
         signal.profit = updateTp(Number(signal.enter), signal.tp);
-        ai_items = ai_items.filter((k) => k !== "profit");
+        ai_items = ai_items.filter((k) => k !== "profit" && k !== "tp");
       }
       if (targetKey === "sl" && signal.sl != null) {
         signal.loss = updateSl(Number(signal.enter), signal.sl);
-        ai_items = ai_items.filter((k) => k !== "loss");
+        ai_items = ai_items.filter((k) => k !== "loss" && k !== "sl");
       }
 
       // remove ai badge for the field the user edited
