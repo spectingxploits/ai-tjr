@@ -16,7 +16,7 @@ describe("HyperionConnector integration", () => {
     const result = await connector.getQuote({
       symbolIn: "APT",
       symbolOut: "USDC",
-      amount: 1_000_000, // 0.01 APT if decimals = 8
+      // amount: 1_000_000, // 0.01 APT if decimals = 8
     });
 
     console.log("Quote result:", result);

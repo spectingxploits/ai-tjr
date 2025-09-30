@@ -317,7 +317,7 @@ export class MerkleTradeConnector implements PerpConnector {
       if (!price)
         return { success: false, error: `Price for ${symbol} not found` };
 
-      return { success: true, data: Number(price.price) };
+      return { success: true, data: Number(price.price) / 10 ** 6 };
     } catch (err) {
       return { success: false, error: (err as Error).message };
     }

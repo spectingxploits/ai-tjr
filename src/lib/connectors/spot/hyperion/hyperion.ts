@@ -55,7 +55,7 @@ export class HyperionConnector implements SwapConnector {
         );
       }
 
-      return pool.pool.currentTick;
+      return Number(pool.pool.currentTick) / 10 ** 6;
     } catch (err) {
       console.error("[HyperionConnector] getQuote error:", err);
       throw err;
@@ -196,14 +196,13 @@ export class HyperionConnector implements SwapConnector {
     return Promise.resolve({ success: true, data: balances });
   }
 
-
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   estimateGas?(
     _symbolIn: string,
     _symbolOut: string,
     _amount: number
   ): Promise<number> {
-    this.hyperionAdapter.Position.fetchAllPositionsByAddress
+    this.hyperionAdapter.Position.fetchAllPositionsByAddress;
     throw new Error("Method not implemented.");
   }
 

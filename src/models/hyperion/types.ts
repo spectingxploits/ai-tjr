@@ -4,7 +4,6 @@ import { AptosStandardPayload, FunctionArgument } from "../interfaces";
 export type PairPriceParams = {
   symbolIn: string;
   symbolOut: string;
-  amount: number;
   opts?: { exactIn?: boolean; slippagePct?: number };
 };
 

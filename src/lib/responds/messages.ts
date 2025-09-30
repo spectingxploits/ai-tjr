@@ -278,6 +278,7 @@ ${Object.entries(positionsByProvider)
   .join("\n\n")}
     `;
   },
+
   history: (historyByProvider: Record<string, GlobalHistory>) => {
     return `
 📜 <b>Trade / Order History</b>
@@ -366,6 +367,31 @@ ${Object.entries(historyByProvider)
       .join("\n\n");
 
     return `📜 <b>${providerName}</b>\n${formatted}`;
+  })
+  .join("\n\n")}
+    `;
+  },
+
+  prices: (pricesByProvider: Record<string, number>, token: string) => {
+    return `
+💱 <b>Prices</b>
+
+${Object.entries(pricesByProvider)
+  .map(([provider, price]) => {
+    const providerName =
+      provider.charAt(0).toUpperCase() +
+      provider
+        .slice(1)
+        .replace("_perpetual_connector", "")
+        .replace("_swap_connector", "")
+        .replace("_connector", "");
+
+    // If no prices, show friendly fallback
+    if (!price || price == null) {
+      return `💱 <b>${providerName}</b>\n🤷‍♂️ no prices`;
+    }
+
+    return `💱 <b>${providerName}</b>\n${token}: ${price}`;
   })
   .join("\n\n")}
     `;

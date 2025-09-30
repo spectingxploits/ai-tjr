@@ -35,6 +35,7 @@ import { I } from "vitest/dist/chunks/reporters.d.BFLkQcL6.js";
 import { InlineKeyboardButton } from "grammy/types";
 import { MESSAGES } from "../responds/messages";
 import { S } from "vitest/dist/chunks/config.d.D2ROskhv.js";
+import { Conversation } from "@grammyjs/conversations";
 /** Standardized response wrapper for safer integrations */
 export type Result<T> =
   | { success: true; data: T }
@@ -519,6 +520,53 @@ export class ConnectorGateway {
       ctx.chat.id.toString(),
       message.message_id,
       MESSAGES.history(orderHistory),
+      {
+        parse_mode: "HTML",
+      }
+    );
+    return Promise.resolve({ success: true, data: true });
+  }
+
+  async getAllPrices(conversation: Conversation, ctx: Context, token: string) {
+    try {
+    } catch (e) {}
+    if (!ctx.chat?.id) {
+      return Promise.reject("No chat id found");
+    }
+    let user_address = await this.getUserAddress(ctx);
+
+    let message = await ctx.reply(
+      ` ✅ Fetching prices for ${user_address.slice(0, 6)}...`
+    );
+
+    let prices: Record<string, number> = {};
+
+    for (const connector of this.perpConnectors) {
+      const res = await connector.getTickerPrice(token);
+      if (!res.success) {
+        ctx.reply(` ❌ ${res.error}`);
+        return Promise.resolve({ success: false, error: res.error });
+      }
+      prices[connector.name] = res.data;
+    }
+
+    for (const connector of this.spotConnectors) {
+      const price = await connector.getQuote({
+        symbolIn: token.toLocaleUpperCase(),
+        symbolOut: "USDT",
+      });
+
+      if (price) {
+        // continue without token balances
+      }
+
+      prices[connector.name] = price;
+    }
+
+    ctx.api.editMessageText(
+      ctx.chat.id.toString(),
+      message.message_id,
+      MESSAGES.prices(prices, token),
       {
         parse_mode: "HTML",
       }

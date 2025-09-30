@@ -24,10 +24,9 @@ import {
   editToEditAndConfirmExt,
   respondEditAndConfirm,
 } from "@/lib/responds/trade/EditAndConfirm";
-import { GlobalSignal } from "@/models/interfaces";
 import { editConversation } from "@/lib/responds/trade/editConversation";
-import { decode } from "punycode";
 import { clearPendingEdit, getPendingEdit } from "@/lib/sessionStore";
+import { priceConversation } from "@/lib/responds/trade/priceConversation";
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 if (!token) throw new Error("TELEGRAM_BOT_TOKEN env var not found.");
@@ -47,6 +46,9 @@ bot.use(createConversation(respondAutomate));
 bot.use(createConversation(respondDeactivate));
 
 bot.use(createConversation(editConversation));
+
+bot.use(createConversation(priceConversation));
+
 async function setupListeners() {
   const connector_gateway = new ConnectorGateway(Network.TESTNET);
   await connector_gateway.initGatewayConnectors();
@@ -174,7 +176,12 @@ async function setupListeners() {
     if (ctx.message.text.trim().includes("/get_trade_history")) {
       await connector_gateway.getHistory(ctx);
     }
-
+    if (ctx.message.text.trim().includes("/get_price")) {
+      await ctx.conversation.enter(
+        "priceConversation",
+        connector_gateway.getAllPrices
+      );
+    }
     if (ctx.message.text.trim().includes("/help")) {
       await ctx.reply(MESSAGES.help);
     }
