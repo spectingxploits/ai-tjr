@@ -1,4 +1,9 @@
-import { Order, Position } from "@merkletrade/ts-sdk";
+import {
+  Order,
+  Position,
+  RawTradeHistory,
+  TradeHistory,
+} from "@merkletrade/ts-sdk";
 import { HyperionSwapPayload, TokenInfo } from "./hyperion/types";
 import {
   KanalabsOrderPayload,
@@ -176,7 +181,11 @@ export type GlobalOrders =
   | ParsedKanaOrder[]
   | ParsedKanaOrder;
 
-export type GlobalHistory = ParsedKanaHistory | ParsedKanaHistory[];
+export type GlobalHistory =
+  | ParsedKanaHistory
+  | ParsedKanaHistory[]
+  | TradeHistory
+  | TradeHistory[];
 
 export type AptosStandardPayload = {
   type: string;

@@ -1,4 +1,11 @@
-import { Balance, GlobalOrders, GlobalPositions } from "@/models/interfaces";
+import {
+  Balance,
+  GlobalHistory,
+  GlobalOrders,
+  GlobalPositions,
+} from "@/models/interfaces";
+import { ParsedKanaHistory } from "@/models/kanalabs/types";
+import { TradeHistory } from "@merkletrade/ts-sdk";
 import stringify from "json-stringify-pretty-compact";
 
 // all message should be sent with parse_mode: "HTML"
@@ -267,6 +274,98 @@ ${Object.entries(positionsByProvider)
       .join("\n\n");
 
     return `📊 <b>${providerName}</b>\n${formatted}`;
+  })
+  .join("\n\n")}
+    `;
+  },
+  history: (historyByProvider: Record<string, GlobalHistory>) => {
+    return `
+📜 <b>Trade / Order History</b>
+
+${Object.entries(historyByProvider)
+  .map(([provider, history]) => {
+    const providerName =
+      provider.charAt(0).toUpperCase() +
+      provider
+        .slice(1)
+        .replace("_perpetual_connector", "")
+        .replace("_swap_connector", "")
+        .replace("_connector", "");
+
+    const arr = Array.isArray(history) ? history : [history];
+
+    if (arr.length === 0) {
+      return `📜 <b>${providerName}</b>\n🤷‍♂️ no history`;
+    }
+
+    const formatted = arr
+      .map((h) => {
+        // ParsedKanaHistory guard: has numeric marketId and string orderId
+        if (
+          h &&
+          typeof h === "object" &&
+          "marketId" in h &&
+          typeof (h as any).marketId === "number" &&
+          "orderId" in h
+        ) {
+          const ph = h as ParsedKanaHistory;
+          return stringify(
+            {
+              orderId: ph.orderId,
+              tradeId: ph.tradeId,
+              status: ph.status,
+              marketId: ph.marketId,
+              leverage: ph.leverage,
+              size: ph.size,
+              price: ph.price,
+              value: ph.orderValue,
+              ts: ph.timestamp,
+              updated: ph.lastUpdated,
+              txVer: ph.transactionVersion,
+            },
+            { maxLength: 80 }
+          );
+        }
+
+        // TradeHistory guard: has version and ts (converted Date)
+        if (
+          h &&
+          typeof h === "object" &&
+          "version" in h &&
+          ("ts" in h || "pairType" in h)
+        ) {
+          const th = h as TradeHistory;
+          // many numeric fields may be strings — print them compactly
+          return stringify(
+            {
+              version: th.version,
+              uid: (th as any).uid,
+              orderId: (th as any).orderId,
+              pairType: (th as any).pairType,
+              eventType: (th as any).eventType,
+              side: (th as any).isLong ? "LONG" : "SHORT",
+              leverage: (th as any).leverage,
+              price: (th as any).price,
+              sizeDelta: (th as any).sizeDelta,
+              originalSize: (th as any).originalSize,
+              pnl: (th as any).pnlWithoutFee,
+              fees: {
+                entryExit: (th as any).entryExitFee,
+                funding: (th as any).fundingFee,
+                rollover: (th as any).rolloverFee,
+              },
+              ts: (th as any).ts,
+            },
+            { maxLength: 80 }
+          );
+        }
+
+        // fallback: best-effort stringify
+        return stringify(h as any, { maxLength: 80 });
+      })
+      .join("\n\n");
+
+    return `📜 <b>${providerName}</b>\n${formatted}`;
   })
   .join("\n\n")}
     `;

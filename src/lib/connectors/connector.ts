@@ -67,9 +67,7 @@ export interface PerpConnector {
   listOpenPositions(
     userAddress: `0x${string}`
   ): Promise<Result<GlobalPositions>>;
-  listHistory(
-    userAddress: `0x${string}`
-  ): Promise<Result<GlobalHistory>>;
+  listHistory(userAddress: `0x${string}`): Promise<Result<GlobalHistory>>;
   /* market data & account */
   getTickerPrice(symbol: string): Promise<Result<number>>;
   getBalance(mainnet: boolean, userAddress: string): Promise<Result<Balance[]>>;
@@ -505,10 +503,10 @@ export class ConnectorGateway {
       ` ✅ Fetching order history for ${user_address.slice(0, 6)}...`
     );
 
-    let orderHistory: Record<string, GlobalOrders> = {};
+    let orderHistory: Record<string, GlobalHistory> = {};
 
     for (const connector of this.perpConnectors) {
-      const res = await connector.(user_address);
+      const res = await connector.listHistory(user_address);
       if (!res.success) {
         ctx.reply(` ❌ ${res.error}`);
         return Promise.resolve({ success: false, error: res.error });
@@ -520,7 +518,7 @@ export class ConnectorGateway {
     ctx.api.editMessageText(
       ctx.chat.id.toString(),
       message.message_id,
-      MESSAGES.order_history(orderHistory),
+      MESSAGES.history(orderHistory),
       {
         parse_mode: "HTML",
       }

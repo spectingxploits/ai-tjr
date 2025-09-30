@@ -50,9 +50,10 @@ describe("HyperionConnector integration", () => {
     const result = await connector.swap(params);
 
     console.log("Swap payload result:", result);
-
+    expect(result.success).to.be.true;
+    if (result.success != true) throw new Error(result.error);
     expect(result).toHaveProperty("payload");
-    expect(result.payload).toBeDefined();
+    expect(result.data).toBeDefined();
   });
 
   it("should fetch balances for a user", async () => {
@@ -66,9 +67,10 @@ describe("HyperionConnector integration", () => {
     const balances = await connector.getBalance(true, USER_ADDRESS);
 
     console.log("Balances:", balances);
+    if (balances.success != true) throw new Error(balances.error);
 
     expect(Array.isArray(balances)).toBe(true);
-    expect(balances.some((b) => b.asset === "APT")).toBe(true);
+    expect(balances.data.some((b) => b.asset === "APT")).toBe(true);
   });
 
   it("should throw an error when estimating gas", async () => {

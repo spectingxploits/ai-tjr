@@ -17,6 +17,7 @@ import {
   Tokens,
   GlobalPositions,
   GlobalOrders,
+  GlobalHistory,
 } from "@/models/interfaces";
 import {
   MerkleCancelOrderPayload,
@@ -260,14 +261,26 @@ export class MerkleTradeConnector implements PerpConnector {
       return { success: false, error: (err as Error).message };
     }
   }
-  async listOrderHistory(
+  async listHistory(
     userAddress: `0x${string}`
-  ): Promise<Result<GlobalOrders>> {
+  ): Promise<Result<GlobalHistory>> {
     this.checkClients();
-  
-  
-  
+
+    try {
+      const history = await this.merkle_client.getTradingHistory({
+        address: userAddress,
+      });
+
+      if (!history || history.length === 0) {
+        return { success: false, error: "No history found" };
+      }
+
+      return { success: true, data: history };
+    } catch (err) {
+      return { success: false, error: (err as Error).message };
+    }
   }
+
   async fetchPosition(): Promise<Result<Position>> {
     return Promise.reject(
       "fetchPosition not implemented, use list open positions instead"

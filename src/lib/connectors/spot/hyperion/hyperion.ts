@@ -196,12 +196,14 @@ export class HyperionConnector implements SwapConnector {
     return Promise.resolve({ success: true, data: balances });
   }
 
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   estimateGas?(
     _symbolIn: string,
     _symbolOut: string,
     _amount: number
   ): Promise<number> {
+    this.hyperionAdapter.Position.fetchAllPositionsByAddress
     throw new Error("Method not implemented.");
   }
 
