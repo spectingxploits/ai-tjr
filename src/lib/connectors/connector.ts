@@ -29,6 +29,9 @@ import { connect } from "http2";
 import { sendOpenSignPageButton } from "@/lib/responds/trade/confirmButton";
 import SuperJSON from "superjson";
 import { KanalabsConnector } from "./perpetual/kanalabs/kanalabs";
+import { Context, InlineKeyboard } from "grammy";
+import { I } from "vitest/dist/chunks/reporters.d.BFLkQcL6.js";
+import { InlineKeyboardButton } from "grammy/types";
 /** Standardized response wrapper for safer integrations */
 export type Result<T> =
   | { success: true; data: T }
@@ -163,8 +166,11 @@ export class ConnectorGateway {
   }
 
   async handleIncomingSignal(
+    ctx: Context,
     signal: GlobalSignal,
-    user_chat_id: number
+    user_chat_id: number,
+    message_id: number,
+    token: string
   ): Promise<Result<boolean>> {
     // getting the supported dexes
     let supportedSpotDexes: SwapConnector[] = [];
@@ -290,12 +296,7 @@ export class ConnectorGateway {
     }
 
     // generating the sign and submit magic links
-    let magicLinks: {
-      text: string;
-      web_app: {
-        url: string;
-      };
-    }[] = [];
+    let keyboard: InlineKeyboardButton[][] = []; // <-- 2D array
     type WRAPPER = SignAndSubmitParams & { telegramChatId?: string };
 
     for (const payload of Object.keys(payloads)) {
@@ -331,20 +332,30 @@ export class ConnectorGateway {
       const webAppUrl = `${process.env.NEXT_PUBLIC_MINI_APP_BASE_URL}/trade/sign?payload=${encoded}`;
 
       const parsed_connector_name = payload.split("_")[0];
-      magicLinks.push({
-        text: `sign for ${parsed_connector_name}`,
-        web_app: {
-          url: webAppUrl,
+      keyboard.push([
+        {
+          text: `Sign for ${parsed_connector_name}`,
+          web_app: { url: webAppUrl },
         },
-      });
+      ]);
     }
 
-    // sending the magic links
-    await sendOpenSignPageButton(
-      String(user_chat_id),
+    keyboard.push([
+      {
+        text: "⬅️ Back",
+        callback_data: `back_to_edit_and_confirm:${token}`,
+      },
+    ]);
+    await ctx.api.editMessageText(
+      user_chat_id,
+      message_id,
       signal.text ?? "data not found",
-      signal,
-      magicLinks
+      {
+        reply_markup: {
+          inline_keyboard: keyboard,
+        },
+        parse_mode: "HTML",
+      }
     );
 
     return Promise.resolve({ success: true, data: true });

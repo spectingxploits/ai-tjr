@@ -2,7 +2,12 @@ import { Conversation } from "@grammyjs/conversations";
 import { InlineKeyboard, Context as GramContext } from "grammy";
 import { formatGLobalSignal } from "@/lib/helpers/formatter";
 import { GlobalSignal } from "@/models/interfaces";
-import { respondEditAndConfirm } from "./EditAndConfirm";
+import {
+  editToEditAndConfirmExt,
+  respondEditAndConfirm,
+} from "./EditAndConfirm";
+import { getPendingEdit, savePendingEdit } from "@/lib/sessionStore";
+import { sign } from "crypto";
 
 /**
  * Edit a signal interactively inside a conversation.
@@ -12,7 +17,9 @@ export async function editConversation(
   conversation: Conversation,
   ctx: GramContext,
   signal: GlobalSignal,
-  ai_items: string[]
+  ai_items: string[],
+  perv_message_id: string,
+  token: string
 ) {
   // Map editable callback keys -> human label and signal key
   const editableMap: Record<
@@ -61,33 +68,31 @@ export async function editConversation(
       .row()
       .text("⬅️ Back", "back");
 
-  // initial formatted text
-  let formatted = formatGLobalSignal(signal, ai_items);
-
-  // send the editable message and retrieve the message id so we can edit it later
-  const sent = await ctx.reply(formatted, {
-    reply_markup: buildKeyboard(),
-    parse_mode: "HTML",
-  });
-
   const chatId = String(ctx.chat!.id);
-  const messageId = (sent as any).message_id;
+  const messageId = perv_message_id;
 
   let back = false;
 
   // helper to update the message text (centralized)
-  async function updateMessage() {
-    formatted = formatGLobalSignal(signal, ai_items);
+  async function updateMessage(message: string, keyboard?: InlineKeyboard) {
     try {
-      await ctx.api.editMessageText(chatId, messageId, formatted, {
-        parse_mode: "HTML",
-        reply_markup: buildKeyboard(),
-      });
+      if (keyboard) {
+        await ctx.api.editMessageText(chatId, Number(messageId), message, {
+          parse_mode: "HTML",
+          reply_markup: keyboard,
+        });
+      } else {
+        await ctx.api.editMessageText(chatId, Number(messageId), message, {
+          parse_mode: "HTML",
+        });
+      }
     } catch (e) {
       // ignore edit errors (e.g. message deleted) but at least log
       console.warn("editMessageText failed:", e);
     }
   }
+
+  await updateMessage(formatGLobalSignal(signal, ai_items), buildKeyboard());
 
   while (!back) {
     // wait for a callback query (user clicked a button)
@@ -101,6 +106,16 @@ export async function editConversation(
 
     // handle "back"
     if (cbData === "back") {
+      await updateMessage(
+        formatGLobalSignal(signal, ai_items),
+        buildKeyboard()
+      );
+      // updating the signal text
+      signal.text = formatGLobalSignal(signal, ai_items);
+      const combined = { signal, ai_items, createdAt: Date.now() };
+      savePendingEdit(token, combined);
+      console.log("pendingEdit", getPendingEdit(token));
+
       back = true;
       break;
     }
@@ -108,14 +123,16 @@ export async function editConversation(
     // order type (market/limit)
     if (cbData === "change_order_type") {
       // show options
-      await cqCtx.reply("Select order type:", {
-        reply_markup: new InlineKeyboard()
+      await updateMessage(
+        "Select order type:",
+        new InlineKeyboard()
           .text("Market", "change_order_to_market")
           .row()
-          .text("Limit", "change_order_to_limit"),
-      });
+          .text("Limit", "change_order_to_limit")
+      );
 
       const sel = await conversation.waitFor("callback_query");
+      console.log("sel", sel);
       await sel.answerCallbackQuery().catch(() => {});
       const selData =
         sel.update.callback_query?.data ?? sel.callbackQuery?.data;
@@ -126,18 +143,22 @@ export async function editConversation(
 
       // user manually changed -> remove ai badge for 'market' if present
       ai_items = ai_items.filter((k) => k !== "market");
-      await updateMessage();
+      await updateMessage(
+        formatGLobalSignal(signal, ai_items),
+        buildKeyboard()
+      );
       continue;
     }
 
     // change side (long/short)
     if (cbData === "change_side") {
-      await cqCtx.reply("Select side:", {
-        reply_markup: new InlineKeyboard()
+      await updateMessage(
+        "Select side:",
+        new InlineKeyboard()
           .text("Long ⬆️", "change_side_long")
           .row()
-          .text("Short ⬇️", "change_side_short"),
-      });
+          .text("Short ⬇️", "change_side_short")
+      );
 
       const sel = await conversation.waitFor("callback_query");
       await sel.answerCallbackQuery().catch(() => {});
@@ -149,7 +170,10 @@ export async function editConversation(
       if (selData === "change_side_short") signal.long = false;
 
       ai_items = ai_items.filter((k) => k !== "long");
-      await updateMessage();
+      await updateMessage(
+        formatGLobalSignal(signal, ai_items),
+        buildKeyboard()
+      );
       continue;
     }
 
@@ -164,8 +188,8 @@ export async function editConversation(
     if (numericCallbacks.includes(cbData)) {
       const fieldMap: Record<string, keyof GlobalSignal> = {
         change_enter_price: "enter",
-        change_profit_price: "profit",
-        change_loss_price: "loss",
+        change_profit_price: "tp",
+        change_loss_price: "sl",
         change_liquidity_amount: "lq",
         change_leverage: "leverage",
       };
@@ -173,7 +197,7 @@ export async function editConversation(
       const targetKey = fieldMap[cbData];
 
       // ask user for the new value
-      await cqCtx.reply(
+      await updateMessage(
         `Please send the new value for ${editableMap[cbData].label}:`
       );
 
@@ -192,18 +216,47 @@ export async function editConversation(
       // update the signal
       (signal as any)[targetKey] = newVal;
 
+      if (targetKey === "tp" && signal.tp != null) {
+        signal.profit = updateTp(Number(signal.enter), signal.tp);
+        ai_items = ai_items.filter((k) => k !== "profit");
+      }
+      if (targetKey === "sl" && signal.sl != null) {
+        signal.loss = updateSl(Number(signal.enter), signal.sl);
+        ai_items = ai_items.filter((k) => k !== "loss");
+      }
+
       // remove ai badge for the field the user edited
       ai_items = ai_items.filter((k) => k !== String(targetKey));
 
-      await updateMessage();
+      await updateMessage(
+        formatGLobalSignal(signal, ai_items),
+        buildKeyboard()
+      );
       continue;
     }
-
-    // unknown cbData - ignore
   }
 
   // final update before returning (in case user pressed back without any changes)
-  await updateMessage();
+  try {
+    await updateMessage(formatGLobalSignal(signal, ai_items), buildKeyboard());
+  } catch (e) {
+    console.error("updateMessage failed, but its ok", e);
+  }
 
-  await respondEditAndConfirm(ctx.chat!.id.toString(), signal, ai_items);
+  await editToEditAndConfirmExt(
+    ctx,
+    signal,
+    ai_items,
+    chatId,
+    messageId,
+    token
+  );
+}
+
+function updateTp(enter: number, new_tp: number): number {
+  return ((new_tp - enter) / enter) * 100;
+}
+
+function updateSl(enter: number, new_sl: number): number {
+  return ((new_sl - enter) / enter) * 100;
 }

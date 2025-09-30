@@ -20,9 +20,14 @@ import {
   createConversation,
 } from "@grammyjs/conversations";
 import { MESSAGES } from "@/lib/responds/messages";
-import { respondEditAndConfirm } from "@/lib/responds/trade/EditAndConfirm";
+import {
+  editToEditAndConfirmExt,
+  respondEditAndConfirm,
+} from "@/lib/responds/trade/EditAndConfirm";
 import { GlobalSignal } from "@/models/interfaces";
 import { editConversation } from "@/lib/responds/trade/editConversation";
+import { decode } from "punycode";
+import { clearPendingEdit, getPendingEdit } from "@/lib/sessionStore";
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 if (!token) throw new Error("TELEGRAM_BOT_TOKEN env var not found.");
@@ -154,7 +159,6 @@ async function setupListeners() {
         "to deactivate a automation a channel you have to forward a message from the channel or the group you want to deactivate automation for."
       );
     }
-
     if (ctx.message.text.trim().includes("/help")) {
       await ctx.reply(MESSAGES.help);
     }
@@ -208,30 +212,106 @@ async function setupListeners() {
       await ctx.reply(`✅ Automating channel : ${myData.split("_")[1]}`);
       await ctx.conversation.enter("respondAutomate", myData.split("_")[0]);
     }
-
     if (data.startsWith("deactivate_instructions:")) {
       const myData = data.split(":")[1];
       await ctx.reply(`❌ Deactivating channel : ${myData.split("_")[1]}`);
       await ctx.conversation.enter("respondDeactivate", myData.split("_")[0]);
     }
-
     if (data.startsWith("edit_signal:")) {
-      const myData = data.split(":")[1];
-      const signal: { ai_items: string[]; signal: GlobalSignal } =
-        JSON.parse(myData);
+      const token = data.split(":")[1];
+      // retriving the data from the session store
+      const pendingEdit = getPendingEdit(token);
+      console.log("edit_signal token", String(token), "data", pendingEdit);
+
+      if (!pendingEdit) {
+        await ctx.reply("No pending edit found for this token.");
+        return;
+      }
+      const { signal, ai_items, createdAt } = pendingEdit;
+      console.log("pendingEdit", pendingEdit);
+
+      // send the edit and confirm message
+      let msg =
+        ctx.callbackQuery?.message ?? ctx.update.callback_query?.message;
+      if (!msg || !msg.message_id) {
+        console.log("no message found", msg);
+        throw new Error("No message found");
+      }
       await ctx.conversation.enter(
         "editConversation",
-        signal.signal,
-        signal.ai_items
+        signal,
+        ai_items,
+        msg?.message_id,
+        String(token)
       );
     }
 
     if (data.startsWith("confirm_signal:")) {
-      const myData = data.split(":")[1];
-      const signal: { ai_items: string[]; signal: GlobalSignal } =
-        JSON.parse(myData);
-      await connector_gateway.handleIncomingSignal(signal.signal, ctx.chat!.id);
+      const token = data.split(":")[1];
+      // retriving the data from the session store
+      const pendingEdit = getPendingEdit(token);
+      console.log("confirm_signal token", String(token), "data", pendingEdit);
+      if (!pendingEdit) {
+        await ctx.reply("No pending edit found for this token.");
+        return;
+      }
+
+      const { signal } = pendingEdit;
+
+      let msg =
+        ctx.callbackQuery?.message ?? ctx.update.callback_query?.message;
+
+      if (!msg || !msg.message_id) {
+        console.log("no message found", msg);
+        throw new Error("No message found");
+      }
+      await ctx.api.editMessageText(
+        ctx.chat!.id,
+        msg.message_id,
+        "Generating Transactions ..."
+      );
+      await connector_gateway.handleIncomingSignal(
+        ctx,
+        signal,
+        ctx.chat!.id,
+        msg.message_id,
+        String(token)
+      );
       console.log("Notified admin user", ctx.chat!.id);
+    }
+    if (data.startsWith("back_to_edit_and_confirm:")) {
+      const token = data.split(":")[1];
+      // retriving the data from the session store
+      const pendingEdit = getPendingEdit(token);
+      console.log(
+        "back_to_edit_and_confirm token",
+        String(token),
+        "data",
+        pendingEdit
+      );
+      if (!pendingEdit) {
+        await ctx.reply("No pending edit found for this token.");
+        return;
+      }
+
+      const { signal, ai_items, createdAt } = pendingEdit;
+
+      let msg =
+        ctx.callbackQuery?.message ?? ctx.update.callback_query?.message;
+
+      if (!msg || !msg.message_id) {
+        console.log("no message found", msg);
+        throw new Error("No message found");
+      }
+
+      await editToEditAndConfirmExt(
+        ctx,
+        signal,
+        ai_items,
+        ctx.chat!.id.toString(),
+        String(msg?.message_id),
+        String(token)
+      );
     }
   });
 

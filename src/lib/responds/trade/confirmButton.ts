@@ -6,7 +6,6 @@ import fetch from "node-fetch";
 export async function sendOpenSignPageButton(
   chat_id: string,
   message: string,
-  signal: GlobalSignal,
   options: {
     text: string;
     web_app: {
