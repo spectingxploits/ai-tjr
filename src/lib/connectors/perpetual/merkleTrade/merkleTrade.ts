@@ -338,6 +338,16 @@ export class MerkleTradeConnector implements PerpConnector {
         // continue without token balances
       }
 
+      // usdc balance
+      try {
+        let usdc_bal = await this.merkle_client.aptos.getUsdcBalance({
+          accountAddress: userAddress,
+        });
+
+        balances.push({ asset: "USDC", amount: Number(usdc_bal) });
+      } catch (e) {
+        // continue without usdc balance
+      }
       return { success: true, data: balances };
     } catch (err) {
       return { success: false, error: (err as Error).message };

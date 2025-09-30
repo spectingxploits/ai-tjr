@@ -1,3 +1,5 @@
+import { Balance } from "@/models/interfaces";
+
 // all message should be sent with parse_mode: "HTML"
 export const MESSAGES = {
   help: `
@@ -114,4 +116,29 @@ To start your trading journey, first connect your wallet and then click on autom
 
 ⚡ Let’s get started and take your trading to the next level!
     `,
+  balances: (balances: Record<string, Balance[]>, bal: number) => {
+    return `
+💰 <b>Balances</b>
+
+🔘 <b>APT</b>: ${bal.toFixed(3)}
+
+${Object.entries(balances)
+  .map(([provider, balancesArr]) => {
+    const providerName =
+      provider.charAt(0).toUpperCase() +
+      provider
+        .slice(1)
+        .replace("_perpetual_connector", "")
+        .replace("_swap_connector", "");
+
+    const assets = balancesArr
+      .filter((b) => !["apt", "aptos"].includes(b.asset.toLowerCase())) // skip APT
+      .map((b) => `${b.asset}: ${b.amount.toFixed(3)}`)
+      .join("\n");
+
+    return `💰 <b>${providerName}</b>\n${assets || `🤷‍♂️ no balance available`}`;
+  })
+  .join("\n\n")}
+  `;
+  },
 };

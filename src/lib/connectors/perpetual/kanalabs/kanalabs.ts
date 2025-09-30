@@ -252,17 +252,22 @@ export class KanalabsConnector implements PerpConnector {
     mainnet: boolean,
     userAddress: string
   ): Promise<Result<Balance[]>> {
-    let balances: Balance[] = [];
+    try {
+      let balances: Balance[] = [];
 
-    let aptBal = await this.kanalabsApi.get("/getAccountAptBalance", {
-      params: { userAddress },
-    });
-    balances.push({ asset: "APT", amount: aptBal.data.data });
-    let usdtBal = await this.kanalabsApi.get("/getProfileBalanceSnapshot", {
-      params: { userAddress },
-    });
-    balances.push({ asset: "USDT", amount: usdtBal.data.data });
-    return Promise.resolve({ success: true, data: balances });
+      let aptBal = await this.kanalabsApi.get("/getAccountAptBalance", {
+        params: { userAddress },
+      });
+      balances.push({ asset: "APT", amount: aptBal.data.data });
+      let usdtBal = await this.kanalabsApi.get("/getProfileBalanceSnapshot", {
+        params: { userAddress },
+      });
+      balances.push({ asset: "USDT", amount: usdtBal.data.data });
+      return Promise.resolve({ success: true, data: balances });
+    } catch (e) {
+      console.error("getBalance failed:", e);
+      return Promise.resolve({ success: true, data: [] });
+    }
   }
   getFundingRate?(symbol: string): Promise<number | null> {
     throw new Error("Method not implemented.");

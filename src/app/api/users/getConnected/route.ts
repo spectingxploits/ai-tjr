@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getConnectedStatus } from "@/services/db/user";
+import { getUser } from "@/services/db/user";
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
@@ -13,7 +13,7 @@ export async function GET(req: Request) {
   }
 
   try {
-    const res = await getConnectedStatus(String(user_tg_id));
+    const res = await getUser(String(user_tg_id));
 
     if (res === undefined) {
       return NextResponse.json(

@@ -48,7 +48,7 @@ bot.use(createConversation(respondDeactivate));
 
 bot.use(createConversation(editConversation));
 async function setupListeners() {
-  const connector_gateway = new ConnectorGateway(Network.MAINNET);
+  const connector_gateway = new ConnectorGateway(Network.TESTNET);
   await connector_gateway.initGatewayConnectors();
 
   bot.on("channel_post", async (ctx) => {
@@ -159,6 +159,11 @@ async function setupListeners() {
         "to deactivate a automation a channel you have to forward a message from the channel or the group you want to deactivate automation for."
       );
     }
+
+    if (ctx.message.text.trim().includes("/get_balance")) {
+      await connector_gateway.getBalance(ctx);
+    }
+
     if (ctx.message.text.trim().includes("/help")) {
       await ctx.reply(MESSAGES.help);
     }

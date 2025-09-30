@@ -84,7 +84,7 @@ export async function setPubKey(
   }
   return user.pub != null;
 }
-export async function getConnectedStatus(user_tg_id: string): Promise<{
+export async function getUser(user_tg_id: string): Promise<{
   connected: boolean;
   shared_pubkey: string;
   wallet_address: string;
@@ -100,7 +100,7 @@ export async function getConnectedStatus(user_tg_id: string): Promise<{
   if (error) {
     console.log("Fetch error:", error.message);
     throw new Error(
-      `error fetching user(getConnectedStatus):
+      `error fetching user(getUser):
                 ${error.message}
                 `
     );

@@ -23,8 +23,8 @@ import {
 import { Order, Position } from "@merkletrade/ts-sdk";
 import { MerkleTradeConnector } from "./perpetual/merkleTrade/merkleTrade";
 import { HyperionConnector } from "./spot/hyperion/hyperion";
-import { Network } from "@aptos-labs/ts-sdk";
-import { getConnectedStatus } from "@/services/db/user";
+import { Aptos, AptosConfig, Network } from "@aptos-labs/ts-sdk";
+import { getUser } from "@/services/db/user";
 import { connect } from "http2";
 import { sendOpenSignPageButton } from "@/lib/responds/trade/confirmButton";
 import SuperJSON from "superjson";
@@ -32,6 +32,7 @@ import { KanalabsConnector } from "./perpetual/kanalabs/kanalabs";
 import { Context, InlineKeyboard } from "grammy";
 import { I } from "vitest/dist/chunks/reporters.d.BFLkQcL6.js";
 import { InlineKeyboardButton } from "grammy/types";
+import { MESSAGES } from "../responds/messages";
 /** Standardized response wrapper for safer integrations */
 export type Result<T> =
   | { success: true; data: T }
@@ -91,6 +92,8 @@ export interface SwapConnector {
   /* Helpers */
   getPoolInfoByPair(tokenA: string, tokenB: string): Promise<PoolInfo>;
   getTokenBalance?(address: string, token: string): Promise<number>;
+  getBalance(mainnet: boolean, userAddress: string): Promise<Result<Balance[]>>;
+
   estimateGas?(
     symbolIn: string,
     symbolOut: string,
@@ -121,7 +124,7 @@ type SpotCtor = new (
 // 2) static registry of constructors (same as before)
 export class ConnectorGateway {
   network: Network.MAINNET | Network.TESTNET;
-
+  aptos?: Aptos;
   // instance fields we'll populate — declare them as optional so TS is happy before init
   merkle?: PerpConnector;
   hyperion?: SwapConnector;
@@ -163,6 +166,9 @@ export class ConnectorGateway {
       (this as any)[name] = inst;
       this.perpConnectors.push(inst);
     }
+    const config = new AptosConfig({ network: this.network });
+
+    this.aptos = new Aptos(config);
   }
 
   async handleIncomingSignal(
@@ -213,9 +219,8 @@ export class ConnectorGateway {
     }
 
     // fetching the user address
-    let user_address: `0x${string}` = (
-      await getConnectedStatus(String(user_chat_id))
-    ).wallet_address as `0x${string}`;
+    let user_address: `0x${string}` = (await getUser(String(user_chat_id)))
+      .wallet_address as `0x${string}`;
 
     if (!user_address) {
       return Promise.reject(
@@ -361,8 +366,67 @@ export class ConnectorGateway {
     return Promise.resolve({ success: true, data: true });
   }
 
-  async getBalance(userAddress: string): Promise<Balance[]> {
-    return Promise.resolve([]);
+  async getBalance(ctx: Context): Promise<Result<boolean>> {
+    // get user address
+    if (!ctx.chat?.id) {
+      return Promise.reject("No chat id found");
+    }
+    let user_address: `0x${string}` = (await getUser(String(ctx.chat?.id)))
+      .wallet_address as `0x${string}`;
+    if (!user_address) {
+      ctx.reply(" ❌ Please connect you wallet first");
+      return Promise.resolve({ success: false, error: "No wallet connected" });
+    }
+
+    let message = await ctx.reply(
+      ` ✅ Fetching balances for ${user_address.slice(0, 6)}...`
+    );
+
+    let balances: Record<string, Balance[]> = {};
+    if (this.aptos == null) {
+      return Promise.reject("Aptos not initialized");
+    }
+
+    let aptBal = await this.aptos.getAccountAPTAmount({
+      accountAddress: user_address,
+    });
+
+    aptBal = aptBal / 10 ** 8;
+
+    console.log("aptBal", aptBal);
+
+    for (const connector of this.perpConnectors) {
+      const res = await connector.getBalance(
+        this.network == Network.MAINNET,
+        user_address
+      );
+      if (!res.success) {
+        ctx.reply(` ❌ ${res.error}`);
+        return Promise.resolve({ success: false, error: res.error });
+      }
+      balances[connector.name] = res.data;
+    }
+    for (const connector of this.spotConnectors) {
+      const res = await connector.getBalance(
+        this.network == Network.MAINNET,
+        user_address
+      );
+      if (!res.success) {
+        ctx.reply(` ❌ ${res.error}`);
+        return Promise.resolve({ success: false, error: res.error });
+      }
+      balances[connector.name] = res.data;
+    }
+    console.log("balances", balances);
+    ctx.api.editMessageText(
+      ctx.chat.id.toString(),
+      message.message_id,
+      MESSAGES.balances(balances, aptBal),
+      {
+        parse_mode: "HTML",
+      }
+    );
+    return Promise.resolve({ success: true, data: true });
   }
 
   getSpotConnectors() {

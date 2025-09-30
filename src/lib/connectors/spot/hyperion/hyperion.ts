@@ -152,7 +152,10 @@ export class HyperionConnector implements SwapConnector {
     }
   }
 
-  async getBalance(_mainnet: boolean, userAddress: string): Promise<Balance[]> {
+  async getBalance(
+    _mainnet: boolean,
+    userAddress: string
+  ): Promise<Result<Balance[]>> {
     const balances: Balance[] = [];
 
     try {
@@ -190,7 +193,7 @@ export class HyperionConnector implements SwapConnector {
       console.error("[HyperionConnector] Error fetching token balances:", err);
     }
 
-    return balances;
+    return Promise.resolve({ success: true, data: balances });
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
