@@ -33,6 +33,7 @@ import { Context, InlineKeyboard } from "grammy";
 import { I } from "vitest/dist/chunks/reporters.d.BFLkQcL6.js";
 import { InlineKeyboardButton } from "grammy/types";
 import { MESSAGES } from "../responds/messages";
+import { S } from "vitest/dist/chunks/config.d.D2ROskhv.js";
 /** Standardized response wrapper for safer integrations */
 export type Result<T> =
   | { success: true; data: T }
@@ -371,12 +372,7 @@ export class ConnectorGateway {
     if (!ctx.chat?.id) {
       return Promise.reject("No chat id found");
     }
-    let user_address: `0x${string}` = (await getUser(String(ctx.chat?.id)))
-      .wallet_address as `0x${string}`;
-    if (!user_address) {
-      ctx.reply(" ❌ Please connect you wallet first");
-      return Promise.resolve({ success: false, error: "No wallet connected" });
-    }
+    let user_address = await this.getUserAddress(ctx);
 
     let message = await ctx.reply(
       ` ✅ Fetching balances for ${user_address.slice(0, 6)}...`
@@ -429,10 +425,85 @@ export class ConnectorGateway {
     return Promise.resolve({ success: true, data: true });
   }
 
+  async getOpenOrders(ctx: Context) {
+    if (!ctx.chat?.id) {
+      return Promise.reject("No chat id found");
+    }
+    let user_address = await this.getUserAddress(ctx);
+
+    let message = await ctx.reply(
+      ` ✅ Fetching open orders for ${user_address.slice(0, 6)}...`
+    );
+
+    let openOrders: Record<string, GlobalOrders> = {};
+
+    for (const connector of this.perpConnectors) {
+      const res = await connector.listOpenOrders(user_address);
+      if (!res.success) {
+        ctx.reply(` ❌ ${res.error}`);
+        return Promise.resolve({ success: false, error: res.error });
+      }
+      openOrders[connector.name] = res.data;
+    }
+
+    console.log("openOrders", openOrders);
+    ctx.api.editMessageText(
+      ctx.chat.id.toString(),
+      message.message_id,
+      MESSAGES.open_orders(openOrders),
+      {
+        parse_mode: "HTML",
+      }
+    );
+    return Promise.resolve({ success: true, data: true });
+  }
+
+  async getOpenPositions(ctx: Context) {
+    if (!ctx.chat?.id) {
+      return Promise.reject("No chat id found");
+    }
+    let user_address = await this.getUserAddress(ctx);
+
+    let message = await ctx.reply(
+      ` ✅ Fetching open positions for ${user_address.slice(0, 6)}...`
+    );
+
+    let openPositions: Record<string, GlobalPositions> = {};
+
+    for (const connector of this.perpConnectors) {
+      const res = await connector.listOpenPositions(user_address);
+      if (!res.success) {
+        ctx.reply(` ❌ ${res.error}`);
+        return Promise.resolve({ success: false, error: res.error });
+      }
+      openPositions[connector.name] = res.data;
+    }
+
+    console.log("openPositions", openPositions);
+    ctx.api.editMessageText(
+      ctx.chat.id.toString(),
+      message.message_id,
+      MESSAGES.open_positions(openPositions),
+      {
+        parse_mode: "HTML",
+      }
+    );
+    return Promise.resolve({ success: true, data: true });
+  }
   getSpotConnectors() {
     return this.spotConnectors;
   }
   getPerpConnectors() {
     return this.perpConnectors;
+  }
+
+  async getUserAddress(ctx: Context): Promise<`0x${string}`> {
+    let user_address: `0x${string}` = (await getUser(String(ctx.chat?.id)))
+      .wallet_address as `0x${string}`;
+    if (!user_address) {
+      ctx.reply(" ❌ Please connect you wallet first");
+      return Promise.reject({ success: false, error: "No wallet connected" });
+    }
+    return user_address;
   }
 }

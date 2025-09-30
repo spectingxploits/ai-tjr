@@ -1,4 +1,5 @@
-import { Balance } from "@/models/interfaces";
+import { Balance, GlobalOrders, GlobalPositions } from "@/models/interfaces";
+import stringify from "json-stringify-pretty-compact";
 
 // all message should be sent with parse_mode: "HTML"
 export const MESSAGES = {
@@ -140,5 +141,134 @@ ${Object.entries(balances)
   })
   .join("\n\n")}
   `;
+  },
+
+  open_orders: (openOrders: Record<string, GlobalOrders>) => {
+    return `
+💰 <b>Open Orders</b>
+
+${Object.entries(openOrders)
+  .map(([provider, orders]) => {
+    const providerName =
+      provider.charAt(0).toUpperCase() +
+      provider
+        .slice(1)
+        .replace("_perpetual_connector", "")
+        .replace("_swap_connector", "");
+
+    // Normalize into array
+    const arr = Array.isArray(orders) ? orders : [orders];
+
+    if (arr.length === 0) {
+      return `💰 <b>${providerName}</b>\n🤷‍♂️ no open orders`;
+    }
+
+    // Pretty print each order safely
+    const formatted = arr
+      .map((o) => {
+        if ("orderId" in o) {
+          // ParsedKanaOrder
+          if ("price" in o && "totalSize" in o) {
+            return stringify(
+              {
+                orderId: o.orderId,
+                price: o.price,
+                size: o.totalSize,
+                status: (o as any).status,
+                timestamp: o.timestamp,
+              },
+              { maxLength: 80 }
+            );
+          }
+
+          // Order
+          if ("price" in o && "sizeDelta" in o) {
+            return stringify(
+              {
+                orderId: o.orderId,
+                price: o.price,
+                size: o.sizeDelta,
+                timestamp: o.createdTimestamp,
+              },
+              { maxLength: 80 }
+            );
+          }
+        }
+        return stringify(o, { maxLength: 80 });
+      })
+      .join("\n\n");
+
+    return `💰 <b>${providerName}</b>\n${formatted}`;
+  })
+  .join("\n\n")}
+    `;
+  },
+
+  open_positions: (positionsByProvider: Record<string, GlobalPositions>) => {
+    return `
+📊 <b>Open Positions</b>
+
+${Object.entries(positionsByProvider)
+  .map(([provider, positions]) => {
+    const providerName =
+      provider.charAt(0).toUpperCase() +
+      provider
+        .slice(1)
+        .replace("_perpetual_connector", "")
+        .replace("_swap_connector", "");
+
+    const arr = Array.isArray(positions) ? positions : [positions];
+
+    if (arr.length === 0) {
+      return `📊 <b>${providerName}</b>\n🤷‍♂️ no positions`;
+    }
+
+    const formatted = arr
+      .map((p) => {
+        // ParsedKanaPosition
+        if ("tradeId" in p) {
+          return stringify(
+            {
+              tradeId: p.tradeId,
+              marketId: p.marketId,
+              side: p.tradeSide ? "LONG" : "SHORT",
+              size: p.size,
+              value: p.value,
+              entry: p.entryPrice,
+              liq: p.liqPrice,
+              margin: p.margin,
+              tp: p.tp,
+              sl: p.sl,
+              updated: p.lastUpdated,
+            },
+            { maxLength: 80 }
+          );
+        }
+
+        // Position (Move type)
+        if ("avgPrice" in p) {
+          return stringify(
+            {
+              user: p.user,
+              side: p.isLong ? "LONG" : "SHORT",
+              size: p.size,
+              collateral: p.collateral,
+              entry: p.avgPrice,
+              stopLoss: p.stopLossTriggerPrice,
+              takeProfit: p.takeProfitTriggerPrice,
+              lastExec: p.lastExecuteTimestamp,
+            },
+            { maxLength: 80 }
+          );
+        }
+
+        return stringify(p, { maxLength: 80 });
+      })
+      .join("\n\n");
+
+    return `📊 <b>${providerName}</b>\n${formatted}`;
+  })
+  .join("\n\n")}
+    `;
   },
 };

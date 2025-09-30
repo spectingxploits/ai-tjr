@@ -6,7 +6,6 @@ import { useSearchParams } from "next/navigation";
 import nacl from "tweetnacl";
 import type { SignAndSubmitParams } from "@/models/interfaces";
 import type { GlobalSignal } from "@/models/interfaces"; // if you export it
-import { get } from "http";
 import SuperJSON from "superjson";
 import { toAptosStandardPayload } from "@/lib/helpers/utils";
 

@@ -164,6 +164,13 @@ async function setupListeners() {
       await connector_gateway.getBalance(ctx);
     }
 
+    if (ctx.message.text.trim().includes("/get_open_positions")) {
+      await connector_gateway.getOpenPositions(ctx);
+    }
+    if (ctx.message.text.trim().includes("/get_open_orders")) {
+      await connector_gateway.getOpenOrders(ctx);
+    }
+
     if (ctx.message.text.trim().includes("/help")) {
       await ctx.reply(MESSAGES.help);
     }
