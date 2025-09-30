@@ -27,8 +27,8 @@ export function formatGLobalSignal(
 ════════════════════
 
 🚪 <b>Enter:</b> ${signal.enter}${aiBadge("enter")}
-💰 <b>Profit:</b> ${signal.profit}%${aiBadge("profit")}
-📉 <b>Loss:</b> ${signal.loss}%${aiBadge("loss")}
+💰 <b>Profit:</b> ${Number(signal.profit).toFixed(2)}%${aiBadge("profit")}
+📉 <b>Loss:</b> ${Number(signal.loss).toFixed(2)}%${aiBadge("loss")}
 🎯 <b>TP:</b> ${signal.tp}${aiBadge("tp")}
 🚫 <b>SL:</b> ${signal.sl}${aiBadge("sl")}
 💧 <b>Liquidity:</b> ${signal.lq}${aiBadge("lq")}
@@ -48,7 +48,7 @@ ${
 
 // export function formatGlobalSignalWithDiff(
 //   // prevText: string,
-//   newSignal: GlobalSignal, 
+//   newSignal: GlobalSignal,
 //   ai_items: string[]
 // ): string {
 //   const fieldPatterns: Record<string, RegExp> = {
