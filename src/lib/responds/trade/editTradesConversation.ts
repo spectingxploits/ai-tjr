@@ -12,18 +12,18 @@ import SuperJSON from "superjson";
 export async function editTradesConversation(
   conversation: Conversation,
   ctx: Context,
-  action: string,
-  connector: ConnectorGateway
+  action: string
 ) {
   console.log("action", action);
+  const connector_gateway_instance = ConnectorGateway.getInstance();
   if (action.includes("close_position")) {
     try {
-      let user_address = await connector.getUserAddress(ctx);
+      let user_address = await connector_gateway_instance.getUserAddress(ctx);
       let msg = await ctx.reply(
         ` ✅ Fetching positions for ${user_address.slice(0, 6)}...`
       );
       let closeable_positions: Record<string, GlobalClosablePosition> =
-        await connector.getCloseablePositions(ctx);
+        await connector_gateway_instance.getCloseablePositions(ctx);
       console.log("closeable_positions", closeable_positions);
       if (Object.keys(closeable_positions).length === 0) {
         await ctx.api.editMessageText(
@@ -109,7 +109,7 @@ Please select confirm to close the following position: \n
         if (data?.startsWith("close_position_confirm:")) {
           const key = data.split(":")[1];
 
-          let webAppUrl = await connector.closePosition(
+          let webAppUrl = await connector_gateway_instance.closePosition(
             conversation,
             ctx,
             msg_id,
@@ -178,12 +178,12 @@ Please select confirm to close the following position: \n
 
   if (action.includes("cancel_order")) {
     try {
-      let user_address = await connector.getUserAddress(ctx);
+      let user_address = await connector_gateway_instance.getUserAddress(ctx);
       let msg = await ctx.reply(
         ` ✅ Fetching positions for ${user_address.slice(0, 6)}...`
       );
       let cancelable_orders: Record<string, GlobalCancelableOrder> =
-        await connector.getCancelableOrders(ctx);
+        await connector_gateway_instance.getCancelableOrders(ctx);
 
       console.log("cancelable_orders", cancelable_orders);
       if (Object.keys(cancelable_orders).length === 0) {
@@ -270,7 +270,7 @@ Please select "confirm" to cancel the following Order: \n
         if (data?.startsWith("cancel_order_confirm:")) {
           const key = data.split(":")[1];
 
-          let webAppUrl = await connector.cancelOrder(
+          let webAppUrl = await connector_gateway_instance.cancelOrder(
             conversation,
             ctx,
             msg_id,
@@ -339,13 +339,13 @@ Please select "confirm" to cancel the following Order: \n
 
   if (action.includes("update_tp_sl")) {
     // let get user address
-    let user_address = await connector.getUserAddress(ctx);
+    let user_address = await connector_gateway_instance.getUserAddress(ctx);
     let msg = await ctx.reply(
       ` ✅ Fetching open positions for ${user_address.slice(0, 6)}...`
     );
 
     let positions: Record<string, GlobalClosablePosition> =
-      await connector.getCloseablePositions(ctx);
+      await connector_gateway_instance.getCloseablePositions(ctx);
 
     console.log("closable_positions", positions);
 
@@ -481,7 +481,7 @@ Please select "confirm" to update the following position TP & SL: \n
       if (data?.startsWith("update_position_confirm:")) {
         const key = data.split(":")[1];
 
-        let urlRes = await connector.updatePostionTPSL(
+        let urlRes = await connector_gateway_instance.updatePostionTPSL(
           conversation,
           ctx,
           msg_id,

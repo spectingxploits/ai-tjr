@@ -5,17 +5,9 @@ import { Context } from "grammy";
 
 export async function priceConversation(
   conversation: Conversation,
-  ctx: Context,
-  connector: ConnectorGateway,
-  getAllPrice: (
-    conversation: Conversation<Context, Context>,
-    ctx: Context,
-    token: string
-  ) => Promise<{
-    success: boolean;
-    error: any;
-  }>
+  ctx: Context
 ) {
+  const connector_gateway_instance = ConnectorGateway.getInstance();
   ctx.reply(`
 Please enter the symbol of the asset you want to get the price for: \n 
 APT, RION, MKL, BTC, ETH, etc ...`);
@@ -24,5 +16,9 @@ APT, RION, MKL, BTC, ETH, etc ...`);
   console.log("token", tkCtx.message.text.trim());
   await ctx.reply(`Fetching prices for the token ${tkCtx.message.text.trim()}`);
 
-  await connector.getAllPrices(conversation, ctx, tkCtx.message.text.trim());
+  await connector_gateway_instance.getAllPrices(
+    conversation,
+    ctx,
+    tkCtx.message.text.trim()
+  );
 }

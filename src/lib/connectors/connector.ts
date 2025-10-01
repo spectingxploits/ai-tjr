@@ -140,6 +140,8 @@ type SpotCtor = new (
 // 2) static registry of constructors (same as before)
 export class ConnectorGateway {
   network: Network.MAINNET | Network.TESTNET;
+  private static instance: ConnectorGateway | null = null;
+
   aptos?: Aptos;
   // instance fields we'll populate — declare them as optional so TS is happy before init
   merkle?: PerpConnector;
@@ -159,11 +161,30 @@ export class ConnectorGateway {
     },
   };
 
-  constructor(network: Network.MAINNET | Network.TESTNET) {
+  private constructor(network: Network.MAINNET | Network.TESTNET) {
     this.network = network;
   }
+  // create or reuse the instance
+  static async create(
+    network: Network.MAINNET | Network.TESTNET
+  ): Promise<ConnectorGateway> {
+    if (!ConnectorGateway.instance) {
+      ConnectorGateway.instance = new ConnectorGateway(network);
+    }
+    await this.instance?.initGatewayConnectors();
+    
+    return ConnectorGateway.instance;
+  }
 
-  async initGatewayConnectors() {
+  // get existing instance
+  static getInstance(): ConnectorGateway {
+    if (!ConnectorGateway.instance) {
+      throw new Error("Instance not created yet. Call create() first.");
+    }
+    return ConnectorGateway.instance;
+  }
+
+  private async initGatewayConnectors() {
     for (const [name, Ctor] of Object.entries(
       ConnectorGateway.AvailableConnectors.spot
     )) {

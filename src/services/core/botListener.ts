@@ -59,8 +59,9 @@ bot.use(createConversation(priceConversation));
 bot.use(createConversation(editTradesConversation));
 
 async function setupListeners() {
-  const connector_gateway = new ConnectorGateway(Network.TESTNET);
-  await connector_gateway.initGatewayConnectors();
+  const connector_gateway_instance = await ConnectorGateway.create(
+    Network.TESTNET
+  );
 
   bot.on("channel_post", async (ctx) => {
     const post = ctx.update.channel_post;
@@ -192,22 +193,22 @@ async function setupListeners() {
     }
 
     if (ctx.message.text.trim().includes("/get_balance")) {
-      await connector_gateway.getBalance(ctx);
+      await connector_gateway_instance.getBalance(ctx);
     }
 
     if (ctx.message.text.trim().includes("/get_open_positions")) {
-      await connector_gateway.getOpenPositions(ctx);
+      await connector_gateway_instance.getOpenPositions(ctx);
     }
     if (ctx.message.text.trim().includes("/get_open_orders")) {
-      await connector_gateway.getOpenOrders(ctx);
+      await connector_gateway_instance.getOpenOrders(ctx);
     }
 
     if (ctx.message.text.trim().includes("/get_trade_history")) {
-      await connector_gateway.getHistory(ctx);
+      await connector_gateway_instance.getHistory(ctx);
     }
 
     if (ctx.message.text.trim().includes("/get_price")) {
-      await ctx.conversation.enter("priceConversation", connector_gateway);
+      await ctx.conversation.enter("priceConversation");
     }
     if (
       ["/close_position", "/cancel_order", "/update_tp_sl"].includes(
@@ -344,7 +345,7 @@ async function setupListeners() {
         msg.message_id,
         "Generating Transactions ..."
       );
-      await connector_gateway.handleIncomingSignal(
+      await connector_gateway_instance.handleIncomingSignal(
         ctx,
         signal,
         ctx.chat!.id,
@@ -388,24 +389,24 @@ async function setupListeners() {
       );
     }
     if (data.startsWith("get_open_orders")) {
-      await connector_gateway.getOpenOrders(ctx);
+      await connector_gateway_instance.getOpenOrders(ctx);
     }
     if (data.startsWith("get_open_positions")) {
-      await connector_gateway.getOpenPositions(ctx);
+      await connector_gateway_instance.getOpenPositions(ctx);
     }
     if (data.startsWith("get_trade_history")) {
-      await connector_gateway.getHistory(ctx);
+      await connector_gateway_instance.getHistory(ctx);
     }
     if (data.startsWith("get_price")) {
-      await ctx.conversation.enter("priceConversation", connector_gateway);
+      await ctx.conversation.enter("priceConversation");
     }
     if (data.startsWith("get_balance")) {
-      await connector_gateway.getBalance(ctx);
+      await connector_gateway_instance.getBalance(ctx);
     }
     if (
       ["close_position", "cancel_order", "update_tp_sl"].includes(data.trim())
     ) {
-      await ctx.conversation.enter("editTradesConversation", data.trim());
+      await ctx.conversation.enter("editTradesConversation");
     }
   });
 
@@ -465,13 +466,6 @@ async function setupListeners() {
 
 // Start polling
 (async () => {
-  // let connector_gateway = new ConnectorGateway(Network.MAINNET);
-  // await connector_gateway.initGatewayConnectors();
-  // console.log("connector_gateway", connector_gateway);
-  // let balances = await connector_gateway.kanalabs?.getTickerPrice("ETH");
-  // console.log("balances", balances);
-  // await connector_gateway.hyperion?.getTokens(true);
-  // await connector_gateway.merkle?.getTokens(true);
   console.log("Starting bot with long polling...");
   await bot.init(); // fetch bot info
   await setupListeners(); // ✅ register listeners before start
@@ -479,10 +473,7 @@ async function setupListeners() {
     onStart: (info) =>
       console.log("Bot started as", info.username, "id", info.id),
   });
-  // let keyPair = nacl.box.keyPair();
-  // console.log("public key ", Buffer.from(keyPair.publicKey).toString("hex"));
-  // console.log("priv key ", Buffer.from(keyPair.secretKey).toString("hex"));
-  // graceful shutdown
+
   const shutdown = async () => {
     console.log("Shutting down bot...");
     try {
