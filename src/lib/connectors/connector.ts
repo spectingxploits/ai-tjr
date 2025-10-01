@@ -6,6 +6,7 @@ import {
 } from "@/models/hyperion/types";
 import {
   Balance,
+  GlobalCancelableOrder,
   GlobalClosablePosition,
   GlobalHistory,
   GlobalOrders,
@@ -38,7 +39,12 @@ import { InlineKeyboardButton } from "grammy/types";
 import { MESSAGES } from "../responds/messages";
 import { S } from "vitest/dist/chunks/config.d.D2ROskhv.js";
 import { Conversation } from "@grammyjs/conversations";
-import { ParsedKanaPosition } from "@/models/kanalabs/types";
+import {
+  KanalabsOrderPayload,
+  ParsedKanaOrder,
+  ParsedKanaPosition,
+} from "@/models/kanalabs/types";
+import { MerkleCancelOrderPayload } from "@/models/merkleTrade/models";
 /** Standardized response wrapper for safer integrations */
 export type Result<T> =
   | { success: true; data: T }
@@ -668,7 +674,7 @@ export class ConnectorGateway {
       payload: payload,
       userAddress: userAddress,
       mainnet: this.network === Network.MAINNET,
-      connectorName: payload as any,
+      connectorName: position.connector_name as any,
       signal: {
         market: true,
         enter: null,
@@ -692,7 +698,134 @@ export class ConnectorGateway {
     const webAppUrl = `${process.env.NEXT_PUBLIC_MINI_APP_BASE_URL}/trade/sign?payload=${encoded}`;
 
     return Promise.resolve({ success: true, data: webAppUrl });
+  }
 
+  async getCancelableOrders(
+    ctx: Context
+  ): Promise<Record<string, GlobalCancelableOrder>> {
+    // get user address
+    if (!ctx.chat?.id) {
+      return Promise.reject("No chat id found");
+    }
+    let user_address = await this.getUserAddress(ctx);
+
+    let cancelable_orders: Record<string, GlobalCancelableOrder> = {};
+
+    for (const connector of this.perpConnectors) {
+      const res = await connector.listOpenOrders(user_address);
+      if (!res.success) {
+        ctx.reply(` ❌ ${res.error}`);
+        return Promise.reject(res.error);
+      }
+      let orders: Order[] | ParsedKanaOrder[] = res.data as
+        | Order[]
+        | ParsedKanaOrder[];
+
+      for (const order of orders) {
+        let pair_name = "";
+        let key = "";
+        if (connector.name === "kanalabs_perpetual_connector") {
+          let tokenInfo: TokenInfo = (this.kanalabs! as any).getTokenByMarketId(
+            (order as ParsedKanaOrder).marketId
+          );
+          pair_name = tokenInfo != null ? tokenInfo.symbol : "";
+          key = (order as ParsedKanaOrder).orderId;
+        }
+        if (connector.name === "merkle_trade_perpetual_connector") {
+          let parts = (order as Order).pairType.split("::");
+          pair_name = parts[parts.length - 1];
+          key = (order as Order).orderId.toString();
+        }
+
+        cancelable_orders[key] = {
+          order,
+          connector_name: connector.name.replace("_perpetual_connector", ""), // only perpetual connectors
+          pair_name,
+        };
+      }
+    }
+
+    console.log("cancelable_orders", cancelable_orders);
+
+    return Promise.resolve(cancelable_orders);
+  }
+
+  async cancelOrder(
+    conversation: Conversation,
+    ctx: Context,
+    msg_id: number,
+    order: GlobalCancelableOrder
+  ): Promise<Result<string>> {
+    await ctx.api.editMessageText(
+      ctx.chat!.id.toString(),
+      msg_id,
+      `Canceling ${order.pair_name} order... `
+    );
+    // getting the user address
+    if (!ctx.chat?.id) {
+      return Promise.reject("No chat id found");
+    } else {
+      let userAddress = await this.getUserAddress(ctx);
+      let payload: KanalabsOrderPayload | Order | null = null;
+      if (order.connector_name === "kanalabs_perpetual_connector") {
+        // close  short and long are the same
+        let res = await this.kanalabs!.cancelOrder(
+          order.order as ParsedKanaOrder,
+          userAddress
+        );
+        if (!res.success) {
+          return Promise.reject(res.error);
+        }
+        payload = res.data as KanalabsOrderPayload;
+      }
+
+      if (order.connector_name === "merkle_trade_perpetual_connector") {
+        // close  short and long are the same
+        let res = await this.merkle!.cancelOrder(
+          order.order as Order,
+          userAddress
+        );
+        if (!res.success) {
+          return Promise.reject(res.error);
+        }
+        payload = res.data as Order;
+      }
+
+      if (payload == null) {
+        return Promise.reject(payload);
+      }
+
+      console.log("payload", payload);
+
+      const wrapper: WRAPPER = {
+        payload,
+        userAddress: userAddress,
+        mainnet: this.network === Network.MAINNET,
+        connectorName: order.connector_name as any,
+        signal: {
+          market: true,
+          enter: null,
+          profit: null,
+          loss: null,
+          tp: null,
+          sl: null,
+          lq: null,
+          leverage: null,
+          long: null,
+          symbol: "",
+          aiDetectedSuccessRate: null,
+          reasons: [],
+        },
+        telegramChatId: String(ctx.chat!.id), // added field
+      };
+
+      // encode the wrapper for safe URL transport
+      const encoded = encodeURIComponent(SuperJSON.stringify(wrapper));
+
+      const webAppUrl = `${process.env.NEXT_PUBLIC_MINI_APP_BASE_URL}/trade/sign?payload=${encoded}`;
+
+      return Promise.resolve({ success: true, data: webAppUrl });
+    }
   }
   getSpotConnectors() {
     return this.spotConnectors;

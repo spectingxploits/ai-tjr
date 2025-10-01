@@ -184,6 +184,12 @@ export type GlobalClosablePosition = {
   pair_name: string;
 };
 
+export type GlobalCancelableOrder = {
+  order: Order | ParsedKanaOrder;
+  connector_name: string;
+  pair_name: string;
+};
+
 export type GlobalOrders =
   | Order[]
   | Order
