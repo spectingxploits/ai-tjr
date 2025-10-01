@@ -121,7 +121,7 @@ export class MerkleTradeConnector implements PerpConnector {
           collateralDelta: collateral,
           isLong: params.side === "long",
           isIncrease: true,
-          price: BigInt(params.entryPrice),
+          price: BigInt(params.entryPrice * 10 ** 6),
         });
         console.log("payload limit", payload);
       } else {

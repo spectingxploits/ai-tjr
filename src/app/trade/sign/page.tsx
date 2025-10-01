@@ -160,8 +160,10 @@ export default function PetraSignPage() {
       let os = getMobileOS();
       if (os === "iOS") {
         window.location.href = url;
+        (window as any).tg.close();
       } else if (os === "Android") {
         window.open(url);
+        (window as any).tg.close();
       }
     } catch (err) {
       setError((err as Error).message);

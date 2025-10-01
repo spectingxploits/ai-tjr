@@ -939,8 +939,8 @@ export class ConnectorGateway {
           positionId: position.pair_name,
           userAddress,
           mainnet: this.network === Network.MAINNET,
-          tpPriceInQuote: new_tp,
-          slPriceInQuote: new_sl,
+          tpPriceInQuote: new_tp * 10 ** 6,
+          slPriceInQuote: new_sl * 10 ** 6,
         });
         if (!res.success) {
           return Promise.reject(res.error);

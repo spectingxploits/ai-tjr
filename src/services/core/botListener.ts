@@ -6,7 +6,7 @@ import { Network } from "@aptos-labs/ts-sdk";
 import "dotenv/config";
 import { Bot, Context } from "grammy";
 import { respondStartMessage } from "@/lib/responds/startRespond";
-import { setGatewayId } from "../db/gateway";
+import { getGatewayId, setGatewayId } from "../db/gateway";
 import { respondChannelUpdates } from "@/lib/responds/automation/gateway_channel";
 import { respondAutomation } from "@/lib/responds/automation/main";
 import {
@@ -56,7 +56,7 @@ bot.use(createConversation(editConversation));
 bot.use(createConversation(priceConversation));
 
 async function setupListeners() {
-  const connector_gateway = new ConnectorGateway(Network.MAINNET);
+  const connector_gateway = new ConnectorGateway(Network.TESTNET);
   await connector_gateway.initGatewayConnectors();
 
   bot.on("channel_post", async (ctx) => {
@@ -157,11 +157,24 @@ async function setupListeners() {
       await respondAutomation(ctx);
     }
     if (ctx.message.text.trim().includes("/setup_automation")) {
+      let gateway_channel = await getGatewayId(String(ctx.chat!.id));
+      console.log("gateway_channel", gateway_channel);
+      if (!gateway_channel) {
+        ctx.reply(MESSAGES.no_gateway_found, { parse_mode: "HTML" });
+        return;
+      }
+
       ctx.reply(
         "to automate a channel you have to forward a message from the channel or the group you want to automate to me."
       );
     }
     if (ctx.message.text.trim().includes("/deactivate_automated_channel")) {
+      let gateway_channel = await getGatewayId(String(ctx.chat!.id));
+      console.log("gateway_channel", gateway_channel);
+      if (!gateway_channel) {
+        ctx.reply(MESSAGES.no_gateway_found, { parse_mode: "HTML" });
+        return;
+      }
       ctx.reply(
         "to deactivate a automation a channel you have to forward a message from the channel or the group you want to deactivate automation for."
       );
@@ -210,6 +223,12 @@ async function setupListeners() {
 
   bot.callbackQuery("setup_automation", async (ctx) => {
     await ctx.answerCallbackQuery(); // removes "loading" spinner on the button
+    let gateway_channel = await getGatewayId(String(ctx.chat!.id));
+    console.log("gateway_channel", gateway_channel);
+    if (!gateway_channel) {
+      ctx.reply(MESSAGES.no_gateway_found, { parse_mode: "HTML" });
+      return;
+    }
     ctx.reply(
       "to automate a channel you have to forward a message from the channel or the group you want to automate to me."
     );
@@ -217,6 +236,12 @@ async function setupListeners() {
 
   bot.callbackQuery("deactivate_automated_channel", async (ctx) => {
     await ctx.answerCallbackQuery(); // removes "loading" spinner on the button
+    let gateway_channel = await getGatewayId(String(ctx.chat!.id));
+    console.log("gateway_channel", gateway_channel);
+    if (!gateway_channel) {
+      ctx.reply(MESSAGES.no_gateway_found, { parse_mode: "HTML" });
+      return;
+    }
     ctx.reply(
       "to deactivate a automation a channel you have to forward a message from the channel or the group you want to deactivate automation for."
     );

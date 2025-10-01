@@ -15,6 +15,12 @@ export async function respondSetupAutomationConversation(
   conversation: Conversation,
   ctx: Context
 ) {
+  let gateway_channel = await getGatewayId(String(ctx.chat!.id));
+  console.log("gateway_channel", gateway_channel);
+  if (!gateway_channel) {
+    ctx.reply(MESSAGES.no_gateway_found, { parse_mode: "HTML" });
+    return;
+  }
   const fwd = ctx.message?.forward_origin;
 
   if (!fwd) {
@@ -60,26 +66,20 @@ export async function respondAutomate(
   ctx: Context,
   channel_id: string
 ) {
-  let forward_channel_id = null;
-  try {
-    forward_channel_id = await getGatewayId(String(ctx.chat!.id));
-  } catch (e) {
-    console.error("getGatewayId failed:", e);
-
-    return;
-  }
-  const phone_number = await checkAndFetchPhoneNumber(conversation, ctx);
-  if (!phone_number) return;
-
-  if (!forward_channel_id) {
+  let gateway_channel = await getGatewayId(String(ctx.chat!.id));
+  console.log("gateway_channel", gateway_channel);
+  if (!gateway_channel) {
     ctx.reply(MESSAGES.no_gateway_found, { parse_mode: "HTML" });
     return;
   }
 
+  const phone_number = await checkAndFetchPhoneNumber(conversation, ctx);
+  if (!phone_number) return;
+
   const msg = MESSAGES.automate_instructions(
     phone_number,
     channel_id,
-    forward_channel_id
+    gateway_channel
   );
   await ctx.reply(msg, { parse_mode: "HTML" });
 }
@@ -89,25 +89,19 @@ export async function respondDeactivate(
   ctx: Context,
   channel_id: string
 ) {
-  let forward_channel_id = null;
-  try {
-    forward_channel_id = await getGatewayId(String(ctx.chat!.id));
-  } catch (e) {
-    console.error("getGatewayId failed:", e);
-
-    return;
-  }
-  const phone_number = await checkAndFetchPhoneNumber(conversation, ctx);
-  if (!phone_number) return;
-
-  if (!forward_channel_id) {
+  let gateway_channel = await getGatewayId(String(ctx.chat!.id));
+  console.log("gateway_channel", gateway_channel);
+  if (!gateway_channel) {
     ctx.reply(MESSAGES.no_gateway_found, { parse_mode: "HTML" });
     return;
   }
 
+  const phone_number = await checkAndFetchPhoneNumber(conversation, ctx);
+  if (!phone_number) return;
+
   const msg = MESSAGES.deactivate_instructions(
     channel_id,
-    forward_channel_id,
+    gateway_channel,
     phone_number
   );
   await ctx.reply(msg, { parse_mode: "HTML" });

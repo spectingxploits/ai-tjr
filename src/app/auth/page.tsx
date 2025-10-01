@@ -322,8 +322,10 @@ export default function MiniAppPage() {
     let os = getMobileOS();
     if (os === "iOS") {
       window.location.href = url;
+      (window as any).tg.close();
     } else if (os === "Android") {
       window.open(url);
+      (window as any).tg.close();
     }
   };
 
@@ -350,12 +352,14 @@ export default function MiniAppPage() {
           window.location.href = `https://petra.app/api/v1/disconnect?data=${btoa(
             JSON.stringify(data)
           )}`;
+          (window as any).tg.close();
         } else if (os === "Android") {
           window.open(
             `https://petra.app/api/v1/disconnect?data=${btoa(
               JSON.stringify(data)
             )}`
           );
+          (window as any).tg.close();
         }
       }
 
