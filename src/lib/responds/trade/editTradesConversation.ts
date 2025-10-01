@@ -16,7 +16,7 @@ export async function editTradesConversation(
   connector: ConnectorGateway
 ) {
   console.log("action", action);
-  if (action === "/close_position") {
+  if (action.includes("close_position")) {
     try {
       let user_address = await connector.getUserAddress(ctx);
       let msg = await ctx.reply(
@@ -176,7 +176,7 @@ Please select confirm to close the following position: \n
     }
   }
 
-  if (action === "/cancel_order") {
+  if (action.includes("cancel_order")) {
     try {
       let user_address = await connector.getUserAddress(ctx);
       let msg = await ctx.reply(
@@ -337,7 +337,7 @@ Please select "confirm" to cancel the following Order: \n
     }
   }
 
-  if (action === "update_tp_sl") {
+  if (action.includes("update_tp_sl")) {
     // let get user address
     let user_address = await connector.getUserAddress(ctx);
     let msg = await ctx.reply(

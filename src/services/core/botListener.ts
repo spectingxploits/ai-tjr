@@ -32,6 +32,7 @@ import { MerkleClient } from "@merkletrade/ts-sdk";
 import { WRAPPER } from "@/models/interfaces";
 import SuperJSON from "superjson";
 import { MerkleTestTradePayload } from "@/models/merkleTrade/models";
+import { respondTrade } from "@/lib/responds/trade/respondTrade";
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 if (!token) throw new Error("TELEGRAM_BOT_TOKEN env var not found.");
@@ -129,8 +130,7 @@ async function setupListeners() {
     await ctx.reply(MESSAGES.help);
   });
   bot.hears("📊 Trade", async (ctx) => {
-    // await respondTrade(ctx);
-    ctx.reply("trade");
+    await respondTrade(ctx);
   });
 
   bot.on("message:text", async (ctx) => {
@@ -183,14 +183,10 @@ async function setupListeners() {
     }
 
     if (ctx.message.text.trim().includes("/get_price")) {
-      await ctx.conversation.enter(
-        "priceConversation",
-        connector_gateway.getAllPrices,
-        connector_gateway
-      );
+      await ctx.conversation.enter("priceConversation", connector_gateway);
     }
     if (
-      ["/close_position", "/cancel_order", "update_tp_sl"].includes(
+      ["/close_position", "/cancel_order", "/update_tp_sl"].includes(
         ctx.message.text.trim()
       )
     ) {
@@ -198,6 +194,9 @@ async function setupListeners() {
         "editTradesConversation",
         ctx.message.text.trim()
       );
+    }
+    if (ctx.message.text.trim().includes("/trade")) {
+      await respondTrade(ctx);
     }
     if (ctx.message.text.trim().includes("/help")) {
       await ctx.reply(MESSAGES.help);
@@ -244,8 +243,7 @@ async function setupListeners() {
       await ctx.reply(MESSAGES.help);
     }
     if (data.startsWith("📊 Trade")) {
-      // await respondTrade(ctx);
-      ctx.reply("trade");
+      await respondTrade(ctx);
     }
     if (data.startsWith("automate_instructions:")) {
       const myData = data.split(":")[1]; // the data you passed in
@@ -352,6 +350,26 @@ async function setupListeners() {
         String(msg?.message_id),
         String(token)
       );
+    }
+    if (data.startsWith("get_open_orders")) {
+      await connector_gateway.getOpenOrders(ctx);
+    }
+    if (data.startsWith("get_open_positions")) {
+      await connector_gateway.getOpenPositions(ctx);
+    }
+    if (data.startsWith("get_trade_history")) {
+      await connector_gateway.getHistory(ctx);
+    }
+    if (data.startsWith("get_price")) {
+      await ctx.conversation.enter("priceConversation", connector_gateway);
+    }
+    if (data.startsWith("get_balance")) {
+      await connector_gateway.getBalance(ctx);
+    }
+    if (
+      ["close_position", "cancel_order", "update_tp_sl"].includes(data.trim())
+    ) {
+      await ctx.conversation.enter("editTradesConversation", data.trim());
     }
   });
 
