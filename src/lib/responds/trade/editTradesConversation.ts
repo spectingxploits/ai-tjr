@@ -8,6 +8,7 @@ import { Conversation } from "@grammyjs/conversations";
 import { Context, InlineKeyboard } from "grammy";
 import { InlineKeyboardButton } from "grammy/types";
 import SuperJSON from "superjson";
+import { MESSAGES } from "../messages";
 
 export async function editTradesConversation(
   conversation: Conversation,
@@ -180,7 +181,7 @@ Please select confirm to close the following position: \n
     try {
       let user_address = await connector_gateway_instance.getUserAddress(ctx);
       let msg = await ctx.reply(
-        ` ✅ Fetching positions for ${user_address.slice(0, 6)}...`
+        ` ✅ Fetching orders for ${user_address.slice(0, 6)}...`
       );
       let cancelable_orders: Record<string, GlobalCancelableOrder> =
         await connector_gateway_instance.getCancelableOrders(ctx);
@@ -207,7 +208,7 @@ Please select confirm to close the following position: \n
       await ctx.api.editMessageText(
         ctx.chat!.id.toString(),
         msg.message_id,
-        `Select a position to close:`,
+        `Select a order to close:`,
         {
           reply_markup: {
             inline_keyboard,
@@ -240,12 +241,15 @@ Please select confirm to close the following position: \n
         }
         if (data?.startsWith("cancel_order_req:")) {
           const key = data.split(":")[1];
+          let render_data: Record<string, any> = {};
+          render_data[cancelable_orders[key].connector_name] =
+            cancelable_orders[key].order;
           await ctx.api.editMessageText(
             cbCtx.chat!.id.toString(),
             msg_id,
             `
-Please select "confirm" to cancel the following Order: \n
-\n${SuperJSON.stringify(cancelable_orders[key])}
+Please select "confirm" to cancel the following Order:
+\n${MESSAGES.open_orders(render_data)}
 `,
             {
               reply_markup: {
@@ -269,13 +273,14 @@ Please select "confirm" to cancel the following Order: \n
         }
         if (data?.startsWith("cancel_order_confirm:")) {
           const key = data.split(":")[1];
-
+          console.log("cancel confirmed ", cancelable_orders[key]);
           let webAppUrl = await connector_gateway_instance.cancelOrder(
             conversation,
             ctx,
             msg_id,
             cancelable_orders[key]
           );
+          console.log("webAppUrl", webAppUrl);
           if (!webAppUrl.success) {
             await ctx.api.editMessageText(
               ctx.chat!.id.toString(),
@@ -325,7 +330,7 @@ Please select "confirm" to cancel the following Order: \n
             }
           );
 
-          return Promise.resolve({ success: true, data: true });
+          continue;
         }
         back = true;
         break;

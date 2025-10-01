@@ -406,7 +406,7 @@ async function setupListeners() {
     if (
       ["close_position", "cancel_order", "update_tp_sl"].includes(data.trim())
     ) {
-      await ctx.conversation.enter("editTradesConversation");
+      await ctx.conversation.enter("editTradesConversation", data.trim());
     }
   });
 

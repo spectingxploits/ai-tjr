@@ -207,7 +207,7 @@ export type AptosStandardPayload = {
   type: string;
   function: string;
   type_arguments: string[];
-  arguments: string[];
+  arguments: FunctionArgument[];
 };
 
 export type FunctionArgument =
@@ -218,6 +218,8 @@ export type FunctionArgument =
   | null
   | undefined
   | `0x${string}` // hex-encoded address/string
+  | string[]
+  | bigint[]
   | Uint8Array // raw bytes
   | Record<string, any> // objects like AccountAddressInput
   | Array<FunctionArgument>; // nested arrays

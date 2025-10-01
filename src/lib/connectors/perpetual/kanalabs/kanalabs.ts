@@ -158,6 +158,7 @@ export class KanalabsConnector implements PerpConnector {
   setLeverage?(symbol: string, leverage: number): Promise<boolean> {
     throw new Error("Method not implemented.");
   }
+
   async setTP_SL?(params: PerpTP_SLParams): Promise<
     Result<{
       tpPayload: KanalabsOrderPayload;
@@ -213,12 +214,12 @@ export class KanalabsConnector implements PerpConnector {
       const body = {
         marketId: order.marketId,
         cancelOrderIds: [order.orderId],
-        orderSides: Number(order.orderType) % 2 === 0 ? [true] : [false],
+        orderSides: Number(order.orderType) % 2 === 0 ? [false] : [true],
       };
 
       const res = await this.kanalabsApi.post("/cancelMultipleOrders", body, {
         headers: {
-          "x-api-key": process.env.API_KEY,
+          "x-api-key": process.env.KANALABS_API_KEY,
           "Content-Type": "application/json",
         },
       });
@@ -409,9 +410,11 @@ export class KanalabsConnector implements PerpConnector {
   }
 
   getTokenByMarketId(marketId: number): TokenInfo | null {
+    console.log("getTokenByMarketId", marketId);
     try {
       for (const token of Object.keys(this.tokens)) {
-        if (this.tokens[token].marketId === marketId) {
+        if (Number(this.tokens[token].marketId) == Number(marketId)) {
+          console.log("found token", this.tokens[token]);
           return this.tokens[token];
         }
       }

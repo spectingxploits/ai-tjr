@@ -11,11 +11,12 @@ export interface KanalabsOrderPayload {
 export function kanalabsToAptosStandardPayload(
   payload: KanalabsOrderPayload
 ): AptosStandardPayload {
+  let arguments_parsed = payload.functionArguments.map(normalizeArgument);
   return {
     type: "entry_function_payload",
     function: payload.function,
     type_arguments: payload.typeArguments,
-    arguments: payload.functionArguments.map(normalizeArgument),
+    arguments: arguments_parsed,
   };
 }
 

@@ -172,7 +172,7 @@ export class ConnectorGateway {
       ConnectorGateway.instance = new ConnectorGateway(network);
     }
     await this.instance?.initGatewayConnectors();
-    
+
     return ConnectorGateway.instance;
   }
 
@@ -670,7 +670,7 @@ export class ConnectorGateway {
     }
     let userAddress = await this.getUserAddress(ctx);
     let payload: GlobalPayload;
-    if (position.connector_name === "kanalabs_perpetual_connector") {
+    if (position.connector_name === "kanalabs") {
       // close  short and long are the same
       payload = await this.kanalabs!.closeLong({
         positionId: (
@@ -680,7 +680,7 @@ export class ConnectorGateway {
         mainnet: this.network === Network.MAINNET,
       });
     }
-    if (position.connector_name === "merkle_trade_perpetual_connector") {
+    if (position.connector_name === "merkle_trade") {
       // close  short and long are the same
       payload = await this.merkle!.closeLong({
         positionId: position.pair_name,
@@ -780,75 +780,81 @@ export class ConnectorGateway {
     msg_id: number,
     order: GlobalCancelableOrder
   ): Promise<Result<string>> {
-    await ctx.api.editMessageText(
-      ctx.chat!.id.toString(),
-      msg_id,
-      `Canceling ${order.pair_name} order... `
-    );
-    // getting the user address
-    if (!ctx.chat?.id) {
-      return Promise.reject("No chat id found");
-    } else {
-      let userAddress = await this.getUserAddress(ctx);
-      let payload: KanalabsOrderPayload | Order | null = null;
-      if (order.connector_name === "kanalabs_perpetual_connector") {
-        // close  short and long are the same
-        let res = await this.kanalabs!.cancelOrder(
-          order.order as ParsedKanaOrder,
-          userAddress
-        );
-        if (!res.success) {
-          return Promise.reject(res.error);
+    try {
+      console.log("canceling order in the connector gatewayyyy", order);
+      await ctx.api.editMessageText(
+        ctx.chat!.id.toString(),
+        msg_id,
+        `Canceling ${order.pair_name} order... `
+      );
+      // getting the user address
+      if (!ctx.chat?.id) {
+        return Promise.reject("No chat id found");
+      } else {
+        let userAddress = await this.getUserAddress(ctx);
+        let payload: KanalabsOrderPayload | Order | null = null;
+        if (order.connector_name === "kanalabs") {
+          // close  short and long are the same
+          let res = await this.kanalabs!.cancelOrder(
+            order.order as ParsedKanaOrder,
+            userAddress
+          );
+          if (!res.success) {
+            return Promise.reject(res.error);
+          }
+          payload = res.data as KanalabsOrderPayload;
         }
-        payload = res.data as KanalabsOrderPayload;
-      }
 
-      if (order.connector_name === "merkle_trade_perpetual_connector") {
-        // close  short and long are the same
-        let res = await this.merkle!.cancelOrder(
-          order.order as Order,
-          userAddress
-        );
-        if (!res.success) {
-          return Promise.reject(res.error);
+        if (order.connector_name === "merkle_trade") {
+          // close  short and long are the same
+          let res = await this.merkle!.cancelOrder(
+            order.order as Order,
+            userAddress
+          );
+          if (!res.success) {
+            return Promise.reject(res.error);
+          }
+          payload = res.data as Order;
         }
-        payload = res.data as Order;
+
+        if (payload == null) {
+          return Promise.reject(payload);
+        }
+
+        console.log("payload", payload);
+
+        const wrapper: WRAPPER = {
+          payload,
+          userAddress: userAddress,
+          mainnet: this.network === Network.MAINNET,
+          connectorName: order.connector_name as any,
+          signal: {
+            market: true,
+            enter: null,
+            profit: null,
+            loss: null,
+            tp: null,
+            sl: null,
+            lq: null,
+            leverage: null,
+            long: null,
+            symbol: "",
+            aiDetectedSuccessRate: null,
+            reasons: [],
+          },
+          telegramChatId: String(ctx.chat!.id), // added field
+        };
+
+        // encode the wrapper for safe URL transport
+        const encoded = encodeURIComponent(SuperJSON.stringify(wrapper));
+
+        const webAppUrl = `${process.env.NEXT_PUBLIC_MINI_APP_BASE_URL}/trade/sign?payload=${encoded}`;
+
+        return Promise.resolve({ success: true, data: webAppUrl });
       }
-
-      if (payload == null) {
-        return Promise.reject(payload);
-      }
-
-      console.log("payload", payload);
-
-      const wrapper: WRAPPER = {
-        payload,
-        userAddress: userAddress,
-        mainnet: this.network === Network.MAINNET,
-        connectorName: order.connector_name as any,
-        signal: {
-          market: true,
-          enter: null,
-          profit: null,
-          loss: null,
-          tp: null,
-          sl: null,
-          lq: null,
-          leverage: null,
-          long: null,
-          symbol: "",
-          aiDetectedSuccessRate: null,
-          reasons: [],
-        },
-        telegramChatId: String(ctx.chat!.id), // added field
-      };
-
-      // encode the wrapper for safe URL transport
-      const encoded = encodeURIComponent(SuperJSON.stringify(wrapper));
-
-      const webAppUrl = `${process.env.NEXT_PUBLIC_MINI_APP_BASE_URL}/trade/sign?payload=${encoded}`;
-
-      return Promise.resolve({ success: true, data: webAppUrl });
+    } catch (e) {
+      console.log("e", e);
+      return Promise.reject(e);
     }
   }
 
@@ -878,7 +884,7 @@ export class ConnectorGateway {
         | MerkleUpdatePayload
         | null = null;
       let urls: string[] = [];
-      if (position.connector_name === "kanalabs_perpetual_connector") {
+      if (position.connector_name === "kanalabs") {
         // close  short and long are the same
         let res = await this.kanalabs!.setTP_SL!({
           position: position.position as ParsedKanaPosition,
@@ -954,7 +960,7 @@ export class ConnectorGateway {
         return Promise.resolve({ success: true, data: urls });
       }
 
-      if (position.connector_name === "merkle_trade_perpetual_connector") {
+      if (position.connector_name === "merkle_trade") {
         // close  short and long are the same
         let res = await this.merkle!.setTP_SL!({
           positionId: position.pair_name,
