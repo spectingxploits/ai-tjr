@@ -123,7 +123,10 @@ export default function PetraResponsePage() {
         )}
 
         <div className="mt-6">
-          <a href="/" className="text-indigo-400 underline">
+          <a
+            href="https://t.me/AITJR_BOT"
+            className="text-indigo-400 underline"
+          >
             Return home
           </a>
         </div>

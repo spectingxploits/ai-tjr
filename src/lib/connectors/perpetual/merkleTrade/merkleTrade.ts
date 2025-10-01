@@ -248,7 +248,7 @@ export class MerkleTradeConnector implements PerpConnector {
       const orders = await this.merkle_client.getOrders({
         address: userAddress,
       });
-
+      console.log("orders", orders);
       if (!orders) {
         return {
           success: false,
@@ -296,7 +296,7 @@ export class MerkleTradeConnector implements PerpConnector {
       const positions = await this.merkle_client.getPositions({
         address: userAddress,
       });
-
+      console.log("positions", positions);
       if (!positions || positions.length === 0) {
         return { success: false, error: "No positions found" };
       }

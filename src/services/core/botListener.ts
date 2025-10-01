@@ -33,6 +33,7 @@ import { WRAPPER } from "@/models/interfaces";
 import SuperJSON from "superjson";
 import { MerkleTestTradePayload } from "@/models/merkleTrade/models";
 import { respondTrade } from "@/lib/responds/trade/respondTrade";
+import { editTradesConversation } from "@/lib/responds/trade/editTradesConversation";
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 if (!token) throw new Error("TELEGRAM_BOT_TOKEN env var not found.");
@@ -54,6 +55,8 @@ bot.use(createConversation(respondDeactivate));
 bot.use(createConversation(editConversation));
 
 bot.use(createConversation(priceConversation));
+
+bot.use(createConversation(editTradesConversation));
 
 async function setupListeners() {
   const connector_gateway = new ConnectorGateway(Network.TESTNET);
@@ -78,6 +81,9 @@ async function setupListeners() {
         // only two admins in the forwards, channel, the one who is not the bot is the user to send back the messages
         if (admin.user && !admin.user.is_bot) {
           try {
+            let check = await ctx.reply(
+              `checking potential signal from ${post?.chat?.id}`
+            );
             const signal = await parseRawPotentialSignal(content);
             if (
               signal == null ||
@@ -90,6 +96,11 @@ async function setupListeners() {
             console.log("signal", signal);
             console.log("sending edit and confirm");
             console.log("admin", admin.user.id);
+            await ctx.api.deleteMessage(
+              ctx.chat.id.toString(),
+              check.message_id
+            );
+
             await respondEditAndConfirm(
               admin.user.id.toString(),
               signal[0].values,
