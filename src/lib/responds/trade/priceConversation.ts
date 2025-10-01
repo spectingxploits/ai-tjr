@@ -1,3 +1,4 @@
+import { ConnectorGateway } from "@/lib/connectors/connector";
 import { GlobalHistory } from "@/models/interfaces";
 import { Conversation } from "@grammyjs/conversations";
 import { Context } from "grammy";
@@ -5,6 +6,7 @@ import { Context } from "grammy";
 export async function priceConversation(
   conversation: Conversation,
   ctx: Context,
+  connector: ConnectorGateway,
   getAllPrice: (
     conversation: Conversation<Context, Context>,
     ctx: Context,
@@ -22,5 +24,5 @@ APT, RION, MKL, BTC, ETH, etc ...`);
   console.log("token", tkCtx.message.text.trim());
   await ctx.reply(`Fetching prices for the token ${tkCtx.message.text.trim()}`);
 
-  await getAllPrice(conversation, ctx, tkCtx.message.text.trim());
+  await connector.getAllPrices(conversation, ctx, tkCtx.message.text.trim());
 }

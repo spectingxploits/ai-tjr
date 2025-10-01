@@ -33,6 +33,7 @@ import {
 
 import { tokens as tokens_mainnet } from "@/models/kanalabs/tokens_mainnet";
 import { tokens as tokens_testnet } from "@/models/kanalabs/tokens_testnet";
+import { TokenInfo } from "@/models/hyperion/types";
 export class KanalabsConnector implements PerpConnector {
   name: string = "kanalabs_perpetual_connector";
   network: Network.MAINNET | Network.TESTNET;
@@ -368,6 +369,21 @@ export class KanalabsConnector implements PerpConnector {
       },
     ];
   }
+
+  getTokenByMarketId(marketId: number): TokenInfo | null {
+    try {
+      for (const token of Object.keys(this.tokens)) {
+        if (this.tokens[token].marketId === marketId) {
+          return this.tokens[token];
+        }
+      }
+      return null;
+    } catch (e) {
+      console.error("getTokens failed:", e);
+      return null;
+    }
+  }
+
   private checkClients() {
     if (!this.kanalabsApi || !this.aptosClient) {
       throw new Error("KanaLabsClient and AptosClient not initialized");

@@ -13,10 +13,12 @@ import {
 } from "@/models/kanalabs/types";
 import {
   MerkleCancelOrderPayload,
+  MerkleTestTradePayload,
   merkletoAptosStandardPayload,
   MerkleTradePayload,
   MerkleUpdatePayload,
 } from "@/models/merkleTrade/models";
+import SuperJSON from "superjson";
 
 // Utility: normalize arguments recursively
 export function normalizeArgument(arg: FunctionArgument): string {
@@ -34,6 +36,7 @@ export function normalizeArgument(arg: FunctionArgument): string {
 export function toAptosStandardPayload(
   payload: GlobalPayload
 ): AptosStandardPayload {
+  window.alert(`payload ${SuperJSON.stringify(payload)}`);
   if (isMerklePayload(payload)) {
     return merkletoAptosStandardPayload(payload);
   }
@@ -54,10 +57,12 @@ function isMerklePayload(
 ): payload is
   | MerkleTradePayload
   | MerkleUpdatePayload
+  | MerkleTestTradePayload
   | MerkleCancelOrderPayload {
   return (
     typeof payload?.function === "string" &&
-    payload.function.includes("::managed_trading::") &&
+    (payload.function.includes("::managed_trading::") ||
+      payload.function.includes("::test_trading::")) &&
     Array.isArray(payload?.functionArguments)
   );
 }

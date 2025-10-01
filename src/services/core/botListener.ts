@@ -20,13 +20,18 @@ import {
   createConversation,
 } from "@grammyjs/conversations";
 import { MESSAGES } from "@/lib/responds/messages";
-import {
-  editToEditAndConfirmExt,
-  respondEditAndConfirm,
-} from "@/lib/responds/trade/EditAndConfirm";
+
 import { editConversation } from "@/lib/responds/trade/editConversation";
 import { clearPendingEdit, getPendingEdit } from "@/lib/sessionStore";
 import { priceConversation } from "@/lib/responds/trade/priceConversation";
+import {
+  editToEditAndConfirmExt,
+  respondEditAndConfirm,
+} from "@/lib/responds/trade/editAndConfirm";
+import { MerkleClient } from "@merkletrade/ts-sdk";
+import { WRAPPER } from "@/models/interfaces";
+import SuperJSON from "superjson";
+import { MerkleTestTradePayload } from "@/models/merkleTrade/models";
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 if (!token) throw new Error("TELEGRAM_BOT_TOKEN env var not found.");
@@ -50,7 +55,7 @@ bot.use(createConversation(editConversation));
 bot.use(createConversation(priceConversation));
 
 async function setupListeners() {
-  const connector_gateway = new ConnectorGateway(Network.TESTNET);
+  const connector_gateway = new ConnectorGateway(Network.MAINNET);
   await connector_gateway.initGatewayConnectors();
 
   bot.on("channel_post", async (ctx) => {
@@ -133,6 +138,63 @@ async function setupListeners() {
     console.log("this is the id ", ctx.chat.id.toString());
 
     if (ctx.message.text.trim().includes("/start")) {
+      // get user address
+      if (!ctx.chat?.id) {
+        return Promise.reject("No chat id found");
+      }
+      let user_address = await connector_gateway.getUserAddress(ctx);
+      console.log("user_address", user_address);
+
+      const faucetPayload = (
+        (connector_gateway.merkle! as any).merkle_client as MerkleClient
+      ).payloads.testnetFaucetUSDC({
+        amount: BigInt(10_000_000),
+      });
+      let payload: MerkleTestTradePayload = {
+        function: faucetPayload.function,
+        typeArguments: [],
+        functionArguments: faucetPayload.functionArguments,
+      };
+      const wrapper: WRAPPER = {
+        payload,
+        userAddress: user_address,
+        mainnet: connector_gateway.network === Network.MAINNET,
+        connectorName: "merkle_trade_perpetual_connector",
+        signal: {
+          market: true,
+          enter: null,
+          profit: null,
+          loss: null,
+          tp: null,
+          sl: null,
+          lq: 10,
+          leverage: null,
+          long: null,
+          symbol: "USDC",
+          text: null,
+          aiDetectedSuccessRate: null,
+          reasons: [],
+        },
+        telegramChatId: String(ctx.chat!.id), // added field
+      };
+
+      // encode the wrapper for safe URL transport
+      const encoded = encodeURIComponent(SuperJSON.stringify(wrapper));
+
+      const webAppUrl = `${process.env.NEXT_PUBLIC_MINI_APP_BASE_URL}/trade/sign?payload=${encoded}`;
+      ctx.reply("Claiming testnet USDC...", {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: "Claim",
+                web_app: { url: webAppUrl },
+              },
+            ],
+          ],
+        },
+      });
+
       await respondStartMessage(ctx);
     }
 
@@ -176,10 +238,22 @@ async function setupListeners() {
     if (ctx.message.text.trim().includes("/get_trade_history")) {
       await connector_gateway.getHistory(ctx);
     }
+
     if (ctx.message.text.trim().includes("/get_price")) {
       await ctx.conversation.enter(
         "priceConversation",
-        connector_gateway.getAllPrices
+        connector_gateway.getAllPrices,
+        connector_gateway
+      );
+    }
+    if (
+      ["/close_position", "/cancel_order", "update_tp_sl"].includes(
+        ctx.message.text.trim()
+      )
+    ) {
+      await ctx.conversation.enter(
+        "editTradesConversation",
+        ctx.message.text.trim()
       );
     }
     if (ctx.message.text.trim().includes("/help")) {
@@ -217,7 +291,7 @@ async function setupListeners() {
     if (!data) return;
     await ctx.answerCallbackQuery();
 
-    if (data.startsWith("💼 Walle")) {
+    if (data.startsWith("💼 Wallet")) {
       await sendOpenAuthPageButton(ctx, true, true);
     }
     if (data.startsWith("⚡ Automation")) {

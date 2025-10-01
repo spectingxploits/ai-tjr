@@ -6,6 +6,7 @@ import {
 } from "@/models/hyperion/types";
 import {
   Balance,
+  GlobalClosablePosition,
   GlobalHistory,
   GlobalOrders,
   GlobalPayload,
@@ -19,6 +20,7 @@ import {
   SingAndSubmitResponse,
   TimeInForce,
   Tokens,
+  WRAPPER,
 } from "@/models/interfaces";
 
 import { Order, Position } from "@merkletrade/ts-sdk";
@@ -36,6 +38,7 @@ import { InlineKeyboardButton } from "grammy/types";
 import { MESSAGES } from "../responds/messages";
 import { S } from "vitest/dist/chunks/config.d.D2ROskhv.js";
 import { Conversation } from "@grammyjs/conversations";
+import { ParsedKanaPosition } from "@/models/kanalabs/types";
 /** Standardized response wrapper for safer integrations */
 export type Result<T> =
   | { success: true; data: T }
@@ -306,7 +309,6 @@ export class ConnectorGateway {
 
     // generating the sign and submit magic links
     let keyboard: InlineKeyboardButton[][] = []; // <-- 2D array
-    type WRAPPER = SignAndSubmitParams & { telegramChatId?: string };
 
     for (const payload of Object.keys(payloads)) {
       let tempSignal: GlobalSignal | null = null;
@@ -355,6 +357,7 @@ export class ConnectorGateway {
         callback_data: `back_to_edit_and_confirm:${token}`,
       },
     ]);
+
     await ctx.api.editMessageText(
       user_chat_id,
       message_id,
@@ -572,6 +575,58 @@ export class ConnectorGateway {
       }
     );
     return Promise.resolve({ success: true, data: true });
+  }
+
+  async getCloseablePositions(
+    ctx: Context
+  ): Promise<Record<string, GlobalClosablePosition>> {
+    // get user address
+    if (!ctx.chat?.id) {
+      return Promise.reject("No chat id found");
+    }
+    let user_address = await this.getUserAddress(ctx);
+
+    let closeable_positions: Record<string, GlobalClosablePosition> = {};
+
+    for (const connector of this.perpConnectors) {
+      const res = await connector.listOpenPositions(user_address);
+      if (!res.success) {
+        ctx.reply(` ❌ ${res.error}`);
+        return Promise.reject(res.error);
+      }
+      for (const position of res.data) {
+        let pair_name = "";
+        if (connector.name === "kanalabs_perpetual_connector") {
+          let tokenInfo: TokenInfo = (this.kanalabs! as any).getTokenByMarketId(
+            (position as ParsedKanaPosition).marketId
+          );
+          pair_name = tokenInfo != null ? tokenInfo.symbol : "";
+        }
+        if (connector.name === "merkle_trade_perpetual_connector") {
+          let parts = (position as Position).pairType.split("::");
+          pair_name = parts[parts.length - 1];
+        }
+
+        closeable_positions[connector.name] = {
+          position,
+          connector_name: connector.name,
+          pair_name,
+        };
+      }
+    }
+
+    console.log("closeable_positions", closeable_positions);
+
+    return Promise.resolve(closeable_positions);
+  }
+
+  async closePosition(
+    conversation: Conversation,
+    ctx: Context,
+    position: GlobalClosablePosition
+  ) {
+    await ctx.reply(`Closing position ${position.pair_name}`);
+    // to be done
   }
   getSpotConnectors() {
     return this.spotConnectors;

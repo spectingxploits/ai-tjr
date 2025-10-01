@@ -13,6 +13,7 @@ import {
 } from "./kanalabs/types";
 import {
   MerkleCancelOrderPayload,
+  MerkleTestTradePayload,
   MerkleTradePayload,
   MerkleUpdatePayload,
 } from "./merkleTrade/models";
@@ -147,11 +148,13 @@ export interface Balance {
 }
 
 // connector
+export type WRAPPER = SignAndSubmitParams & { telegramChatId?: string };
 
 export type GlobalPayload =
   | MerkleTradePayload
   | MerkleUpdatePayload
   | MerkleCancelOrderPayload
+  | MerkleTestTradePayload
   | KanalabsOrderPayload
   | HyperionSwapPayload
   | any;
@@ -174,6 +177,12 @@ export type SingAndSubmitResponse = {
 };
 
 export type GlobalPositions = Position[] | ParsedKanaPosition[];
+
+export type GlobalClosablePosition = {
+  position: Position | ParsedKanaPosition;
+  connector_name: string;
+  pair_name: string;
+};
 
 export type GlobalOrders =
   | Order[]

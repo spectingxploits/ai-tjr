@@ -2,12 +2,9 @@ import { Conversation } from "@grammyjs/conversations";
 import { InlineKeyboard, Context as GramContext } from "grammy";
 import { formatGLobalSignal } from "@/lib/helpers/formatter";
 import { GlobalSignal } from "@/models/interfaces";
-import {
-  editToEditAndConfirmExt,
-  respondEditAndConfirm,
-} from "./EditAndConfirm";
+
 import { getPendingEdit, savePendingEdit } from "@/lib/sessionStore";
-import { sign } from "crypto";
+import { editToEditAndConfirmExt } from "./editAndConfirm";
 
 /**
  * Edit a signal interactively inside a conversation.

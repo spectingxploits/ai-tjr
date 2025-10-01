@@ -24,6 +24,12 @@ export type MerkleCancelOrderPayload = {
   abi: _aptos_labs_ts_sdk.EntryFunctionABI;
 };
 
+export type MerkleTestTradePayload = {
+  function: `0x${string}::test_trading::faucet_native_usdc`;
+  typeArguments: string[];
+  functionArguments: bigint[];
+};
+
 // Converter
 export function merkletoAptosStandardPayload(
   payload:
@@ -41,6 +47,11 @@ export function merkletoAptosStandardPayload(
         function: `0x${string}::managed_trading::cancel_order_v3`;
         typeArguments: string[];
         functionArguments: (bigint | `0x${string}`)[];
+      }
+    | {
+        function: `0x${string}::test_trading::faucet_native_usdc`;
+        functionArguments: bigint[];
+        typeArguments: string[];
       }
 ): AptosStandardPayload {
   return {

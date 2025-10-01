@@ -1,4 +1,3 @@
-// lib/responds/EditAndConfirm.ts
 import { GlobalSignal } from "@/models/interfaces";
 import { getPendingEdit, savePendingEdit } from "@/lib/sessionStore";
 import { formatGLobalSignal } from "@/lib/helpers/formatter";
