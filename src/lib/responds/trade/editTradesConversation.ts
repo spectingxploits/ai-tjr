@@ -42,6 +42,7 @@ export async function editTradesConversation(
     while (!back) {
       let cbCtx = await conversation.waitFor("callback_query");
       await cbCtx.answerCallbackQuery();
+
       const data = cbCtx.callbackQuery.data;
 
       if (data?.startsWith("back_to_select_position")) {
@@ -89,33 +90,69 @@ Please select confirm to close the following position: \n
       }
       if (data?.startsWith("close_position_confirm:")) {
         const key = data.split(":")[1];
+
+        let webAppUrl = await connector.closePosition(
+          conversation,
+          ctx,
+          msg_id,
+          closeable_positions[key]
+        );
+        if (!webAppUrl.success) {
+          await ctx.api.editMessageText(
+            ctx.chat!.id.toString(),
+            msg_id,
+            `Failed to close position ${closeable_positions[key].pair_name}`,
+            {
+              reply_markup: {
+                inline_keyboard: [
+                  [
+                    {
+                      text: "⬅️ Back",
+                      callback_data: `back_to_select_position:`,
+                    },
+                  ],
+                ],
+              },
+              parse_mode: "HTML",
+            }
+          );
+          continue;
+        }
+        let keyboard: InlineKeyboardButton[][] = [];
+
+        keyboard.push([
+          {
+            text: `Confirm`,
+            web_app: { url: webAppUrl.data },
+          },
+        ]);
+
+        keyboard.push([
+          {
+            text: "⬅️ Back",
+            callback_data: `back_to_select_position`,
+          },
+        ]);
+
         await ctx.api.editMessageText(
           cbCtx.chat!.id.toString(),
           msg_id,
-          "Closing position...",
+          `Click Confirm to Close ${closeable_positions[key].pair_name} position on ${closeable_positions[key].connector_name}`,
           {
             reply_markup: {
-              inline_keyboard: [
-                [
-                  {
-                    text: "✅ Closed",
-                    callback_data: `close_position_confirm:${key}`,
-                  },
-                  {
-                    text: "⬅️ Back",
-                    callback_data: `back_to_select_position`,
-                  },
-                ],
-              ],
+              inline_keyboard: keyboard,
             },
+            parse_mode: "HTML",
           }
         );
-        await connector.closePosition(conversation, ctx, closeable_positions[key]);
-        back = true;
-        break;
+
+        return Promise.resolve({ success: true, data: true });
       }
+      back = true;
+      break;
     }
   }
+
   //   if (action === "/cancel_order") {
   //     await ctx.reply(
   //       "Select order to cancel:",
@@ -134,4 +171,5 @@ Please select confirm to close the following position: \n
   //         .text("Cancel", "cancel_order")
   //     );
   //   }
+  // }
 }

@@ -596,20 +596,23 @@ export class ConnectorGateway {
       }
       for (const position of res.data) {
         let pair_name = "";
+        let key = "";
         if (connector.name === "kanalabs_perpetual_connector") {
           let tokenInfo: TokenInfo = (this.kanalabs! as any).getTokenByMarketId(
             (position as ParsedKanaPosition).marketId
           );
           pair_name = tokenInfo != null ? tokenInfo.symbol : "";
+          key = (position as ParsedKanaPosition).tradeId;
         }
         if (connector.name === "merkle_trade_perpetual_connector") {
           let parts = (position as Position).pairType.split("::");
           pair_name = parts[parts.length - 1];
+          key = (position as Position).uid.toString();
         }
 
-        closeable_positions[connector.name] = {
+        closeable_positions[key] = {
           position,
-          connector_name: connector.name,
+          connector_name: connector.name.replace("_perpetual_connector", ""), // only perpetual connectors
           pair_name,
         };
       }
@@ -623,10 +626,73 @@ export class ConnectorGateway {
   async closePosition(
     conversation: Conversation,
     ctx: Context,
+    msg_id: number,
     position: GlobalClosablePosition
-  ) {
-    await ctx.reply(`Closing position ${position.pair_name}`);
-    // to be done
+  ): Promise<Result<string>> {
+    await ctx.api.editMessageText(
+      ctx.chat!.id.toString(),
+      msg_id,
+      `Closing ${position.pair_name} position... `
+    );
+    // getting the user address
+    if (!ctx.chat?.id) {
+      return Promise.reject("No chat id found");
+    }
+    let userAddress = await this.getUserAddress(ctx);
+    let payload: GlobalPayload;
+    if (position.connector_name === "kanalabs_perpetual_connector") {
+      // close  short and long are the same
+      payload = await this.kanalabs!.closeLong({
+        positionId: (
+          position.position as ParsedKanaPosition
+        ).marketId.toString(),
+        userAddress,
+        mainnet: this.network === Network.MAINNET,
+      });
+    }
+    if (position.connector_name === "merkle_trade_perpetual_connector") {
+      // close  short and long are the same
+      payload = await this.merkle!.closeLong({
+        positionId: position.pair_name,
+        userAddress,
+        mainnet: this.network === Network.MAINNET,
+      });
+    }
+    console.log("payload", payload);
+    if (!payload.success) {
+      return Promise.reject(payload.error);
+    }
+
+    let keyboard: InlineKeyboardButton[][] = [];
+    const wrapper: WRAPPER = {
+      payload: payload,
+      userAddress: userAddress,
+      mainnet: this.network === Network.MAINNET,
+      connectorName: payload as any,
+      signal: {
+        market: true,
+        enter: null,
+        profit: null,
+        loss: null,
+        tp: null,
+        sl: null,
+        lq: null,
+        leverage: null,
+        long: null,
+        symbol: "",
+        aiDetectedSuccessRate: null,
+        reasons: [],
+      },
+      telegramChatId: ctx.chat!.id.toString(), // added field
+    };
+
+    // encode the wrapper for safe URL transport
+    const encoded = encodeURIComponent(SuperJSON.stringify(wrapper));
+
+    const webAppUrl = `${process.env.NEXT_PUBLIC_MINI_APP_BASE_URL}/trade/sign?payload=${encoded}`;
+
+    return Promise.resolve({ success: true, data: webAppUrl });
+
   }
   getSpotConnectors() {
     return this.spotConnectors;
