@@ -42,7 +42,6 @@ export default function PetraSignPage() {
   }, [payloadParam]);
 
   useEffect(() => {
-    // window.open(window.location.href);
     if (!parsedWrapper || !(parsedWrapper as WrappedParams).telegramChatId)
       return;
 
@@ -158,7 +157,12 @@ export default function PetraSignPage() {
           payload: wrapper.payload,
         });
       }
-      window.open(url);
+      let os = getMobileOS();
+      if (os === "iOS") {
+        window.location.href = url;
+      } else if (os === "Android") {
+        window.open(url);
+      }
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -354,4 +358,17 @@ function stringifyJsonWithBigInt(json: any): string {
   return JSON.stringify(json, (_, v) =>
     typeof v === "bigint" ? v.toString() : v
   );
+}
+
+function getMobileOS(): "iOS" | "Android" | "Other" {
+  const ua = navigator.userAgent || navigator.vendor || (window as any).opera;
+
+  if (/android/i.test(ua)) {
+    return "Android";
+  }
+  // iOS detection (iPhone, iPad, iPod)
+  if (/iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream) {
+    return "iOS";
+  }
+  return "Other";
 }

@@ -319,7 +319,12 @@ export default function MiniAppPage() {
       JSON.stringify(data)
     )}`;
 
-    window.open(url);
+    let os = getMobileOS();
+    if (os === "iOS") {
+      window.location.href = url;
+    } else if (os === "Android") {
+      window.open(url);
+    }
   };
 
   async function handleDisconnect() {
@@ -340,11 +345,18 @@ export default function MiniAppPage() {
             String(publicKey ?? "")
           ).toString("hex"),
         };
-        window.open(
-          `https://petra.app/api/v1/disconnect?data=${btoa(
+        let os = getMobileOS();
+        if (os === "iOS") {
+          window.location.href = `https://petra.app/api/v1/disconnect?data=${btoa(
             JSON.stringify(data)
-          )}`
-        );
+          )}`;
+        } else if (os === "Android") {
+          window.open(
+            `https://petra.app/api/v1/disconnect?data=${btoa(
+              JSON.stringify(data)
+            )}`
+          );
+        }
       }
 
       // update DB using snapshot id (if present)
@@ -510,4 +522,17 @@ export function base64UrlToU8(s: string) {
   const pad = s.length % 4;
   if (pad) s += "=".repeat(4 - pad);
   return new Uint8Array(Buffer.from(s, "base64"));
+}
+
+function getMobileOS(): "iOS" | "Android" | "Other" {
+  const ua = navigator.userAgent || navigator.vendor || (window as any).opera;
+
+  if (/android/i.test(ua)) {
+    return "Android";
+  }
+  // iOS detection (iPhone, iPad, iPod)
+  if (/iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream) {
+    return "iOS";
+  }
+  return "Other";
 }
