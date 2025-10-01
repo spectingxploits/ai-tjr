@@ -137,7 +137,8 @@ export interface PerpTP_SLParams {
   userAddress: `0x${string}`;
   mainnet: boolean; // for chains that need it (e.g. Aptos)
   tpPriceInQuote: number; // without decimals adjustment
-  slPriceInQuote: number; // without decimals adjustment
+  slPriceInQuote: number; // without decimals adjustment,
+  position?: ParsedKanaPosition;
 }
 
 // global for balance

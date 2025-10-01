@@ -26,7 +26,11 @@ export async function editTradesConversation(
         await connector.getCloseablePositions(ctx);
       console.log("closeable_positions", closeable_positions);
       if (Object.keys(closeable_positions).length === 0) {
-        await ctx.reply("No positions found to close");
+        await ctx.api.editMessageText(
+          ctx.chat!.id.toString(),
+          msg.message_id,
+          "No position found to close 🤷‍♂️"
+        );
         return;
       }
       let inline_keyboard: InlineKeyboardButton[][] = [];
@@ -80,7 +84,7 @@ export async function editTradesConversation(
             msg_id,
             `
 Please select confirm to close the following position: \n
-/n ${SuperJSON.stringify(closeable_positions[key])}
+\n ${SuperJSON.stringify(closeable_positions[key])}
 `,
             {
               reply_markup: {
@@ -178,19 +182,23 @@ Please select confirm to close the following position: \n
       let msg = await ctx.reply(
         ` ✅ Fetching positions for ${user_address.slice(0, 6)}...`
       );
-      let cancelable_order: Record<string, GlobalCancelableOrder> =
+      let cancelable_orders: Record<string, GlobalCancelableOrder> =
         await connector.getCancelableOrders(ctx);
 
-      console.log("cancelable_order", cancelable_order);
-      if (Object.keys(cancelable_order).length === 0) {
-        await ctx.reply("No order found to close");
+      console.log("cancelable_orders", cancelable_orders);
+      if (Object.keys(cancelable_orders).length === 0) {
+        await ctx.api.editMessageText(
+          ctx.chat!.id.toString(),
+          msg.message_id,
+          "No order found to cancel 🤷‍♂️"
+        );
         return;
       }
       let inline_keyboard: InlineKeyboardButton[][] = [];
-      for (const key of Object.keys(cancelable_order)) {
+      for (const key of Object.keys(cancelable_orders)) {
         inline_keyboard.push([
           {
-            text: `${cancelable_order[key].connector_name} - ${cancelable_order[key].pair_name}`,
+            text: `${cancelable_orders[key].connector_name} - ${cancelable_orders[key].pair_name}`,
             callback_data: `cancel_order_req:${key}`,
           },
         ]);
@@ -237,7 +245,7 @@ Please select confirm to close the following position: \n
             msg_id,
             `
 Please select "confirm" to cancel the following Order: \n
-/n ${SuperJSON.stringify(cancelable_order[key])}
+\n${SuperJSON.stringify(cancelable_orders[key])}
 `,
             {
               reply_markup: {
@@ -266,13 +274,13 @@ Please select "confirm" to cancel the following Order: \n
             conversation,
             ctx,
             msg_id,
-            cancelable_order[key]
+            cancelable_orders[key]
           );
           if (!webAppUrl.success) {
             await ctx.api.editMessageText(
               ctx.chat!.id.toString(),
               msg_id,
-              `Failed to cancel Order ${cancelable_order[key].pair_name}`,
+              `Failed to cancel Order ${cancelable_orders[key].pair_name}`,
               {
                 reply_markup: {
                   inline_keyboard: [
@@ -308,7 +316,7 @@ Please select "confirm" to cancel the following Order: \n
           await ctx.api.editMessageText(
             cbCtx.chat!.id.toString(),
             msg_id,
-            `Click "Confirm" to Cancel ${cancelable_order[key].pair_name} Order on ${cancelable_order[key].connector_name}`,
+            `Click "Confirm" to Cancel ${cancelable_orders[key].pair_name} Order on ${cancelable_orders[key].connector_name}`,
             {
               reply_markup: {
                 inline_keyboard: keyboard,
@@ -329,14 +337,225 @@ Please select "confirm" to cancel the following Order: \n
     }
   }
 
-  //   if (action === "update_tp_sl") {
-  //     await ctx.reply(
-  //       "Select position to update:",
-  //       new InlineKeyboard()
-  //         .text("Update TP & SL", "update_tp_sl")
-  //         .row()
-  //         .text("Cancel", "cancel_order")
-  //     );
-  //   }
-  // }
+  if (action === "update_tp_sl") {
+    // let get user address
+    let user_address = await connector.getUserAddress(ctx);
+    let msg = await ctx.reply(
+      ` ✅ Fetching open positions for ${user_address.slice(0, 6)}...`
+    );
+
+    let positions: Record<string, GlobalClosablePosition> =
+      await connector.getCloseablePositions(ctx);
+
+    console.log("closable_positions", positions);
+
+    if (Object.keys(positions).length === 0) {
+      await ctx.api.editMessageText(
+        ctx.chat!.id.toString(),
+        msg.message_id,
+        "No position found to update TP & SL 🤷‍♂️"
+      );
+      return;
+    }
+
+    let inline_keyboard: InlineKeyboardButton[][] = [];
+
+    for (const key of Object.keys(positions)) {
+      inline_keyboard.push([
+        {
+          text: `${positions[key].connector_name} - ${positions[key].pair_name}`,
+          callback_data: `update_position_req:${key}`,
+        },
+      ]);
+    }
+
+    await ctx.api.editMessageText(
+      ctx.chat!.id.toString(),
+      msg.message_id,
+      `Select a position to update TP & SL:`,
+      {
+        reply_markup: {
+          inline_keyboard,
+        },
+      }
+    );
+
+    let back = false;
+    let msg_id = msg.message_id;
+    let new_tp = 0;
+    let new_sl = 0;
+    while (!back) {
+      let cbCtx = await conversation.waitFor("callback_query");
+      await cbCtx.answerCallbackQuery();
+
+      const data = cbCtx.callbackQuery.data;
+
+      if (data?.startsWith("back_to_select_position")) {
+        await ctx.api.editMessageText(
+          cbCtx.chat!.id.toString(),
+          msg_id,
+          "Select position to update TP & SL:",
+          {
+            reply_markup: {
+              inline_keyboard,
+            },
+            parse_mode: "HTML",
+          }
+        );
+        continue;
+      }
+      if (data?.startsWith("update_position_req:")) {
+        const key = data.split(":")[1];
+        // getting the new values from the user
+        await ctx.api.editMessageText(
+          cbCtx.chat!.id.toString(),
+          msg_id,
+          `Please enter the new TP Value (price in usd):`,
+          {
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "⬅️ Back",
+                    callback_data: `back_to_select_position`,
+                  },
+                ],
+              ],
+            },
+            parse_mode: "HTML",
+          }
+        );
+        let tpCtx = await conversation.waitFor("message:text");
+        new_tp = Number(tpCtx.message.text.trim());
+        await ctx.api.editMessageText(
+          cbCtx.chat!.id.toString(),
+          msg_id,
+          `Please enter the new SL Value (price in usd):`,
+          {
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "⬅️ Back",
+                    callback_data: `back_to_select_position`,
+                  },
+                ],
+              ],
+            },
+            parse_mode: "HTML",
+          }
+        );
+        let slCtx = await conversation.waitFor("message:text");
+        new_sl = Number(slCtx.message.text.trim());
+
+        // sending the new values to the bot
+        await ctx.api.editMessageText(
+          cbCtx.chat!.id.toString(),
+          msg_id,
+          `
+Please select "confirm" to update the following position TP & SL: \n
+\n new take profit trigger price : ${new_tp}
+\n new stop loss trigger price : ${new_sl}
+`,
+          {
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "Confirm",
+                    callback_data: `update_position_confirm:${key}`,
+                  },
+                  {
+                    text: "⬅️ Back",
+                    callback_data: `back_to_select_position`,
+                  },
+                ],
+              ],
+            },
+            parse_mode: "HTML",
+          }
+        );
+
+        continue;
+      }
+      if (data?.startsWith("update_position_confirm:")) {
+        const key = data.split(":")[1];
+
+        let urlRes = await connector.updatePostionTPSL(
+          conversation,
+          ctx,
+          msg_id,
+          positions[key],
+          new_tp,
+          new_sl
+        );
+        if (!urlRes.success) {
+          await ctx.api.editMessageText(
+            ctx.chat!.id.toString(),
+            msg_id,
+            `Failed to Update TP & SL for ${positions[key].pair_name}`,
+            {
+              reply_markup: {
+                inline_keyboard: [
+                  [
+                    {
+                      text: "⬅️ Back",
+                      callback_data: `back_to_select_position:`,
+                    },
+                  ],
+                ],
+              },
+              parse_mode: "HTML",
+            }
+          );
+          continue;
+        }
+        let buttons: InlineKeyboardButton[] =
+          urlRes.data.length === 1
+            ? [
+                {
+                  text: "Confirm",
+                  web_app: { url: urlRes.data[0] },
+                },
+              ]
+            : [
+                {
+                  text: "Confirm tp",
+                  web_app: { url: urlRes.data[1] },
+                },
+                {
+                  text: "Confirm sl",
+                  web_app: { url: urlRes.data[2] },
+                },
+              ];
+
+        let keyboard: InlineKeyboardButton[][] = [
+          [
+            ...buttons,
+            {
+              text: "⬅️ Back",
+              callback_data: "back_to_select_position",
+            },
+          ],
+        ];
+
+        // sending the new values to the bot
+        await ctx.api.editMessageText(
+          cbCtx.chat!.id.toString(),
+          msg_id,
+          `Click "Confirm" to Update ${positions[key].pair_name} position on ${positions[key].connector_name}`,
+          {
+            reply_markup: {
+              inline_keyboard: keyboard,
+            },
+            parse_mode: "HTML",
+          }
+        );
+
+        return Promise.resolve({ success: true, data: true });
+      }
+      back = true;
+      break;
+    }
+  }
 }

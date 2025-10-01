@@ -44,7 +44,10 @@ import {
   ParsedKanaOrder,
   ParsedKanaPosition,
 } from "@/models/kanalabs/types";
-import { MerkleCancelOrderPayload } from "@/models/merkleTrade/models";
+import {
+  MerkleCancelOrderPayload,
+  MerkleUpdatePayload,
+} from "@/models/merkleTrade/models";
 /** Standardized response wrapper for safer integrations */
 export type Result<T> =
   | { success: true; data: T }
@@ -825,6 +828,160 @@ export class ConnectorGateway {
       const webAppUrl = `${process.env.NEXT_PUBLIC_MINI_APP_BASE_URL}/trade/sign?payload=${encoded}`;
 
       return Promise.resolve({ success: true, data: webAppUrl });
+    }
+  }
+
+  async updatePostionTPSL(
+    conversation: Conversation,
+    ctx: Context,
+    msg_id: number,
+    position: GlobalClosablePosition,
+    new_tp: number,
+    new_sl: number
+  ): Promise<Result<string[]>> {
+    await ctx.api.editMessageText(
+      ctx.chat!.id.toString(),
+      msg_id,
+      `Updating TP & SL for ${position.pair_name} position... `
+    );
+    // getting the user address
+    if (!ctx.chat?.id) {
+      return Promise.reject("No chat id found");
+    } else {
+      let userAddress = await this.getUserAddress(ctx);
+      let payload:
+        | {
+            tpPayload: KanalabsOrderPayload;
+            slPayload: KanalabsOrderPayload;
+          }
+        | MerkleUpdatePayload
+        | null = null;
+      let urls: string[] = [];
+      if (position.connector_name === "kanalabs_perpetual_connector") {
+        // close  short and long are the same
+        let res = await this.kanalabs!.setTP_SL!({
+          position: position.position as ParsedKanaPosition,
+          userAddress,
+          mainnet: this.network === Network.MAINNET,
+          tpPriceInQuote: new_tp,
+          slPriceInQuote: new_sl,
+          positionId: (position.position as ParsedKanaPosition).tradeId,
+        });
+        if (!res.success) {
+          return Promise.reject(res.error);
+        }
+        let kanaPayload = res.data as {
+          tpPayload: KanalabsOrderPayload;
+          slPayload: KanalabsOrderPayload;
+        };
+
+        const slWrapper: WRAPPER = {
+          payload: kanaPayload.slPayload,
+          userAddress: userAddress,
+          mainnet: this.network === Network.MAINNET,
+          connectorName: position.connector_name as any,
+          signal: {
+            market: true,
+            enter: null,
+            profit: null,
+            loss: null,
+            tp: null,
+            sl: null,
+            lq: null,
+            leverage: null,
+            long: null,
+            symbol: "",
+            aiDetectedSuccessRate: null,
+            reasons: [],
+          },
+          telegramChatId: String(ctx.chat!.id), // added field
+        };
+
+        // encode the wrapper for safe URL transport
+        const slEncoded = encodeURIComponent(SuperJSON.stringify(slWrapper));
+
+        const slWebAppUrl = `${process.env.NEXT_PUBLIC_MINI_APP_BASE_URL}/trade/sign?payload=${slEncoded}`;
+        urls.push(slWebAppUrl);
+
+        const tgWrapper: WRAPPER = {
+          payload: kanaPayload.tpPayload,
+          userAddress: userAddress,
+          mainnet: this.network === Network.MAINNET,
+          connectorName: position.connector_name as any,
+          signal: {
+            market: true,
+            enter: null,
+            profit: null,
+            loss: null,
+            tp: null,
+            sl: null,
+            lq: null,
+            leverage: null,
+            long: null,
+            symbol: "",
+            aiDetectedSuccessRate: null,
+            reasons: [],
+          },
+          telegramChatId: String(ctx.chat!.id), // added field
+        };
+
+        // encode the wrapper for safe URL transport
+        const tgEncoded = encodeURIComponent(SuperJSON.stringify(tgWrapper));
+
+        const tgWebAppUrl = `${process.env.NEXT_PUBLIC_MINI_APP_BASE_URL}/trade/sign?payload=${tgEncoded}`;
+        urls.push(tgWebAppUrl);
+        return Promise.resolve({ success: true, data: urls });
+      }
+
+      if (position.connector_name === "merkle_trade_perpetual_connector") {
+        // close  short and long are the same
+        let res = await this.merkle!.setTP_SL!({
+          positionId: position.pair_name,
+          userAddress,
+          mainnet: this.network === Network.MAINNET,
+          tpPriceInQuote: new_tp,
+          slPriceInQuote: new_sl,
+        });
+        if (!res.success) {
+          return Promise.reject(res.error);
+        }
+        payload = res.data as MerkleUpdatePayload;
+      }
+
+      if (payload == null) {
+        return Promise.reject(payload);
+      }
+
+      console.log("payload", payload);
+
+      const wrapper: WRAPPER = {
+        payload,
+        userAddress: userAddress,
+        mainnet: this.network === Network.MAINNET,
+        connectorName: position.connector_name as any,
+        signal: {
+          market: true,
+          enter: null,
+          profit: null,
+          loss: null,
+          tp: null,
+          sl: null,
+          lq: null,
+          leverage: null,
+          long: null,
+          symbol: "",
+          aiDetectedSuccessRate: null,
+          reasons: [],
+        },
+        telegramChatId: String(ctx.chat!.id), // added field
+      };
+
+      // encode the wrapper for safe URL transport
+      const encoded = encodeURIComponent(SuperJSON.stringify(wrapper));
+
+      const webAppUrl = `${process.env.NEXT_PUBLIC_MINI_APP_BASE_URL}/trade/sign?payload=${encoded}`;
+
+      return Promise.resolve({ success: true, data: [webAppUrl] });
     }
   }
   getSpotConnectors() {

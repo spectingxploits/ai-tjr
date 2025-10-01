@@ -158,8 +158,46 @@ export class KanalabsConnector implements PerpConnector {
   setLeverage?(symbol: string, leverage: number): Promise<boolean> {
     throw new Error("Method not implemented.");
   }
-  setTP_SL?(params: PerpTP_SLParams): Promise<Result<KanalabsOrderPayload>> {
-    throw new Error("Method not implemented.");
+  async setTP_SL?(params: PerpTP_SLParams): Promise<
+    Result<{
+      tpPayload: KanalabsOrderPayload;
+      slPayload: KanalabsOrderPayload;
+    }>
+  > {
+    try {
+      let payloads: {
+        tpPayload: KanalabsOrderPayload;
+        slPayload: KanalabsOrderPayload;
+      } = { tpPayload: null as any, slPayload: null as any };
+
+      if (params.tpPriceInQuote != null && params.slPriceInQuote != 0) {
+        const res = await this.kanalabsApi.get("/updateStopLoss", {
+          params: {
+            marketId: params.position!.marketId,
+            tradeSide: params.position!.tradeSide,
+            newStopLossPrice: params.slPriceInQuote,
+          },
+        });
+        const payloadData: KanalabsOrderPayload = res.data.data;
+        payloads.slPayload = payloadData;
+      }
+      if (params.tpPriceInQuote != null) {
+        const res = await this.kanalabsApi.get("/updateTakeProfit", {
+          params: {
+            marketId: params.position!.marketId,
+            tradeSide: params.position!.tradeSide,
+            newTakeProfitPrice: params.tpPriceInQuote,
+          },
+        });
+        const payloadData: KanalabsOrderPayload = res.data.data;
+        payloads.tpPayload = payloadData;
+      }
+
+      return { success: true, data: payloads };
+    } catch (e) {
+      console.error("setTP_SL failed:", e);
+      return { success: false, error: (e as Error).message };
+    }
   }
   async cancelOrder(
     order: ParsedKanaOrder,
