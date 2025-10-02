@@ -82,8 +82,9 @@ async function setupListeners() {
         // only two admins in the forwards, channel, the one who is not the bot is the user to send back the messages
         if (admin.user && !admin.user.is_bot) {
           try {
-            let check = await ctx.reply(
-              `checking potential signal from ${post?.chat?.id}`
+            let check = await ctx.api.sendMessage(
+              admin.user.id.toString(),
+              `checking potential signal from ${post?.chat?.title} ...`
             );
             const signal = await parseRawPotentialSignal(content);
             if (
@@ -98,7 +99,7 @@ async function setupListeners() {
             console.log("sending edit and confirm");
             console.log("admin", admin.user.id);
             await ctx.api.deleteMessage(
-              ctx.chat.id.toString(),
+              admin.user.id.toString(),
               check.message_id
             );
 
