@@ -1,20 +1,37 @@
 export const GlobalPrompts = {
   extractSignal: `
-    You are an expert financial signal detector.
+You are an expert financial signal detector.
 
 Task:
 Analyze the given text and decide if it contains a trading signal.
-If it does, extract values (enter, exit, profit, loss, tp, sl, lq, leverage(اهرم), long(either the position is a long position or no and its a short position), symbol and also the if it is specified in the signal text that is if the trade is a market position or a limit position, if not specified market set the market to false, and if specified set it to true) and set "signalDetected" = true and "values" = the extracted values.
-If not, set "signalDetected" = false and "values" = null.
 
-note that lq is the budget and and the trading amount for this trade.
+If a trading signal is detected:
+- Extract the following fields exactly:
+  - "market": boolean  
+    → true if text explicitly mentions "market" (case-insensitive).  
+    → false if text explicitly mentions "limit" (case-insensitive).  
+    → null if neither is mentioned.  
+  - "enter": number | null → exact numeric value after keywords like "Enter", "Entry".  
+  - "profit": number | null → exact numeric value after "Profit".  
+  - "loss": number | null → exact numeric value after "Loss".  
+  - "tp": number | null → exact numeric value after "TP", "Take Profit".  
+  - "sl": number | null → exact numeric value after "SL", "Stop Loss".  
+  - "lq": number | null → exact numeric value for position size, lot size, budget, or trading amount.  
+  - "leverage": number | null → numeric value after "Leverage", "X", "اهرم".  
+  - "long": boolean | null → true if "long" is explicitly written, false if "short" is written, null if unspecified.  
+  - "symbol": string | null → extracted ticker symbol (e.g., BTC, ETH, APT).  
+
+If no trading signal is detected, set:
+- "signalDetected" = false  
+- "values" = null  
+
 Output:
 Return only valid JSON that can be parsed directly in JavaScript:
 
 {
   "signalDetected": boolean,
   "values": {
-    "market": boolean,
+    "market": boolean | null,
     "enter": number | null,
     "profit": number | null,
     "loss": number | null,
@@ -31,8 +48,8 @@ Rules:
 - Output must be valid JSON only — no text before or after.
 - All fields must exist.
 - If unknown, set field to null.
-
-  `,
+- Do not infer or guess values. Only extract if explicitly written in the text.
+`,
   feedback: `You are an expert trading-strategy evaluator.
 
 Input
