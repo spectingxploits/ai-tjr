@@ -1,4 +1,5 @@
 import { InlineKeyboard } from "grammy";
+import { MESSAGES } from "../messages";
 
 function openAuthKeyboard(chatId: string, connect: boolean) {
   return new InlineKeyboard().webApp(
@@ -26,7 +27,8 @@ export async function sendOpenAuthPageButton(
         `${process.env.NEXT_PUBLIC_MINI_APP_BASE_URL}/auth?ref=telegram&userId=${ctx.chat.id}&action=disconnect`
       );
 
-    await ctx.reply("Choose one of the wallet options below:", {
+    await ctx.reply(MESSAGES.wallet, {
+      parse_mode: "HTML",
       reply_markup: kb,
     });
   } else {

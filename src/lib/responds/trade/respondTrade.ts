@@ -1,4 +1,5 @@
 import { InlineKeyboardButton } from "grammy/types";
+import { MESSAGES } from "../messages";
 
 export async function respondTrade(ctx: any) {
   let keyboard: InlineKeyboardButton[][] = [
@@ -20,7 +21,8 @@ export async function respondTrade(ctx: any) {
     ],
   ];
 
-  await ctx.reply("Choose a trade action:", {
+  await ctx.reply(MESSAGES.trade, {
+    parse_mode: "HTML",
     reply_markup: { inline_keyboard: keyboard },
   });
 }

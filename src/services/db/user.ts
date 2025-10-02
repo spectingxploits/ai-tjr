@@ -6,29 +6,57 @@ export async function setConnectedStatus(
   shared_pubkey: string,
   wallet_address: string
 ): Promise<{ new_status: boolean }> {
-  const { data: user, error: upsertError } = await supabase
-    .from("users")
-    .upsert(
-      {
-        tg_id: user_tg_id,
-        connected: connected,
-        shared_pubkey,
-        wallet_address,
-      },
-      { onConflict: "tg_id" } // 👈 ensures conflict handled by updating
-    )
-    .select()
-    .single();
+  if (!connected) {
+    const { data: user, error: upsertError } = await supabase
+      .from("users")
+      .upsert(
+        {
+          tg_id: user_tg_id,
+          connected: connected,
+          shared_pubkey,
+          wallet_address,
+          sec: "",
+          pub: "",
+        },
+        { onConflict: "tg_id" } // 👈 ensures conflict handled by updating
+      )
+      .select()
+      .single();
 
-  if (upsertError) {
-    console.error("Upsert error:", upsertError.message);
-    throw new Error(
-      `error setting user connected status:
+    if (upsertError) {
+      console.error("Upsert error:", upsertError.message);
+      throw new Error(
+        `error setting user connected status:
       ${upsertError.message}
     `
-    );
+      );
+    }
+    return { new_status: user.connected };
+  } else {
+    const { data: user, error: upsertError } = await supabase
+      .from("users")
+      .upsert(
+        {
+          tg_id: user_tg_id,
+          connected: connected,
+          shared_pubkey,
+          wallet_address,
+        },
+        { onConflict: "tg_id" } // 👈 ensures conflict handled by updating
+      )
+      .select()
+      .single();
+
+    if (upsertError) {
+      console.error("Upsert error:", upsertError.message);
+      throw new Error(
+        `error setting user connected status:
+      ${upsertError.message}
+    `
+      );
+    }
+    return { new_status: user.connected };
   }
-  return { new_status: user.connected };
 }
 
 export async function setSec(

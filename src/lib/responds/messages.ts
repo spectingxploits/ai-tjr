@@ -113,17 +113,25 @@ To enable channel automation, we need your phone number.
 `,
 
   welcome_text: `
-I can help you <b>automate your trading strategy</b> with my powerful AI.  
+🤖 <b>Automate Your Trading Strategy with AI</b>  
 
-To start your trading journey, first connect your wallet and then click on automation :  
+The bot helps you trade smarter by automating strategies and executing signals ⚡ in real time.  
 
-1️⃣ <b>💼 Wallet</b>  
-2️⃣ <b>⚡ Automation</b>
-3️⃣ <b>📊 Trade</b>
-4️⃣ <b>❓ Help</b>
+<b>📈 Supported DEXes (v1.6.9):</b>  
 
-⚡ Let’s get started and take your trading to the next level!
-    `,
+- 🌐 Hyperion (Aptos)  
+- 🔗 Kanalabs (Aptos)  
+- 🌀 MerkleTrade (Aptos)  
+
+<b>🛠 Getting Started:</b>  
+1️⃣ Install the <b>Petra Wallet</b> on your 📱 iOS or Android device  
+2️⃣ <b>Connect your wallet</b> (click on 💼 <i>Wallet</i>)  
+3️⃣ <b>Automate your signals</b> (click on 🤖 <i>Automation</i>)  
+
+✅ Once set up, the bot will monitor 🔍 opportunities and notify you 📩 when trading signals are detected.  
+
+🚀 <b>Start now and take your trading to the next level!</b>
+`,
   balances: (balances: Record<string, Balance[]>, bal: number) => {
     return `
 💰 <b>Balances</b>
@@ -396,4 +404,38 @@ ${Object.entries(pricesByProvider)
   .join("\n\n")}
     `;
   },
+
+  trade: `
+📖 <b>Trading Commands Overview</b>  
+
+🔍 <b>Trading Data</b>  
+- <code>/get_open_orders</code> → View your open orders on all supported dexes📑  
+- <code>/get_open_positions</code> → Check your active position on all supported dexes 📊
+- <code>/get_trade_history</code> → See your past trades  📜
+- <code>/get_price</code> → Get token price on all supported dexes 💰  
+- <code>/get_balance</code> → Check your Apt balance and your balance on all supported dexes 💳  
+
+⚡ <b>Trading Actions</b>  
+- <code>/cancel_order</code> → Cancel an order ❌  
+- <code>/close_position</code> → Close a position 🔒  
+- <code>/update_tp_sl</code> → Update TP & SL of a open position 🎯  
+
+🚀 Use these commands anytime to manage your trades quickly and efficiently.
+
+`,
+
+  wallet: `
+📖 <b>Wallet Commands</b>  
+
+🔑 <b>Connect / Disconnect</b>  
+
+Both following commands will open the wallet connect/disconnect page.
+
+- <code>/connect_wallet</code> → Connect your Petra wallet to the bot. Your wallet address and public key will be securely stored. 🔗  
+- <code>/disconnect_wallet</code> → Disconnect your wallet from the bot. Stored wallet data will be removed. ❌  
+
+ٔNOTE: To get you balance you must use /get_balance command 💳
+
+⚡ Use these commands to manage your wallet quickly and securely.
+`,
 };
