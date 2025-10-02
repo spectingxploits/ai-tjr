@@ -33,11 +33,13 @@ First AI-driven, automated trading telegram bot on Aptos !
 
 AI-TJR is the first AI-powered automated trading Telegram bot on **Aptos**, and the first project in the Aptos ecosystem to bring Aptos wallets inside a Telegram mini-app.
 
-it also is a interface for interacting with your favorite dexes through a telegram bot which can make everything faster and easier. such as monitoring the history of the trades, positions and orders, get real time price of different dexes tokens, opening perpetual and spot potions, and more.
+it also is a interface for interacting with your favorite dexes through a telegram bot which abstracts the dex complexities into couple of buttons !
+
+users can monitor the history of the trades, positions and orders, get real time price of different dexes tokens, managing assets, opening perpetual and spot potions, and more !
 
 ### Never miss an opportunity again !
 
-This Bot is the dream of traders, connects to your wallet (no private key needed), uses it AI to analyze and detect a trading setup from your favorite telegram financial channels and only gets a confirmation from you execute the trades.
+This Bot is the dream of traders, connects to your wallet (no private key needed), uses it AI to analyze and detect a trading setup from your favorite telegram financial channels and only gets a confirmation from you execute the trades. everything is automated !
 
 ## Supported DEXes
 
@@ -45,7 +47,7 @@ This Bot is the dream of traders, connects to your wallet (no private key needed
 - Kanalabs(Aptos)
 - MerkleTrade(Aptos)
 
-## Supported Platforms
+## Supported Chains
 
 - Aptos
 
