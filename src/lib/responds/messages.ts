@@ -406,7 +406,7 @@ ${Object.entries(pricesByProvider)
   },
 
   trade: `
-📖 <b>Trading Commands Overview</b>  
+📖 <b>Trading Commands</b>  
 
 🔍 <b>Trading Data</b>  
 - <code>/get_open_orders</code> → View your open orders on all supported dexes📑  
@@ -437,5 +437,14 @@ Both following commands will open the wallet connect/disconnect page.
 ٔNOTE: To get you balance you must use /get_balance command 💳
 
 ⚡ Use these commands to manage your wallet quickly and securely.
+`,
+  automation: `
+📖 <b>Automation Commands</b>  
+
+⚙️ <b>Signal Automation</b>  
+- <code>/setup_automation</code> → Set up signal automation for your favorite channels. 🤖  
+- <code>/deactivate_automated_channel</code> → Stop automation and deactivate the automated channel. ⏹️  
+
+💡 Note: /setup_automation may ask you to connect with <a href="https://t.me/tg_feedbot">TeleFeed</a>. For safety, consider using a separate Telegram account.
 `,
 };

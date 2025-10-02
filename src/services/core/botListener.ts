@@ -177,7 +177,7 @@ async function setupListeners() {
       }
 
       ctx.reply(
-        "to automate a channel you have to forward a message from the channel or the group you want to automate to me."
+        "to automate a channel you have to forward a message from the channel or the group you want to me listen to."
       );
     }
     if (ctx.message.text.trim().includes("/deactivate_automated_channel")) {

@@ -15,13 +15,8 @@ export async function respondAutomation(ctx: any) {
     .text("Setup Automation", "setup_automation")
     .text("Remove Automation", "deactivate_automated_channel");
 
-  ctx.reply(
-    `
-⚙️ You can either <b>set up a new automation</b> or <b>remove an existing automation</b> from your gateway channel.
-    `,
-    {
-      reply_markup: keyboard,
-      parse_mode: "HTML",
-    }
-  );
+  ctx.reply(MESSAGES.automation, {
+    reply_markup: keyboard,
+    parse_mode: "HTML",
+  });
 }
